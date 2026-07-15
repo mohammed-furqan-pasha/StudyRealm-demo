@@ -82,15 +82,31 @@ export default function ContactSection() {
         </div>
 
         {/* Footer strip */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">S</span>
+        <div className="border-t border-white/10 pt-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-slate-400">
+          {/* Column 1: Company Info */}
+          <div className="flex flex-col gap-2 md:items-start items-center">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded bg-gradient-to-br from-teal-400 to-blue-500 flex items-center justify-center">
+                <span className="text-white font-bold text-xs">S</span>
+              </div>
+              <span className="font-semibold text-slate-300 text-sm">StudyRealm Technologies</span>
             </div>
-            <span className="font-semibold text-slate-400">StudyRealm Technologies</span>
+            <span className="text-center md:text-left">MSME Udyam Registered • Bangalore, Karnataka</span>
           </div>
-          <span>MSME Udyam Registered · Bangalore, Karnataka</span>
-          <span>studyrealm.app</span>
+
+          {/* Column 2: Platform Links */}
+          <div className="flex flex-col gap-2 md:items-start items-center">
+            <h4 className="font-semibold text-slate-300 text-sm mb-1">Platform</h4>
+            <a href="https://studyrealm.app" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Main Website</a>
+            <a href="https://studyrealm.app/support" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Support & Help</a>
+          </div>
+
+          {/* Column 3: Legal & Trust */}
+          <div className="flex flex-col gap-2 md:items-start items-center">
+            <h4 className="font-semibold text-slate-300 text-sm mb-1">Legal & Trust</h4>
+            <a href="https://studyrealm.app/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Privacy Policy</a>
+            <a href="https://studyrealm.app/terms" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Terms & Conditions</a>
+          </div>
         </div>
       </div>
     </section>

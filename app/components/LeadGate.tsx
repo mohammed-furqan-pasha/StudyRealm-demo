@@ -161,7 +161,7 @@ export default function LeadGate({ onSubmit }: Props) {
         </div>
 
         <p className="text-center text-slate-500 text-xs mt-4">
-          studyrealm.app · MSME Registered · Bangalore, Karnataka
+          demo.studyrealm.app · MSME Registered · Bangalore, Karnataka
         </p>
       </div>
     </div>

@@ -28,7 +28,7 @@ export default function HeroSection() {
         </div>
         <div className="hidden md:flex items-center gap-6 text-sm text-slate-600">
           <a href="#features" className="hover:text-teal-600 transition">Features</a>
-          <a href="#demo" className="hover:text-teal-600 transition">Live Demo</a>
+          <a href="https://studyrealm.app" target="_blank" rel="noopener noreferrer" className="hover:text-teal-600 transition">Main Website</a>
           <a href="#contact" className="hover:text-teal-600 transition">Contact</a>
         </div>
         <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full font-medium">MSME · Govt. of India</span>
