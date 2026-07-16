@@ -38,7 +38,7 @@ export default function HeroSection() {
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 max-w-5xl mx-auto w-full">
         <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-4 py-2 rounded-full mb-8">
           <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
-          Karnataka&apos;s K-10 EdTech Platform · CBSE · ICSE · State Board
+          Karnataka&apos;s LKG-10 EdTech Platform · CBSE · ICSE · State Board
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
@@ -49,8 +49,9 @@ export default function HeroSection() {
         </h1>
 
         <p className="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
-          Interactive micro-lessons, real-time mastery tracking, NCF 2023 auto-compliance — 
-          all in a browser. No app install. No homework friction.
+          Fun lessons kids love, simple progress updates for teachers and parents,
+          and lessons that follow India's latest school guidelines — all inside a
+          website. No app to download.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-16">
@@ -73,7 +74,7 @@ export default function HeroSection() {
         <div ref={pillsRef} className="flex flex-wrap justify-center gap-4">
           {[
             { n: '400+', label: 'Learning Moments' },
-            { n: 'Class 1–10', label: 'All Grades' },
+            { n: 'LKG - Class 10', label: 'All Grades' },
             { n: '3 Boards', label: 'CBSE · ICSE · State' },
             { n: 'NCF 2023', label: 'Auto-Mapped' },
           ].map(s => (
@@ -101,22 +102,22 @@ export default function HeroSection() {
                 icon: '📋',
                 color: 'bg-blue-50 border-blue-100',
                 iconBg: 'bg-blue-100 text-blue-600',
-                title: 'Automated NCF 2023 Tagging',
-                desc: 'Every question and interaction is auto-tagged with NCF 2023 competencies at the database level. Generate compliance reports in one click — zero teacher effort.',
+                title: 'Follows the Latest Curriculum',
+                desc: "Every lesson is built to match NCF 2023, India's newest school guidelines — so teachers don't have to check this themselves.",
               },
               {
                 icon: '🗺️',
                 color: 'bg-amber-50 border-amber-100',
                 iconBg: 'bg-amber-100 text-amber-600',
-                title: 'Live Mastery Heatmaps',
-                desc: 'See which students are thriving (teal), need revision (amber), or need urgent help (coral) — in real time. No waiting for exam results.',
+                title: 'See Who Needs Help, Instantly',
+                desc: 'Teachers can see which students are doing well and which ones need extra help — shown in simple colors, updated as students practice.',
               },
               {
                 icon: '🌐',
                 color: 'bg-teal-50 border-teal-100',
                 iconBg: 'bg-teal-100 text-teal-600',
-                title: '100% Browser-Native',
-                desc: 'No app installation. Works on any smartphone with a basic internet connection. TTS reads every lesson aloud so Class 1–5 students learn independently.',
+                title: 'Works on Any Phone',
+                desc: "No app to install. Works on any smartphone with basic internet. Lessons are read aloud, so even young children who can't read yet can learn on their own.",
               },
             ].map(p => (
               <div key={p.title} className={`rounded-2xl border p-6 ${p.color}`}>
@@ -148,10 +149,10 @@ export default function HeroSection() {
                 emoji: '🎮',
                 color: 'from-teal-400 to-blue-500',
                 points: [
-                  'Learns through interactive moments, 3D models, and live equation sliders',
-                  'Earns stars, unlocks themes — learning feels like a game',
-                  'Zero to Hero: resets any chapter, no penalty, unlimited attempts',
-                  'TTS bot reads every word aloud — perfect for pre-readers',
+                  'Learns through stories, pictures, and games',
+                  'Earns stars and rewards — learning feels like play',
+                  'Can try a chapter again as many times as needed, with no penalty',
+                  "Everything is read aloud, so reading isn't a barrier",
                 ]
               },
               {
@@ -159,10 +160,10 @@ export default function HeroSection() {
                 emoji: '📊',
                 color: 'from-amber-400 to-orange-500',
                 points: [
-                  'Uploads daily quizzes and runs live leaderboards',
-                  'Sees class-wide mastery heatmap updated in real time',
-                  'Identifies weakest students per chapter instantly',
-                  'NCF compliance report generated automatically',
+                  'Puts up quizzes and runs friendly class competitions',
+                  'Sees which students are doing well and who needs help',
+                  'Knows who needs extra attention before the exam, not after',
+                  'Gets curriculum reports automatically — no extra paperwork',
                 ]
               },
               {
@@ -170,10 +171,10 @@ export default function HeroSection() {
                 emoji: '👨‍👩‍👧',
                 color: 'from-purple-400 to-pink-500',
                 points: [
-                  'Daily progress card: stars earned, chapters attempted, quiz scores',
-                  'Mastery score per chapter — not just pass/fail',
-                  'No more "I did my homework" guesswork',
-                  'Reduces friction at home, fewer complaints to school',
+                  'Gets a simple daily update on what their child learned',
+                  'Sees real progress, not just pass or fail',
+                  'No more guessing whether homework actually got done',
+                  'Fewer surprises, less back-and-forth with the school',
                 ]
               },
             ].map(r => (

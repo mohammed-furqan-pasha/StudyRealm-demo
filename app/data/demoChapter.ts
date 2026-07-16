@@ -9,37 +9,37 @@ export const demoChapter: DemoChapter = {
       type: 'story_panel',
       panels: [
         {
-          asset: '/demo/water-cycle/droplet-rising.png',
+          asset: 'https://pub-88ca2fd4f575431997b7da6865fa80c6.r2.dev/syllabus/demo/droplet-rising.png',
           text: "Meet Droplet, a tiny water drop living in the ocean. One warm morning, the sun shone bright — and Droplet felt herself rising up, up, up into the sky!"
         }
       ]
     },
     {
       type: 'tap_reveal',
-      asset: '/demo/water-cycle/cycle-diagram.png',
+      asset: 'https://pub-88ca2fd4f575431997b7da6865fa80c6.r2.dev/syllabus/demo/cycle-diagram.png',
       instruction: 'Tap the glowing dots to explore the Water Cycle',
       spots: [
         {
           id: 'sun',
-          x: 82, y: 12,
+          x: 26, y: 20,
           label: '☀️ Evaporation',
           audio: 'The Sun heats the ocean and lakes, turning water into water vapour. This is called Evaporation. The water rises invisibly into the air!'
         },
         {
           id: 'cloud',
-          x: 45, y: 18,
+          x: 53, y: 18,
           label: '☁️ Condensation',
           audio: 'High up in the sky, water vapour cools down and turns back into tiny droplets. These droplets gather together to form clouds. This is called Condensation!'
         },
         {
           id: 'rain',
-          x: 30, y: 52,
+          x: 80, y: 20,
           label: '🌧️ Precipitation',
           audio: 'When clouds become heavy with water droplets, the water falls back to Earth as rain or snow. This is called Precipitation!'
         },
         {
           id: 'river',
-          x: 60, y: 80,
+          x: 70, y: 80,
           label: '🌊 Collection',
           audio: 'Rain water flows into rivers, lakes, and back into the ocean. This is called Collection, and then the whole cycle starts again!'
         }

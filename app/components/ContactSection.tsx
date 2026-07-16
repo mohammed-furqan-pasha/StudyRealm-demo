@@ -1,5 +1,12 @@
 'use client';
 
+const CALENDLY_LINK = "https://calendly.com/studyrealmtechnologies";
+const WHATSAPP_NUMBER = "919019588700";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like to know more about StudyRealm")}`;
+const EMAIL_ADDRESS = "hello@studyrealm.app";
+
+const isPlaceholder = (val: string) => val.includes("XXXXXXXXXX") || val.includes("your-calendly-link") || val.includes("your@email.com");
+
 export default function ContactSection() {
   return (
     <section id="contact" className="py-20 px-6 bg-slate-900 text-white">
@@ -13,7 +20,7 @@ export default function ContactSection() {
             Join our Term-1 Pilot
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed">
-            We are selecting a limited number of forward-thinking schools in Karnataka for our pilot phase. 
+            We are selecting a limited number of forward-thinking schools in Karnataka for our pilot phase.
             No commitment required — start with a 30-minute demo with your class.
           </p>
         </div>
@@ -22,44 +29,45 @@ export default function ContactSection() {
         <div className="grid md:grid-cols-3 gap-5 mb-12">
           {/* Calendly */}
           <a
-            href="https://calendly.com/studyrealm"
+            href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 p-6 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-teal-500/40"
+            className={`group rounded-2xl border border-white/10 bg-white/5 p-6 text-center transition-all ${isPlaceholder(CALENDLY_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:-translate-y-1 hover:shadow-xl hover:border-teal-500/40'}`}
           >
             <div className="text-3xl mb-3">📅</div>
             <h3 className="font-bold text-white text-base mb-1">Book a Demo</h3>
             <p className="text-slate-400 text-xs mb-4 leading-relaxed">30 minutes, your school, your class. We come to you.</p>
-            <span className="inline-block bg-teal-500 text-white text-xs font-bold px-4 py-2 rounded-full group-hover:bg-teal-400 transition">
-              Open Calendar →
+            <span className={`inline-block text-white text-xs font-bold px-4 py-2 rounded-full transition ${isPlaceholder(CALENDLY_LINK) ? 'bg-slate-600' : 'bg-teal-500 group-hover:bg-teal-400'}`}>
+              {isPlaceholder(CALENDLY_LINK) ? 'Coming soon' : 'Open Calendar →'}
             </span>
           </a>
 
           {/* WhatsApp */}
           <a
-            href="https://wa.me/919876543210"
+            href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 p-6 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-green-500/40"
+            className={`group rounded-2xl border border-white/10 bg-white/5 p-6 text-center transition-all ${isPlaceholder(WHATSAPP_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:-translate-y-1 hover:shadow-xl hover:border-green-500/40'}`}
           >
             <div className="text-3xl mb-3">💬</div>
             <h3 className="font-bold text-white text-base mb-1">WhatsApp Us</h3>
             <p className="text-slate-400 text-xs mb-4 leading-relaxed">Quick questions? We respond within the hour on business days.</p>
-            <span className="inline-block bg-green-500 text-white text-xs font-bold px-4 py-2 rounded-full group-hover:bg-green-400 transition">
-              Chat Now →
+            <span className={`inline-block text-white text-xs font-bold px-4 py-2 rounded-full transition ${isPlaceholder(WHATSAPP_LINK) ? 'bg-slate-600' : 'bg-green-500 group-hover:bg-green-400'}`}>
+              {isPlaceholder(WHATSAPP_LINK) ? 'Coming soon' : 'Chat Now →'}
             </span>
+            <p className="text-sm text-gray-400 mt-2">{isPlaceholder(WHATSAPP_NUMBER) ? '+91 XXXXX XXXXX' : '+91 90195 88700'}</p>
           </a>
 
           {/* Email */}
           <a
-            href="mailto:hello@studyrealm.app"
-            className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 p-6 text-center transition-all hover:-translate-y-1 hover:shadow-xl hover:border-blue-500/40"
+            href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+            className={`group rounded-2xl border border-white/10 bg-white/5 p-6 text-center transition-all ${isPlaceholder(EMAIL_ADDRESS) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 hover:-translate-y-1 hover:shadow-xl hover:border-blue-500/40'}`}
           >
             <div className="text-3xl mb-3">✉️</div>
             <h3 className="font-bold text-white text-base mb-1">Send an Email</h3>
             <p className="text-slate-400 text-xs mb-4 leading-relaxed">For formal proposals, pricing enquiries, and partnership discussions.</p>
-            <span className="inline-block bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-full group-hover:bg-blue-400 transition">
-              hello@studyrealm.app →
+            <span className={`inline-block text-white text-xs font-bold px-4 py-2 rounded-full transition ${isPlaceholder(EMAIL_ADDRESS) ? 'bg-slate-600' : 'bg-blue-500 group-hover:bg-blue-400'}`}>
+              {isPlaceholder(EMAIL_ADDRESS) ? 'Coming soon' : `${EMAIL_ADDRESS} →`}
             </span>
           </a>
         </div>

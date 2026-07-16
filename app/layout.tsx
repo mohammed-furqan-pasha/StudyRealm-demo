@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "StudyRealm — K-10 EdTech Platform for Indian Schools",
+  title: "StudyRealm — LKG-10 EdTech Platform for Indian Schools",
   description: "Interactive learning moments, real-time mastery tracking, and NCF 2023 auto-compliance for CBSE, ICSE, and Karnataka State Board schools.",
   openGraph: {
     title: "StudyRealm — Where Every Student Learns",

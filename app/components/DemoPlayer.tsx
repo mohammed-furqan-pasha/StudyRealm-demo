@@ -116,12 +116,11 @@ function StoryBlock({ block, onAutoRead }: { block: Extract<ContentBlock, {type:
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <div
-        className="relative w-full rounded-2xl overflow-hidden cursor-pointer"
-        style={{ maxHeight: 240 }}
+        className="relative w-full rounded-2xl overflow-hidden cursor-pointer bg-black/20"
+        style={{ height: '300px' }}
         onClick={() => { if (idx < panels.length - 1) setIdx(i => i + 1); }}
       >
-        <Image src={cur.asset} alt="Story" width={800} height={400} className="w-full h-48 md:h-56 object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <Image src={cur.asset} alt="Story" width={800} height={800} className="w-full h-full object-contain" />
         {idx < panels.length - 1 && (
           <div className="absolute bottom-3 right-3 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full font-medium">
             Tap for next →
@@ -158,8 +157,8 @@ function TapReveal({ block, onAutoRead }: { block: Extract<ContentBlock, {type:'
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <p className="text-white/80 text-sm text-center">{block.instruction || 'Tap the glowing dots to reveal the parts'}</p>
-      <div className="relative w-full rounded-2xl overflow-hidden" style={{ maxWidth: 420 }}>
-        <Image src={block.asset} alt="Water Cycle Diagram" width={800} height={400} className="w-full h-52 md:h-64 object-cover rounded-2xl" />
+      <div className="relative inline-block w-full rounded-2xl overflow-hidden" style={{ maxWidth: 420 }}>
+        <Image src={block.asset} alt="Water Cycle Diagram" width={800} height={800} className="w-full h-auto rounded-2xl" />
         {block.spots.map(spot => (
           <button
             key={spot.id}
@@ -172,13 +171,13 @@ function TapReveal({ block, onAutoRead }: { block: Extract<ContentBlock, {type:'
             }}
           >
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all border-2 border-white ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
                 revealed.has(spot.id)
-                  ? 'bg-teal-600 text-white shadow-lg scale-110'
-                  : 'bg-teal-400 text-white shadow-lg spot-pulse'
+                  ? 'border-[3px] border-white bg-transparent text-transparent shadow-lg scale-125 ring-2 ring-teal-400 ring-offset-2 ring-offset-black/20'
+                  : 'border-2 border-white bg-teal-400 text-white shadow-lg spot-pulse'
               }`}
             >
-              {revealed.has(spot.id) ? '✓' : '?'}
+              {revealed.has(spot.id) ? '' : '?'}
             </div>
           </button>
         ))}
