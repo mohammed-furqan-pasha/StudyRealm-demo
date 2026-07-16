@@ -116,8 +116,7 @@ function StoryBlock({ block, onAutoRead }: { block: Extract<ContentBlock, {type:
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <div
-        className="relative w-full rounded-2xl overflow-hidden cursor-pointer bg-black/20"
-        style={{ height: '300px' }}
+        className="relative w-full rounded-2xl overflow-hidden cursor-pointer bg-black/20 h-[250px] md:h-[300px]"
         onClick={() => { if (idx < panels.length - 1) setIdx(i => i + 1); }}
       >
         <Image src={cur.asset} alt="Story" width={800} height={800} className="w-full h-full object-contain" />
@@ -127,8 +126,8 @@ function StoryBlock({ block, onAutoRead }: { block: Extract<ContentBlock, {type:
           </div>
         )}
       </div>
-      <div className="w-full rounded-2xl p-4 shadow-sm" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)' }}>
-        <p className="text-white text-sm md:text-base leading-relaxed text-center font-medium">{cur.text}</p>
+      <div className="w-full rounded-2xl p-3 md:p-4 shadow-sm" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)' }}>
+        <p className="text-white text-xs md:text-base leading-relaxed text-center font-medium">{cur.text}</p>
       </div>
       <div className="flex gap-2">
         {panels.map((_, i) => (
@@ -224,19 +223,19 @@ function FlipCard({ block, onAutoRead }: { block: Extract<ContentBlock, {type:'f
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <p className="text-white/80 text-sm text-center">Tap the card to reveal the answer</p>
-      <div className="flip-container w-full" style={{ maxWidth: 380, height: 200 }}>
-        <div className={`flip-inner w-full h-full ${flipped ? 'flipped' : ''}`} style={{ height: 200 }}>
+      <div className="flip-container w-full max-w-[380px] h-[180px] md:h-[200px]">
+        <div className={`flip-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
           {/* Front */}
-          <div className="flip-face w-full h-full flex flex-col items-center justify-center p-6 cursor-pointer" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }} onClick={handleFlip}>
-            <div className="text-4xl mb-3">🤔</div>
-            <p className="text-white text-center text-sm md:text-base font-medium leading-relaxed">{block.front}</p>
+          <div className="flip-face w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }} onClick={handleFlip}>
+            <div className="text-3xl md:text-4xl mb-3">🤔</div>
+            <p className="text-white text-center text-xs md:text-base font-medium leading-relaxed">{block.front}</p>
             <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.50)' }}>Tap to flip ↓</p>
           </div>
           {/* Back */}
-          <div className="flip-face flip-back w-full h-full flex flex-col items-center justify-center p-6 cursor-pointer" onClick={handleFlip}
+          <div className="flip-face flip-back w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer" onClick={handleFlip}
             style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.6), rgba(59,130,246,0.6))', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }}>
-            <div className="text-4xl mb-3">✨</div>
-            <p className="text-white text-center text-xl md:text-2xl font-bold">{block.back}</p>
+            <div className="text-3xl md:text-4xl mb-3">✨</div>
+            <p className="text-white text-center text-lg md:text-2xl font-bold">{block.back}</p>
             <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.50)' }}>Tap to flip back ↑</p>
           </div>
         </div>
@@ -409,18 +408,18 @@ function CelebrationBlock({ block, onContinue }: { block: Extract<ContentBlock,{
 
   return (
     <div className="flex flex-col items-center gap-6 text-center py-4">
-      <div className="text-6xl animate-[starBurst_0.6s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">🎉</div>
+      <div className="text-5xl md:text-6xl animate-[starBurst_0.6s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">🎉</div>
       <div>
-        <h3 className="text-white text-2xl font-bold mb-1">{block.title}</h3>
-        <p className="text-white/70 text-sm">{block.subtitle}</p>
+        <h3 className="text-white text-xl md:text-2xl font-bold mb-1">{block.title}</h3>
+        <p className="text-white/70 text-[10px] md:text-sm">{block.subtitle}</p>
       </div>
-      <div className="flex gap-2 text-2xl">
+      <div className="flex gap-1 md:gap-2 text-xl md:text-2xl">
         {['⭐','⭐','⭐'].map((s,i) => (
           <span key={i} className="star-burst" style={{ animationDelay: `${i*0.15}s` }}>{s}</span>
         ))}
       </div>
-      <div className="w-full bg-white/10 rounded-2xl p-4 border border-white/20">
-        <p className="text-white text-sm leading-relaxed">
+      <div className="w-full bg-white/10 rounded-2xl p-3 md:p-4 border border-white/20">
+        <p className="text-white text-xs md:text-sm leading-relaxed">
           This is <strong>one chapter</strong>. There are <strong>400+ moments</strong> like this across every subject, Class 1–10 — Practice, Ranked quizzes, AI doubt-clearing, and full teacher & parent dashboards, all NCF 2023 mapped automatically.
         </p>
       </div>
@@ -533,7 +532,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
           key={current}
           className={`w-full max-w-2xl mx-auto z-20 ${direction === 'right' ? 'slide-in-right' : 'slide-in-left'}`}
         >
-          <div className="relative" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px', padding: '40px' }}>
+          <div className="relative p-5 md:p-10" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }}>
             {block.type === 'story_panel' && <StoryBlock block={block} onAutoRead={autoRead} />}
             {block.type === 'tap_reveal' && <TapReveal block={block} onAutoRead={autoRead} />}
             {block.type === 'flip_card' && <FlipCard block={block} onAutoRead={autoRead} />}

@@ -35,20 +35,20 @@ export default function HeroSection() {
       </nav>
 
       {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 max-w-5xl mx-auto w-full">
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 py-10 md:py-16 max-w-5xl mx-auto w-full">
         <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-4 py-2 rounded-full mb-8">
           <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
           Karnataka&apos;s LKG-10 EdTech Platform · CBSE · ICSE · State Board
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
+        <h1 className="text-3xl md:text-6xl font-bold text-slate-900 leading-tight mb-6" style={{ fontFamily: 'Playfair Display, serif' }}>
           Every student learns.<br />
           <span className="bg-gradient-to-r from-teal-500 to-blue-500 bg-clip-text text-transparent">
             Every teacher sees it.
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
+        <p className="text-base md:text-xl text-slate-600 max-w-2xl mb-8 md:mb-10 leading-relaxed">
           Fun lessons kids love, simple progress updates for teachers and parents,
           and lessons that follow India's latest school guidelines — all inside a
           website. No app to download.
@@ -57,46 +57,46 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row gap-3 mb-16">
           <button
             onClick={scrollToDemo}
-            className="px-8 py-4 rounded-2xl text-white font-bold text-base transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
+            className="px-6 md:px-8 py-3 md:py-4 rounded-2xl text-white font-bold text-sm md:text-base transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
             style={{ background: 'linear-gradient(135deg, #14B8A6, #3B82F6)' }}
           >
             Experience One Chapter →
           </button>
           <a
             href="#contact"
-            className="px-8 py-4 rounded-2xl text-slate-700 font-bold text-base border border-slate-200 hover:border-teal-300 hover:text-teal-600 transition"
+            className="px-6 md:px-8 py-3 md:py-4 rounded-2xl text-slate-700 font-bold text-sm md:text-base border border-slate-200 hover:border-teal-300 hover:text-teal-600 transition"
           >
             Book a 30-Min Demo
           </a>
         </div>
 
         {/* Stats */}
-        <div ref={pillsRef} className="flex flex-wrap justify-center gap-4">
+        <div ref={pillsRef} className="flex flex-wrap justify-center gap-3 md:gap-4">
           {[
             { n: '400+', label: 'Learning Moments' },
             { n: 'LKG - Class 10', label: 'All Grades' },
             { n: '3 Boards', label: 'CBSE · ICSE · State' },
             { n: 'NCF 2023', label: 'Auto-Mapped' },
           ].map(s => (
-            <div key={s.n} className="bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-center">
-              <div className="text-xl font-bold text-slate-800">{s.n}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+            <div key={s.n} className="bg-slate-50 border border-slate-100 rounded-2xl px-3 md:px-5 py-2 md:py-3 text-center">
+              <div className="text-base md:text-xl font-bold text-slate-800">{s.n}</div>
+              <div className="text-[10px] md:text-xs text-slate-500 mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* 3 Pillars */}
-      <div id="features" className="bg-slate-50 py-20 px-6">
+      <div id="features" className="bg-slate-50 py-12 md:py-20 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-3">Why StudyRealm</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <div className="text-center mb-8 md:mb-12">
+            <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-2 md:mb-3">Why StudyRealm</p>
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
               Built for Indian classrooms
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
               {
                 icon: '📋',
@@ -120,12 +120,12 @@ export default function HeroSection() {
                 desc: "No app to install. Works on any smartphone with basic internet. Lessons are read aloud, so even young children who can't read yet can learn on their own.",
               },
             ].map(p => (
-              <div key={p.title} className={`rounded-2xl border p-6 ${p.color}`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 ${p.iconBg}`}>
+              <div key={p.title} className={`rounded-2xl border p-4 md:p-6 ${p.color}`}>
+                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-4 ${p.iconBg}`}>
                   {p.icon}
                 </div>
-                <h3 className="font-bold text-slate-800 text-lg mb-2">{p.title}</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{p.desc}</p>
+                <h3 className="font-bold text-slate-800 text-base md:text-lg mb-1 md:mb-2">{p.title}</h3>
+                <p className="text-slate-600 text-xs md:text-sm leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
@@ -133,16 +133,16 @@ export default function HeroSection() {
       </div>
 
       {/* Everyone in the loop */}
-      <div className="py-20 px-6 bg-white">
+      <div className="py-12 md:py-20 px-4 md:px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-3">The Full Loop</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <div className="text-center mb-8 md:mb-12">
+            <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-2 md:mb-3">The Full Loop</p>
+            <h2 className="text-2xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
               Everyone stays informed
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
             {[
               {
                 role: 'Student',
@@ -179,15 +179,15 @@ export default function HeroSection() {
               },
             ].map(r => (
               <div key={r.role} className="rounded-2xl border border-slate-100 overflow-hidden">
-                <div className={`bg-gradient-to-r ${r.color} px-6 py-4 flex items-center gap-3`}>
-                  <span className="text-2xl">{r.emoji}</span>
-                  <span className="text-white font-bold text-lg">{r.role}</span>
+                <div className={`bg-gradient-to-r ${r.color} px-4 md:px-6 py-3 md:py-4 flex items-center gap-2 md:gap-3`}>
+                  <span className="text-xl md:text-2xl">{r.emoji}</span>
+                  <span className="text-white font-bold text-base md:text-lg">{r.role}</span>
                 </div>
-                <div className="p-6">
-                  <ul className="space-y-3">
+                <div className="p-4 md:p-6">
+                  <ul className="space-y-2 md:space-y-3">
                     {r.points.map((p, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                        <span className="text-teal-500 mt-0.5 flex-shrink-0">✓</span>
+                      <li key={i} className="flex items-start gap-2 text-xs md:text-sm text-slate-600">
+                        <span className="text-teal-500 mt-0.5 md:mt-1 flex-shrink-0">✓</span>
                         <span>{p}</span>
                       </li>
                     ))}
@@ -204,7 +204,7 @@ export default function HeroSection() {
         <p className="text-slate-600 mb-4 font-medium">See what a real chapter feels like</p>
         <button
           onClick={scrollToDemo}
-          className="px-8 py-4 rounded-2xl text-white font-bold text-base transition-all hover:shadow-lg hover:-translate-y-0.5"
+          className="px-6 md:px-8 py-3 md:py-4 rounded-2xl text-white font-bold text-sm md:text-base transition-all hover:shadow-lg hover:-translate-y-0.5"
           style={{ background: 'linear-gradient(135deg, #14B8A6, #3B82F6)' }}
         >
           Experience One Chapter →
