@@ -9,10 +9,10 @@ const isPlaceholder = (val: string) => val.includes("XXXXXXXXXX") || val.include
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="py-12 md:py-20 px-4 md:px-6 bg-slate-900 text-white">
-      <div className="max-w-4xl mx-auto">
+    <section id="contact" className="min-h-screen flex flex-col justify-center py-6 md:py-10 px-4 md:px-6 bg-slate-900 text-white">
+      <div className="max-w-4xl mx-auto w-full">
         {/* Innovation Partnership badge */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-6 md:mb-8">
           <div className="inline-flex items-center gap-2 bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-bold px-4 py-2 rounded-full mb-6 uppercase tracking-widest">
             ✦ Innovation Partnership Program
           </div>
@@ -26,7 +26,7 @@ export default function ContactSection() {
         </div>
 
         {/* 3 contact options */}
-        <div className="grid md:grid-cols-3 gap-4 md:gap-5 mb-8 md:mb-12">
+        <div className="grid md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
           {/* Calendly */}
           <a
             href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
@@ -73,8 +73,8 @@ export default function ContactSection() {
         </div>
 
         {/* Why schools partner */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-6 mb-8 md:mb-10">
-          <h3 className="font-bold text-white text-sm md:text-base mb-3 md:mb-4 text-center">Why school management says yes</h3>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5 mb-6 md:mb-8">
+          <h3 className="font-bold text-white text-sm md:text-base mb-2 md:mb-3 text-center">Why school management says yes</h3>
           <div className="grid md:grid-cols-3 gap-3 md:gap-4 text-sm">
             {[
               { icon: '📈', text: 'Better board results: mastery-first learning builds retention' },
@@ -90,7 +90,7 @@ export default function ContactSection() {
         </div>
 
         {/* Footer strip */}
-        <div className="border-t border-white/10 pt-6 md:pt-8 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-[10px] md:text-xs text-slate-400">
+        <div className="border-t border-white/10 pt-4 md:pt-6 mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 text-[10px] md:text-xs text-slate-400">
           {/* Column 1: Company Info */}
           <div className="flex flex-col gap-2 md:items-start items-center">
             <div className="flex items-center gap-2 mb-1">

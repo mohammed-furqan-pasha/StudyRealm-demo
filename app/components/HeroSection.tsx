@@ -88,7 +88,7 @@ export default function HeroSection() {
 
       {/* 3 Pillars */}
       <div id="features" className="bg-slate-50 py-12 md:py-20 px-4 md:px-6">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 md:mb-12">
             <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-2 md:mb-3">Why StudyRealm</p>
             <h2 className="text-2xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>
@@ -134,7 +134,7 @@ export default function HeroSection() {
 
       {/* Everyone in the loop */}
       <div className="py-12 md:py-20 px-4 md:px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 md:mb-12">
             <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-2 md:mb-3">The Full Loop</p>
             <h2 className="text-2xl md:text-4xl font-bold text-slate-900" style={{ fontFamily: 'Playfair Display, serif' }}>

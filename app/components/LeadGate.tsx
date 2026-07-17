@@ -59,7 +59,7 @@ export default function LeadGate({ onSubmit }: Props) {
         role: form.role,
         schoolName: form.schoolName,
         mobile: form.mobile,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('en-IN', { hour12: false }),
       });
       await fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
     } catch { /* silent — no-cors won't throw usefully */ }

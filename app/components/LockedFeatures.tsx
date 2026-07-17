@@ -57,9 +57,9 @@ export default function LockedFeatures() {
   };
 
   return (
-    <section className="py-12 md:py-20 px-4 md:px-6 bg-white">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-8 md:mb-12">
+    <section className="min-h-screen flex flex-col justify-center py-6 md:py-10 px-4 md:px-6 bg-white">
+      <div className="max-w-6xl mx-auto w-full">
+        <div className="text-center mb-6 md:mb-8">
           <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-2 md:mb-3">Full Platform</p>
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
             There is a lot more inside
@@ -69,32 +69,32 @@ export default function LockedFeatures() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {features.map(f => (
             <button
               key={f.title}
               onClick={scrollToContact}
-              className={`text-left rounded-2xl border ${f.border} p-4 md:p-5 transition-all hover:-translate-y-1 hover:shadow-md group relative overflow-hidden`}
+              className={`text-left rounded-2xl border ${f.border} p-3 md:p-4 transition-all hover:-translate-y-1 hover:shadow-md group relative overflow-hidden`}
             >
               {/* Gradient bg */}
               <div className={`absolute inset-0 bg-gradient-to-br ${f.bg} opacity-50`} />
 
               <div className="relative z-10">
-                <div className="flex items-start justify-between mb-2 md:mb-3">
-                  <span className="text-xl md:text-3xl">{f.emoji}</span>
-                  <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+                <div className="flex items-start justify-between mb-1 md:mb-2">
+                  <span className="text-lg md:text-2xl">{f.emoji}</span>
+                  <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full px-2 py-0.5 flex items-center gap-1">
                     <span className="text-slate-400 text-xs">🔒</span>
                     <span className="text-slate-500 text-xs font-medium">Demo only</span>
                   </div>
                 </div>
 
                 <h3 className="font-bold text-slate-800 text-sm md:text-base">{f.title}</h3>
-                <p className="text-slate-500 text-[10px] md:text-xs mb-2 md:mb-3 font-medium">{f.subtitle}</p>
-                <p className="text-slate-600 text-[10px] md:text-xs leading-relaxed">{f.desc}</p>
+                <p className="text-slate-500 text-[10px] md:text-xs mb-1 md:mb-2 font-medium">{f.subtitle}</p>
+                <p className="text-slate-600 text-[10px] md:text-xs leading-relaxed line-clamp-2">{f.desc}</p>
 
                 {/* Blurred preview placeholder */}
-                <div className="mt-3 md:mt-4 rounded-xl overflow-hidden bg-white/50 border border-white/80 h-16 md:h-20 flex items-center justify-center" style={{ filter: 'blur(0px)' }}>
-                  <div className="flex gap-1.5">
+                <div className="mt-2 md:mt-3 rounded-xl overflow-hidden bg-white/50 border border-white/80 h-12 md:h-14 flex items-center justify-center" style={{ filter: 'blur(0px)' }}>
+                  <div className="flex gap-1.5 transform scale-90">
                     {f.title === 'Teacher Dashboard' && (
                       <>
                         {['bg-teal-400','bg-teal-300','bg-amber-400','bg-teal-500','bg-coral-400','bg-teal-400'].map((c,i) => (
@@ -145,7 +145,7 @@ export default function LockedFeatures() {
                   </div>
                 </div>
 
-                <p className="text-teal-600 text-[10px] md:text-xs font-semibold mt-2 md:mt-3 group-hover:underline">
+                <p className="text-teal-600 text-[10px] font-semibold mt-2 group-hover:underline">
                   Live student data required → Book a demo
                 </p>
               </div>
