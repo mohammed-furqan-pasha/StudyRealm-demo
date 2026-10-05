@@ -29,6 +29,9 @@ export default function OpticsLab({
   effectiveFlipped,
   halfCovered,
   setHalfCovered,
+  catcherMoved,
+  hasFocusedOnce,
+  onCatcherMove,
 }: {
   block: OpticsLabBlockData;
   onAutoRead: (t: string) => void;
@@ -39,6 +42,9 @@ export default function OpticsLab({
   effectiveFlipped?: boolean;
   halfCovered?: boolean;
   setHalfCovered?: React.Dispatch<React.SetStateAction<boolean>>;
+  catcherMoved?: boolean;
+  hasFocusedOnce?: boolean;
+  onCatcherMove?: () => void;
 }) {
   const [device, setDevice] = useState<OpticsDevice>(block.device);
   const [focalLength, setFocalLength] = useState(block.focal_length);
@@ -190,6 +196,7 @@ export default function OpticsLab({
     if (draggingRef.current === 'object') setU(clientXToU(e.clientX));
     else {
       setScreenU(clientXToScreenU(e.clientX));
+      onCatcherMove?.();
       if (result.isVirtual) {
         setVirtualCatcherFeedback(true);
         setShowVirtualMessage(true);
@@ -256,6 +263,20 @@ export default function OpticsLab({
 
   const screenDist = imgX !== null ? Math.abs(screenX - imgX) : Infinity;
   const glowIntensity = Math.max(0, 1 - screenDist / 50);
+
+  const isTargetMode = isBigReal || classifyForMission(result) === 'small_real';
+  const showCatcherNudgeRaw = isTargetMode && screenDist > 6 && !catcherMoved && !hasFocusedOnce;
+  const [showCatcherNudge, setShowCatcherNudge] = useState(false);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    if (showCatcherNudgeRaw) {
+      t = setTimeout(() => setShowCatcherNudge(true), 4000);
+    } else {
+      t = setTimeout(() => setShowCatcherNudge(false), 0);
+    }
+    return () => clearTimeout(t);
+  }, [showCatcherNudgeRaw]);
 
   const label = effectiveFlipped
     ? 'Real projectors load the film upside down so the picture on the screen comes out right-side up!'
@@ -327,6 +348,13 @@ export default function OpticsLab({
 
   return (
     <div className="flex flex-col items-center gap-2 md:gap-3 w-full">
+      <style>{`
+        @keyframes wiggleX {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-6px); }
+          75% { transform: translateX(6px); }
+        }
+      `}</style>
       <p className="hidden md:block text-white text-sm text-center font-medium">{block.title}</p>
 
       {/* mission / twist chip */}
@@ -516,6 +544,7 @@ export default function OpticsLab({
               onPointerDown={() => {
                 draggingRef.current = 'screen';
                 setHasTouchedCatcher(true);
+                onCatcherMove?.();
               }}
             >
               {!hasFocused && !hasTouchedCatcher && (
@@ -534,6 +563,9 @@ export default function OpticsLab({
               <rect x={screenX - 4} y={40} width={8} height={VB_H - 80} rx={2}
                 fill={sharp ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)'} />
               <text x={screenX} y={26} fill="white" fontSize={14} fontWeight="bold" textAnchor="middle" opacity={0.7}>Catcher</text>
+              {showCatcherNudge && (
+                <text x={screenX + 35} y={26} fill="white" fontSize={14} fontWeight="bold" className="motion-safe:animate-[wiggleX_1.2s_infinite]">◀ ▶</text>
+              )}
             </g>
           )}
 
@@ -621,12 +653,14 @@ export default function OpticsLab({
               e.stopPropagation();
               draggingRef.current = 'screen';
               setHasTouchedCatcher(true);
+              onCatcherMove?.();
               e.currentTarget.setPointerCapture(e.pointerId);
             }}
             onPointerMove={(e) => {
               e.stopPropagation();
               if (draggingRef.current === 'screen') {
                  setScreenU(clientXToScreenU(e.clientX));
+                 onCatcherMove?.();
                  if (result.isVirtual) {
                    setVirtualCatcherFeedback(true);
                    setShowVirtualMessage(true);
@@ -647,15 +681,20 @@ export default function OpticsLab({
               draggingRef.current = null;
             }}
           >
-            <div className="relative flex items-center justify-center w-[32px] h-[32px] mb-0.5">
-              {(!hasFocused && !hasTouchedCatcher) && (
-                <div className="absolute inset-0 rounded-full border border-white animate-[pulse_1.5s_infinite_ease-in-out]"></div>
+            <div className={`relative flex flex-col items-center justify-center w-full h-full ${showCatcherNudge ? 'motion-safe:animate-[wiggleX_1.2s_infinite]' : ''}`}>
+              {showCatcherNudge && (
+                <span className="absolute -top-4 text-white text-sm">↔</span>
               )}
-              <div className="w-[24px] h-[24px] rounded-full bg-white/20 border-2 border-white flex items-center justify-center shadow-md">
-                 <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+              <div className="relative flex items-center justify-center w-[32px] h-[32px] mb-0.5">
+                {(!hasFocused && !hasTouchedCatcher) && (
+                  <div className="absolute inset-0 rounded-full border border-white animate-[pulse_1.5s_infinite_ease-in-out]"></div>
+                )}
+                <div className="w-[24px] h-[24px] rounded-full bg-white/20 border-2 border-white flex items-center justify-center shadow-md">
+                   <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+                </div>
               </div>
+              <span className="text-[9px] font-bold text-white uppercase tracking-wider opacity-80 leading-none">Catcher</span>
             </div>
-            <span className="text-[9px] font-bold text-white uppercase tracking-wider opacity-80 leading-none">Catcher</span>
           </div>
         )}
       </div>

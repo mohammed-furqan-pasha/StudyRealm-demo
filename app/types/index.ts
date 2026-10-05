@@ -21,6 +21,7 @@ export interface SurveyTextQuestion {
   prompt: string;
   audio: string;
   placeholder?: string;
+  optional?: boolean;
 }
 
 export type SurveyQuestion = SurveyMCQQuestion | SurveyTextQuestion;

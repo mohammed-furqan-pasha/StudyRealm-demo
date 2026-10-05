@@ -10,6 +10,7 @@ export interface ThroughTheLensProps {
   screenDist?: number;
   effectiveFlipped?: boolean;
   halfCovered?: boolean;
+  hasFocusedOnce?: boolean;
 }
 
 const MODE_INFO: Record<string, { label: string; icon: string; fact: string }> = {
@@ -23,7 +24,7 @@ const MODE_INFO: Record<string, { label: string; icon: string; fact: string }> =
 const VB_W = 400, VB_H = 320;
 const SCENE_H = 280;
 
-export default function ThroughTheLens({ worldImageUrl, result, device, active, screenDist = 0, effectiveFlipped = false, halfCovered = false }: ThroughTheLensProps) {
+export default function ThroughTheLens({ worldImageUrl, result, device, active, screenDist = 0, effectiveFlipped = false, halfCovered = false, hasFocusedOnce = false }: ThroughTheLensProps) {
   let mode: string = result.atInfinity ? 'vanish' : classifyForMission(result);
   if (device === 'concave_lens') {
     mode = 'concave_peephole';
@@ -35,6 +36,19 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
   const scaleY = cappedScale * (flip ? -1 : 1);
   
   const visualMode = mode === 'concave_peephole' ? 'virtual_big' : mode;
+  const isTargetMode = visualMode === 'small_real' || visualMode === 'big_real';
+  const showHint = isTargetMode && screenDist > 6 && !hasFocusedOnce;
+
+  const [showSuccess, setShowSuccess] = useState(false);
+  const successShownRef = useRef(false);
+
+  useEffect(() => {
+    if (isTargetMode && screenDist <= 6 && !successShownRef.current) {
+      successShownRef.current = true;
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2500);
+    }
+  }, [screenDist, isTargetMode]);
 
   return (
     <div
@@ -58,6 +72,31 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
             <InfinityScene worldImageUrl={worldImageUrl} />
           )}
         </svg>
+        {showHint && (
+          <div 
+            role="status" aria-live="polite"
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full border border-white/20 max-w-[85%] text-center pointer-events-none motion-safe:animate-[fadeIn_200ms_ease-out] z-10"
+          >
+             <span className="hidden md:inline">
+               {visualMode === 'small_real' 
+                 ? "🔍 Blurry? Drag the white bar (the Catcher) onto the picture to make it sharp!" 
+                 : "🎬 Blurry? Drag the white bar (the Catcher) until the big picture is sharp!"}
+             </span>
+             <span className="inline md:hidden">
+               {visualMode === 'small_real' 
+                 ? "🔍 Blurry? Slide the white knob (the Catcher) until the picture is sharp!" 
+                 : "🎬 Blurry? Slide the white knob (the Catcher) until the big picture is sharp!"}
+             </span>
+          </div>
+        )}
+        {showSuccess && (
+          <div 
+            role="status" aria-live="polite"
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full border border-white/20 max-w-[85%] text-center pointer-events-none motion-safe:animate-[fadeIn_200ms_ease-out] z-10"
+          >
+             ✨ Sharp! The Catcher is right where the image forms.
+          </div>
+        )}
       </div>
 
       <div className="px-3 pb-2 pt-1 md:px-4 md:pb-3 md:pt-0">

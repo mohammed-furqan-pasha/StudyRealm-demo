@@ -90,7 +90,7 @@ export default function SurveySection({ role, name, mobile }: Props) {
          role: role,
          mobile: mobile,
          timestamp: new Date().toISOString(),
-         answers: answers
+         answers: answers.filter(a => a.value.trim() !== '')
        };
        
        // Fire and forget fetch request, do not await it
@@ -146,6 +146,7 @@ export default function SurveySection({ role, name, mobile }: Props) {
   const hasAnsweredCurrent = () => {
     if (currentIndex < 0 || currentIndex >= totalQuestions) return true;
     const q = surveySet.questions[currentIndex];
+    if (q.type === 'text' && q.optional) return true;
     return answers.some(a => a.questionId === q.id && a.value.trim() !== '');
   };
 
@@ -264,7 +265,12 @@ export default function SurveySection({ role, name, mobile }: Props) {
                      aria-disabled={!hasAnsweredCurrent()}
                      className="px-6 md:px-8 py-2.5 md:py-3 bg-teal-600 text-white font-bold rounded-full hover:bg-teal-700 transition shadow-lg focus:outline-none focus:ring-4 focus:ring-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                    >
-                     Next
+                     {(() => {
+                       const q = surveySet.questions[currentIndex];
+                       const val = answers.find(a => a.questionId === q.id)?.value || '';
+                       if (q.type === 'text' && q.optional && val.trim() === '') return 'Skip';
+                       return 'Next';
+                     })()}
                    </button>
                  </div>
               </div>

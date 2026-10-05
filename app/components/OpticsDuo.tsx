@@ -18,13 +18,21 @@ export default function OpticsDuo({
   const [liveDevice, setLiveDevice] = useState<OpticsDevice>(block.device);
   const [twistActive, setTwistActive] = useState(false);
   const [liveScreenDist, setLiveScreenDist] = useState(0);
+  const [catcherMoved, setCatcherMoved] = useState(false);
+  const [hasFocusedOnce, setHasFocusedOnce] = useState(false);
 
   const handleResultChange = useCallback(
     (result: OpticsResult, device: OpticsDevice, twist: boolean, screenDist?: number) => {
       setLiveResult(result);
       setLiveDevice(device);
       setTwistActive(twist);
-      if (screenDist !== undefined) setLiveScreenDist(screenDist);
+      if (screenDist !== undefined) {
+        setLiveScreenDist(screenDist);
+        const mode = result.atInfinity ? 'vanish' : classifyForMission(result);
+        if ((mode === 'small_real' || mode === 'big_real') && screenDist <= 6) {
+          setHasFocusedOnce(true);
+        }
+      }
     },
     []
   );
@@ -47,6 +55,9 @@ export default function OpticsDuo({
           effectiveFlipped={effectiveFlipped}
           halfCovered={halfCovered}
           setHalfCovered={setHalfCovered}
+          catcherMoved={catcherMoved}
+          hasFocusedOnce={hasFocusedOnce}
+          onCatcherMove={() => setCatcherMoved(true)}
         />
       </div>
       <div className="w-full md:w-1/2">
@@ -60,6 +71,7 @@ export default function OpticsDuo({
               screenDist={liveScreenDist}
               effectiveFlipped={effectiveFlipped}
               halfCovered={halfCovered}
+              hasFocusedOnce={hasFocusedOnce}
             />
           </div>
         )}
