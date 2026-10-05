@@ -8,7 +8,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scrollbar-gutter: stable; }
 body {
   font-family: var(--font-body);
   background: #ffffff;
@@ -105,3 +105,5 @@ body {
   0% { opacity: 0.5; filter: blur(2px); }
   100% { opacity: 1; filter: blur(4px); }
 }
+
+button, a, [role="button"], input[type="submit"], label { touch-action: manipulation; }

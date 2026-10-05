@@ -531,8 +531,10 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
   const [speaking, setSpeaking] = useState(false);
   const [direction, setDirection] = useState<'right'|'left'>('right');
   const [isIntersecting, setIsIntersecting] = useState(false);
+  const [canScroll, setCanScroll] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   
   const blocks = demoChapter.blocks;
   const total = blocks.length;
@@ -563,6 +565,18 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (!scrollRef.current || !innerRef.current) return;
+      setCanScroll(innerRef.current.scrollHeight > scrollRef.current.clientHeight + 1);
+    };
+    const ro = new ResizeObserver(checkScroll);
+    if (scrollRef.current) ro.observe(scrollRef.current);
+    if (innerRef.current) ro.observe(innerRef.current);
+    checkScroll();
+    return () => ro.disconnect();
+  }, [current]);
 
   useEffect(() => watchSectionVisibility(
     () => containerRef.current,
@@ -629,7 +643,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
       </div>
 
       {/* Main Content Area */}
-      <div className="relative z-20 flex-1 min-h-0 px-4 w-full h-full md:flex md:items-center md:justify-center">
+      <div className="relative z-20 flex-1 min-h-0 px-4 w-full h-full">
         {/* Prev arrow */}
         <button
           onClick={() => go(-1)}
@@ -640,9 +654,9 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
         </button>
 
         {/* Scroll Wrapper */}
-        <div ref={scrollRef} className="h-full overflow-y-auto overscroll-y-contain md:contents">
+        <div ref={scrollRef} className={`w-full h-full ${canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'} [scrollbar-width:thin]`}>
           {/* Inner centering div */}
-          <div className="min-h-full flex flex-col items-center justify-center pb-24 md:pb-0 md:contents">
+          <div ref={innerRef} className="min-h-full w-full flex flex-col items-center justify-center pb-24 md:pb-0">
             {/* Glass content panel */}
             <div
               key={current}

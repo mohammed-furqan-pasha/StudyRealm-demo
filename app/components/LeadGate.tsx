@@ -51,7 +51,8 @@ export default function LeadGate({ onSubmit }: Props) {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!validate()) return;
     setLoading(true);
     try {
@@ -71,8 +72,8 @@ export default function LeadGate({ onSubmit }: Props) {
   const inputClasses = "w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition text-sm bg-white";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 overflow-y-auto">
-      <div className="w-full max-w-5xl grid md:grid-cols-2 gap-8 md:gap-16 items-center animate-[slideUp_0.4s_ease-out] py-8">
+    <div className="fixed inset-0 z-50 flex p-4 bg-slate-50 overflow-y-auto">
+      <div className="w-full max-w-5xl mx-auto my-auto grid md:grid-cols-2 gap-8 md:gap-16 items-center animate-[slideUp_0.4s_ease-out] py-8">
         
         {/* Left Side: Value/Trust (Hidden on mobile) */}
         <div className="hidden md:block">
@@ -108,7 +109,7 @@ export default function LeadGate({ onSubmit }: Props) {
           </div>
 
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100">
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
@@ -118,6 +119,8 @@ export default function LeadGate({ onSubmit }: Props) {
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Priya Sharma"
                   className={inputClasses}
+                  enterKeyHint="next"
+                  autoComplete="name"
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1.5">{errors.name}</p>}
               </div>
@@ -147,6 +150,8 @@ export default function LeadGate({ onSubmit }: Props) {
                   onChange={e => setForm(f => ({ ...f, schoolName: e.target.value }))}
                   placeholder="e.g. Delhi Public School, Bengaluru"
                   className={inputClasses}
+                  enterKeyHint="next"
+                  autoComplete="organization"
                 />
                 {errors.schoolName && <p className="text-red-500 text-xs mt-1.5">{errors.schoolName}</p>}
               </div>
@@ -162,6 +167,8 @@ export default function LeadGate({ onSubmit }: Props) {
                     onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
                     placeholder="9876543210"
                     className="w-full border border-slate-200 rounded-r-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition text-sm bg-white"
+                    enterKeyHint="go"
+                    autoComplete="tel"
                   />
                 </div>
                 {errors.mobile && <p className="text-red-500 text-xs mt-1.5">{errors.mobile}</p>}
@@ -169,7 +176,7 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* Submit */}
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={loading || submitted}
                 className={`w-full py-3.5 mt-2 rounded-xl font-bold text-white text-sm transition-all duration-200 disabled:opacity-70 ${submitted ? 'bg-teal-500' : 'bg-teal-500 hover:bg-teal-600 shadow-sm hover:shadow'}`}
               >
@@ -179,7 +186,7 @@ export default function LeadGate({ onSubmit }: Props) {
               <p className="text-center text-slate-400 text-xs pt-2">
                 We respect your privacy. No spam, ever.
               </p>
-            </div>
+            </form>
           </div>
 
           <p className="text-center text-slate-500 text-xs mt-6">

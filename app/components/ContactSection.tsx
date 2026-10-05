@@ -18,8 +18,8 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="min-h-[100dvh] md:h-[100dvh] overflow-y-auto md:overflow-hidden flex flex-col justify-between pt-8 pb-0 md:py-6 px-5 md:px-6 bg-slate-900 text-white snap-start">
-      <div className="max-w-5xl mx-auto w-full flex flex-col h-full md:max-h-[95dvh] justify-between">
+    <section id="contact" className="min-h-[100dvh] overflow-y-auto md:overflow-visible flex flex-col justify-between pt-8 pb-0 md:py-6 px-5 md:px-6 bg-slate-900 text-white snap-start">
+      <div className="max-w-5xl mx-auto w-full flex flex-col h-full justify-between">
         
         {/* Top: Header */}
         <div className="text-center shrink-0">

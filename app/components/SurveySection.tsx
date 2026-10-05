@@ -162,8 +162,8 @@ export default function SurveySection({ role, name, mobile }: Props) {
   }
 
   return (
-     <section id="survey" ref={containerRef} className="h-[100dvh] overflow-hidden px-4 bg-slate-50 flex flex-col justify-center items-center relative py-4">
-        <div className="w-full max-w-2xl bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-200 flex flex-col max-h-[95dvh]">
+     <section id="survey" ref={containerRef} className="min-h-[100dvh] overflow-x-clip px-4 bg-slate-50 flex flex-col justify-center items-center relative py-4">
+        <div className="w-full max-w-2xl bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-slate-200 flex flex-col">
           
           {/* Audio Controls */}
           <div className="flex justify-between items-center mb-4 md:mb-6 border-b border-slate-100 pb-3 md:pb-4 shrink-0">
@@ -195,7 +195,7 @@ export default function SurveySection({ role, name, mobile }: Props) {
           )}
 
           {/* Content */}
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 @media (prefers-reduced-motion: reduce) { animate-none } overflow-y-auto shrink min-h-0">
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 @media (prefers-reduced-motion: reduce) { animate-none }">
             {currentIndex === -1 ? (
               <div className="text-center py-4 md:py-8">
                  <p className="text-lg md:text-xl text-slate-800 font-medium leading-relaxed mb-6 md:mb-8">{surveySet.intro}</p>

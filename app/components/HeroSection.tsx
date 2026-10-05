@@ -20,7 +20,7 @@ export default function HeroSection() {
   return (
     <>
       {/* Slide 1: Hero */}
-      <section className="min-h-svh md:min-h-0 md:h-[100dvh] w-full snap-start overflow-hidden bg-white flex flex-col">
+      <section className="min-h-svh md:min-h-[100dvh] w-full snap-start overflow-hidden md:overflow-x-clip md:overflow-y-visible bg-white flex flex-col">
         {/* Nav */}
         <nav className="flex-none flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white/90 backdrop-blur-sm z-40">
           <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export default function HeroSection() {
       </section>
 
       {/* Slide 2: The Full Loop (Now includes CTA) */}
-      <section id="features" className="min-h-svh md:min-h-0 md:h-[100dvh] w-full snap-start overflow-visible md:overflow-hidden bg-slate-50 border-t border-slate-100 flex flex-col justify-center items-center pt-24 pb-28 md:py-4">
+      <section id="features" className="min-h-svh md:min-h-[100dvh] w-full snap-start overflow-visible md:overflow-x-clip bg-slate-50 border-t border-slate-100 flex flex-col justify-center items-center pt-24 pb-28 md:py-4">
         <div className="w-full max-w-7xl px-4 md:px-6 flex flex-col md:h-full justify-center md:max-h-full">
           <div className="text-center mb-4 md:mb-8 shrink-0">
             <p className="text-slate-500 font-bold text-[10px] md:text-sm uppercase tracking-widest mb-1 md:mb-2">The Full Loop</p>
@@ -134,7 +134,7 @@ export default function HeroSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 shrink overflow-visible md:min-h-0 md:overflow-y-auto w-full">
             {/* Student Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[220px] md:h-[280px] overflow-hidden group">
+            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-teal-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">
@@ -175,7 +175,7 @@ export default function HeroSection() {
             </div>
 
             {/* Teacher Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[220px] md:h-[280px] overflow-hidden group">
+            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-blue-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">
@@ -215,7 +215,7 @@ export default function HeroSection() {
             </div>
 
             {/* Parent Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[220px] md:h-[280px] overflow-hidden group">
+            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-purple-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">

@@ -30,20 +30,20 @@ export default function Home() {
         setLeadData(data);
         setGateOpen(false);
       }} />}
-      <main className={`h-[100dvh] overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth ${gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}`}>
+      <main className={`h-[100dvh] overflow-y-auto overflow-x-hidden snap-y snap-mandatory md:snap-proximity scroll-smooth ${gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}`}>
         <HeroSection />
         <div className="snap-start shrink-0">
           <DemoPlayer onComplete={handleDemoComplete} isActive={!gateOpen} />
         </div>
-        <div ref={featuresRef} className="snap-start shrink-0 h-[100dvh]">
+        <div ref={featuresRef} className="snap-start shrink-0 min-h-[100dvh]">
           <LockedFeatures />
         </div>
         {leadData && (
-          <div className="snap-start shrink-0 h-[100dvh]">
+          <div className="snap-start shrink-0 min-h-[100dvh]">
             <SurveySection role={leadData.role} name={leadData.name} mobile={leadData.mobile} />
           </div>
         )}
-        <div className="snap-start shrink-0 h-[100dvh]">
+        <div className="snap-start shrink-0 min-h-[100dvh]">
           <ContactSection />
         </div>
       </main>

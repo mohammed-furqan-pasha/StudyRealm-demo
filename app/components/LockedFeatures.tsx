@@ -8,7 +8,6 @@ import {
   Users, 
   Trophy, 
   Lock, 
-  Image as ImageIcon,
   type LucideIcon
 } from 'lucide-react';
 
