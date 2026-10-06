@@ -648,7 +648,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
         <button
           onClick={() => go(-1)}
           disabled={current === 0}
-          className="absolute bottom-4 md:bottom-auto right-1/2 md:right-auto mr-2 md:mr-0 md:left-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
+          className="absolute bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 right-1/2 md:right-auto mr-2 md:mr-0 md:left-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
         >
           ‹
         </button>
@@ -687,7 +687,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
         <button
           onClick={() => go(1)}
           disabled={current === total - 1}
-          className="absolute bottom-4 md:bottom-auto left-1/2 md:left-auto ml-2 md:ml-0 md:right-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
+          className="absolute bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 left-1/2 md:left-auto ml-2 md:ml-0 md:right-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
         >
           ›
         </button>

@@ -32,6 +32,8 @@ export const demoChapter: DemoChapter = {
           id: 'camera',
           goal: 'small_real',
           prompt: 'Mission 1: Be a camera — make a SMALL, sharp image',
+          // @ts-expect-error adding optional field
+          simpleText: '📷 Be a camera: slide the lighthouse FAR from the lens',
           audio: "First mission. A camera shrinks a big scene onto a tiny sensor. Move the object around, keeping it past the second F mark, to catch a sharp image on the Catcher.",
           success_audio: "Perfect. That's a camera lens at work — the whole world, shrunk onto a small sensor."
         },
@@ -39,6 +41,8 @@ export const demoChapter: DemoChapter = {
           id: 'projector',
           goal: 'big_real',
           prompt: 'Mission 2: Be a projector — make a BIG, sharp image',
+          // @ts-expect-error adding optional field
+          simpleText: '🎬 Be a projector: bring it CLOSER to get a HUGE picture',
           audio: "Second mission. Movie projectors make tiny film frames look huge on a screen. Drag the object inward, between the two F marks, and catch a big sharp image on the Catcher.",
           success_audio: "Yes! That's exactly how a projector throws a huge picture onto a screen from a tiny slide."
         },
@@ -46,6 +50,8 @@ export const demoChapter: DemoChapter = {
           id: 'magnifier',
           goal: 'virtual_big',
           prompt: 'Mission 3: Be a magnifying glass — read tiny writing',
+          // @ts-expect-error adding optional field
+          simpleText: '🔍 Be a magnifier: bring it VERY CLOSE to the lens',
           audio: "Last mission. Bring the object very close to the lens, closer than the first F mark, and look at what the Catcher does.",
           success_audio: "The Catcher went blank — because this image can't be caught, only seen through the lens. That's a magnifying glass."
         }

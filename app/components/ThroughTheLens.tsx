@@ -11,6 +11,7 @@ export interface ThroughTheLensProps {
   effectiveFlipped?: boolean;
   halfCovered?: boolean;
   hasFocusedOnce?: boolean;
+  labMode?: boolean;
 }
 
 const MODE_INFO: Record<string, { label: string; icon: string; fact: string }> = {
@@ -21,10 +22,18 @@ const MODE_INFO: Record<string, { label: string; icon: string; fact: string }> =
   concave_peephole: { label: 'Peephole', icon: '🚪', fact: 'This lens only ever shrinks what you see — exactly like the peephole in a door.' }
 };
 
+const ZONE_COLORS: Record<string, string> = {
+  small_real: '#38BDF8',
+  big_real: '#FBBF24',
+  virtual_big: '#C084FC',
+  vanish: '#9ca3af',
+  concave_peephole: '#9ca3af'
+};
+
 const VB_W = 400, VB_H = 320;
 const SCENE_H = 280;
 
-export default function ThroughTheLens({ worldImageUrl, result, device, active, screenDist = 0, effectiveFlipped = false, halfCovered = false, hasFocusedOnce = false }: ThroughTheLensProps) {
+export default function ThroughTheLens({ worldImageUrl, result, device, active, screenDist = 0, effectiveFlipped = false, halfCovered = false, hasFocusedOnce = false, labMode = false }: ThroughTheLensProps) {
   let mode: string = result.atInfinity ? 'vanish' : classifyForMission(result);
   if (device === 'concave_lens') {
     mode = 'concave_peephole';
@@ -37,7 +46,7 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
   
   const visualMode = mode === 'concave_peephole' ? 'virtual_big' : mode;
   const isTargetMode = visualMode === 'small_real' || visualMode === 'big_real';
-  const showHint = isTargetMode && screenDist > 6 && !hasFocusedOnce;
+  const showHint = labMode && isTargetMode && screenDist > 6 && !hasFocusedOnce;
 
   const [showSuccess, setShowSuccess] = useState(false);
   const successShownRef = useRef(false);
@@ -53,14 +62,19 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
   return (
     <div
       className={`relative w-full rounded-2xl overflow-hidden mb-20 md:mb-0 ${active ? 'ring-2 ring-yellow-400' : ''}`}
-      style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.18)', overflow: 'hidden' }}
+      style={{ 
+        background: 'rgba(0,0,0,0.35)', 
+        border: `2px solid ${!labMode && device === 'convex_lens' ? ZONE_COLORS[mode] : 'rgba(255,255,255,0.18)'}`, 
+        overflow: 'hidden',
+        transition: 'border-color 150ms ease-out'
+      }}
     >
       <div className="px-3 pt-2 md:px-4 md:pt-3 flex items-center gap-2">
         <span className="text-base md:text-lg">{info.icon}</span>
-        <p className="text-white text-sm font-bold">{info.label} Mode</p>
+        <p className="text-sm font-bold transition-colors duration-150" style={{ color: !labMode && device === 'convex_lens' ? ZONE_COLORS[mode] : 'white' }}>{info.label} Mode</p>
       </div>
 
-      <div className="w-full h-[180px] md:h-auto flex justify-center items-center">
+      <div className={labMode ? "w-full h-[180px] md:h-auto flex justify-center items-center" : "w-full h-[240px] md:h-auto flex justify-center items-center"}>
         <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="max-w-full h-full md:w-full md:h-auto" style={{ touchAction: visualMode === 'virtual_big' ? 'none' : undefined }}>
           {visualMode === 'small_real' ? (
             <CameraScene worldImageUrl={worldImageUrl} scaleY={scaleY} screenDist={screenDist} />

@@ -32,6 +32,9 @@ export default function OpticsLab({
   catcherMoved,
   hasFocusedOnce,
   onCatcherMove,
+  labMode = true,
+  introState,
+  setIntroState,
 }: {
   block: OpticsLabBlockData;
   onAutoRead: (t: string) => void;
@@ -45,6 +48,9 @@ export default function OpticsLab({
   catcherMoved?: boolean;
   hasFocusedOnce?: boolean;
   onCatcherMove?: () => void;
+  labMode?: boolean;
+  introState?: 'idle' | 'playing' | 'handoff' | 'done';
+  setIntroState?: (state: 'idle' | 'playing' | 'handoff' | 'done') => void;
 }) {
   const [device, setDevice] = useState<OpticsDevice>(block.device);
   const [focalLength, setFocalLength] = useState(block.focal_length);
@@ -79,6 +85,11 @@ export default function OpticsLab({
     () => computeOptics(device, focalLength, u, block.object_height),
     [device, focalLength, u, block.object_height]
   );
+
+  const imgReal = !result.isVirtual && !result.atInfinity;
+  const effectiveScreenU = (!labMode && imgReal)
+    ? Math.min(block.max_u * 1.4, Math.max(1, Math.abs(result.v)))
+    : screenU;
 
   const currentMission: OpticsMission | undefined = block.missions[missionIdx];
   const isBigReal = classifyForMission(result) === 'big_real';
@@ -126,12 +137,13 @@ export default function OpticsLab({
 
   // check mission completion whenever the object moves
   useEffect(() => {
+    if (introState === 'playing' || introState === 'handoff') return;
     if (twistActive || allDone || !currentMission) return;
     const goal = classifyForMission(result);
     if (goal !== currentMission.goal) return;
     // for real-image goals, also require the screen to be roughly at the sharp spot
     if (!result.isVirtual && !result.atInfinity) {
-      const dist = Math.abs(screenU - Math.abs(result.v));
+      const dist = Math.abs(effectiveScreenU - Math.abs(result.v));
       if (dist * PPU > SCREEN_TOLERANCE) return;
     }
     if (missionDone[missionIdx]) return;
@@ -156,7 +168,7 @@ export default function OpticsLab({
       }
     }, 1600);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result, screenU, missionIdx]);
+  }, [result, effectiveScreenU, missionIdx]);
 
   // twist: reveal the "it can only shrink" line once the student has dragged around a bit
   const twistDragCount = useRef(0);
@@ -212,11 +224,10 @@ export default function OpticsLab({
   // ─── geometry for drawing ─────────────────────────────────────────────
   const objX = xForU(u);
   const objTipY = AXIS_Y - block.object_height * HPU;
-  const imgReal = !result.isVirtual && !result.atInfinity;
   const imgX = result.atInfinity ? null : xForV(device, result.v, result.isVirtual);
   const imgTipY = result.atInfinity ? null : AXIS_Y - result.imageHeight * HPU;
-  const screenX = mirror ? CX - screenU * PPU : CX + screenU * PPU;
-  const sharp = imgReal && imgX !== null && Math.abs(screenX - imgX) * 1 <= SCREEN_TOLERANCE;
+  const effectiveCatcherX = mirror ? CX - effectiveScreenU * PPU : CX + effectiveScreenU * PPU;
+  const sharp = imgReal && imgX !== null && Math.abs(effectiveCatcherX - imgX) * 1 <= SCREEN_TOLERANCE;
 
   useEffect(() => {
     if (sharp && !hasFocused) {
@@ -224,7 +235,7 @@ export default function OpticsLab({
     }
   }, [sharp, hasFocused]);
 
-  const screenDistForExport = imgX !== null ? Math.abs(screenX - imgX) : Infinity;
+  const screenDistForExport = imgX !== null ? Math.abs(effectiveCatcherX - imgX) : Infinity;
 
   useEffect(() => {
     onResultChange?.(result, device, twistActive, screenDistForExport);
@@ -261,7 +272,7 @@ export default function OpticsLab({
   }
   const dropShadow = isOverlap ? 'drop-shadow(0px 4px 6px rgba(0,0,0,0.7))' : 'none';
 
-  const screenDist = imgX !== null ? Math.abs(screenX - imgX) : Infinity;
+  const screenDist = imgX !== null ? Math.abs(effectiveCatcherX - imgX) : Infinity;
   const glowIntensity = Math.max(0, 1 - screenDist / 50);
 
   const isTargetMode = isBigReal || classifyForMission(result) === 'small_real';
@@ -278,12 +289,113 @@ export default function OpticsLab({
     return () => clearTimeout(t);
   }, [showCatcherNudgeRaw]);
 
+  // Intro Animation
+  const cancelIntroRef = useRef(false);
+  const prevIntroState = useRef(introState);
+
+  useEffect(() => {
+    const f = focalLength;
+    const posFar = Math.min(block.max_u, f * 2 + (block.max_u - f * 2) * 0.85);
+
+    if ((prevIntroState.current === 'playing' || prevIntroState.current === 'handoff') && introState === 'done') {
+      if (!hasInteracted) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setU(posFar);
+      }
+    }
+    prevIntroState.current = introState;
+
+    if (introState !== 'playing' && introState !== 'handoff') {
+      cancelIntroRef.current = true;
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      if (introState === 'playing') setIntroState?.('handoff');
+      if (introState === 'handoff') {
+        const t = setTimeout(() => setIntroState?.('done'), 4000);
+        return () => clearTimeout(t);
+      }
+      return;
+    }
+
+    cancelIntroRef.current = false;
+    const posCloser = f + (f * 2 - f) * 0.5;
+    const posVeryClose = f * 0.5;
+
+    const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const animateU = (fromU: number, toU: number, duration: number) => {
+      return new Promise<void>((resolve) => {
+        const start = performance.now();
+        const tick = (now: number) => {
+          if (cancelIntroRef.current) return resolve();
+          const elapsed = now - start;
+          const t = Math.min(1, elapsed / duration);
+          setU(fromU + (toU - fromU) * easeInOutCubic(t));
+          if (t < 1) requestAnimationFrame(tick);
+          else resolve();
+        };
+        requestAnimationFrame(tick);
+      });
+    };
+
+    const wait = (ms: number) => new Promise<void>(resolve => {
+      const start = performance.now();
+      const tick = (now: number) => {
+        if (cancelIntroRef.current) return resolve();
+        if (now - start >= ms) resolve();
+        else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    if (introState === 'playing') {
+      (async () => {
+        setU(posFar);
+        await wait(1500);
+        if (cancelIntroRef.current) return;
+        await animateU(posFar, posCloser, 1200);
+        if (cancelIntroRef.current) return;
+        await wait(2000);
+        if (cancelIntroRef.current) return;
+        await animateU(posCloser, posVeryClose, 1200);
+        if (cancelIntroRef.current) return;
+        await wait(2000);
+        if (cancelIntroRef.current) return;
+        await animateU(posVeryClose, posFar, 1200);
+        if (cancelIntroRef.current) return;
+        setIntroState?.('handoff');
+      })();
+    }
+
+    if (introState === 'handoff') {
+      (async () => {
+        const offset = (block.max_u - block.min_u) * 0.25;
+        const targetU = Math.max(block.min_u, u - offset);
+        const startU = u;
+        await animateU(startU, targetU, 1200);
+        if (cancelIntroRef.current) return;
+        await animateU(targetU, startU, 1200);
+        if (cancelIntroRef.current) return;
+        await wait(600);
+        if (cancelIntroRef.current) return;
+        setIntroState?.('done');
+      })();
+    }
+
+    return () => { cancelIntroRef.current = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [introState, focalLength, block.max_u, block.min_u, setIntroState, hasInteracted]);
+
   const label = effectiveFlipped
     ? 'Real projectors load the film upside down so the picture on the screen comes out right-side up!'
     : twistActive
     ? 'Now try to make it BIG'
     : currentMission
-    ? currentMission.prompt
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? (!labMode && (currentMission as any).simpleText ? (currentMission as any).simpleText : currentMission.prompt)
     : 'Explore freely';
   const imageSvgGroup = introStage >= 2 && imgX !== null ? (
     <g 
@@ -347,7 +459,7 @@ export default function OpticsLab({
   ) : null;
 
   return (
-    <div className="flex flex-col items-center gap-2 md:gap-3 w-full">
+    <div className={labMode ? "flex flex-col items-center gap-2 md:gap-3 w-full" : "flex flex-col items-center gap-2 md:gap-3 w-full max-md:contents"}>
       <style>{`
         @keyframes wiggleX {
           0%, 100% { transform: translateX(0); }
@@ -359,7 +471,9 @@ export default function OpticsLab({
 
       {/* mission / twist chip */}
       {introStage >= 3 && (
-        <div className="px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none" style={{
+        <div className={labMode 
+          ? "px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none"
+          : "px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none max-md:order-1 max-md:mt-2 max-md:w-[90%]"} style={{
           background: twistActive ? 'rgba(248,113,113,0.18)' : 'rgba(45,212,191,0.18)',
           border: `1px solid ${twistActive ? 'rgba(248,113,113,0.4)' : 'rgba(45,212,191,0.4)'}`,
           color: twistActive ? '#f87171' : '#2dd4bf',
@@ -375,7 +489,7 @@ export default function OpticsLab({
         </div>
       )}
 
-      {showLegend && introStage >= 3 && (
+      {showLegend && introStage >= 3 && labMode && (
         <div className="hidden md:flex items-center gap-3 bg-black/40 px-4 py-2 rounded-full border border-white/10 text-xs font-medium text-white/80 mt-1 animate-[fadeIn_0.5s_ease-out]">
           <span>🟢 Object</span>
           <span>·</span>
@@ -386,13 +500,13 @@ export default function OpticsLab({
         </div>
       )}
 
-      {showTooltip && (
+      {showTooltip && labMode && (
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-xs font-bold px-4 py-2 rounded-lg shadow-xl animate-[fadeIn_0.3s_ease-out] z-10 text-center max-w-[90%]">
           The whole image is still there, just dimmer! Every part of the lens sees the whole object.
         </div>
       )}
       <div
-        className="relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[140px] md:h-auto"
+        className={labMode ? "relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[140px] md:h-auto" : "relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[120px] md:h-auto max-md:order-3"}
         style={{ background: 'rgba(0,0,0,0.35)', maxWidth: 640 }}
         onPointerMove={onPointerMove}
         onPointerUp={stopDrag}
@@ -401,16 +515,47 @@ export default function OpticsLab({
         <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 md:static md:translate-y-0">
           <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full h-auto">
           {/* principal axis */}
-          <line x1={20} y1={AXIS_Y} x2={VB_W - 20} y2={AXIS_Y} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" />
+          {labMode && <line x1={20} y1={AXIS_Y} x2={VB_W - 20} y2={AXIS_Y} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" />}
+
+          {/* simple mode zones (convex lens only) */}
+          {!labMode && device === 'convex_lens' && (
+            <g className="transition-all duration-150">
+              {/* Far away */}
+              <rect x={xForU(block.max_u)} y={AXIS_Y - 4} width={twof1x - xForU(block.max_u)} height={8} rx={4}
+                    fill="#38BDF8" opacity={u > 2 * focalLength ? 0.35 : 0.15} style={{ transition: 'opacity 150ms ease-out' }} />
+              {/* Closer */}
+              <rect x={twof1x} y={AXIS_Y - 4} width={f1x - twof1x} height={8} rx={4}
+                    fill="#FBBF24" opacity={u > focalLength && u <= 2 * focalLength ? 0.35 : 0.15} style={{ transition: 'opacity 150ms ease-out' }} />
+              {/* Very close */}
+              <rect x={f1x} y={AXIS_Y - 4} width={CX - f1x} height={8} rx={4}
+                    fill="#C084FC" opacity={u <= focalLength ? 0.35 : 0.15} style={{ transition: 'opacity 150ms ease-out' }} />
+
+              {/* Chips under the track */}
+              <g transform={`translate(${xForU(block.max_u) + (twof1x - xForU(block.max_u)) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u > 2 * focalLength ? 1 : 0.5 }}>
+                <text textAnchor="middle" fontSize={20} y={0}>📷</text>
+                <text textAnchor="middle" fontSize={12} fill="#38BDF8" fontWeight="bold" y={16}>Far away</text>
+              </g>
+
+              <g transform={`translate(${twof1x + (f1x - twof1x) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u > focalLength && u <= 2 * focalLength ? 1 : 0.5 }}>
+                <text textAnchor="middle" fontSize={20} y={0}>🎬</text>
+                <text textAnchor="middle" fontSize={12} fill="#FBBF24" fontWeight="bold" y={16}>Closer</text>
+              </g>
+
+              <g transform={`translate(${f1x + (CX - f1x) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u <= focalLength ? 1 : 0.5 }}>
+                <text textAnchor="middle" fontSize={20} y={0}>🔍</text>
+                <text textAnchor="middle" fontSize={12} fill="#C084FC" fontWeight="bold" y={16}>Very close</text>
+              </g>
+            </g>
+          )}
 
           {/* F / 2F ticks */}
-          {[f1x, f2x].map((x, i) => (
+          {labMode && [f1x, f2x].map((x, i) => (
             <g key={`f${i}`}>
               <line x1={x} y1={AXIS_Y - 6} x2={x} y2={AXIS_Y + 6} stroke="#FBBF24" strokeWidth={2} />
               <text x={x} y={AXIS_Y + 24} fill="#FBBF24" fontSize={16} fontWeight="bold" textAnchor="middle">F</text>
             </g>
           ))}
-          {!mirror && [twof1x, twof2x].map((x, i) => (
+          {labMode && !mirror && [twof1x, twof2x].map((x, i) => (
             <g key={`2f${i}`}>
               <line x1={x} y1={AXIS_Y - 4} x2={x} y2={AXIS_Y + 4} stroke={bump2F ? "#4ade80" : "rgba(251,191,36,0.5)"} strokeWidth={bump2F ? 4 : 2} style={{ transition: 'all 0.1s ease-out' }} />
               <text x={x} y={AXIS_Y + 22} fill={bump2F ? "#4ade80" : "rgba(251,191,36,0.7)"} fontSize={bump2F ? 16 : 14} fontWeight="bold" textAnchor="middle" style={{ transition: 'all 0.1s ease-out' }}>2F</text>
@@ -457,7 +602,7 @@ export default function OpticsLab({
           {result.isVirtual && imageSvgGroup}
 
           {/* rays */}
-          {introStage >= 2 && imgX !== null && (
+          {labMode && introStage >= 2 && imgX !== null && (
             <>
               <style>{`
                 @keyframes revealRay {
@@ -538,7 +683,7 @@ export default function OpticsLab({
           {!result.isVirtual && imageSvgGroup}
 
           {/* screen (only meaningful for real-image side) */}
-          {!twistActive && introStage >= 3 && (
+          {labMode && !twistActive && introStage >= 3 && (
             <g
               style={{ cursor: 'ew-resize' }}
               onPointerDown={() => {
@@ -548,23 +693,23 @@ export default function OpticsLab({
               }}
             >
               {!hasFocused && !hasTouchedCatcher && (
-                <rect x={screenX - 14} y={35} width={28} height={VB_H - 70} fill="none" stroke="#fde047" strokeWidth={2} className="animate-[pulse_1.5s_infinite_ease-in-out]" style={{ pointerEvents: 'none' }} rx={4} />
+                <rect x={effectiveCatcherX - 14} y={35} width={28} height={VB_H - 70} fill="none" stroke="#fde047" strokeWidth={2} className="animate-[pulse_1.5s_infinite_ease-in-out]" style={{ pointerEvents: 'none' }} rx={4} />
               )}
-              <rect x={screenX - 22} y={30} width={44} height={VB_H - 60} fill="transparent" />
+              <rect x={effectiveCatcherX - 22} y={30} width={44} height={VB_H - 60} fill="transparent" />
               {imgReal && imgX !== null && glowIntensity > 0 && (
-                <rect x={screenX - 15} y={40} width={30} height={VB_H - 80} fill="rgba(251, 191, 36, 0.4)" opacity={glowIntensity} style={{ filter: `blur(${glowIntensity * 12}px)` }} />
+                <rect x={effectiveCatcherX - 15} y={40} width={30} height={VB_H - 80} fill="rgba(251, 191, 36, 0.4)" opacity={glowIntensity} style={{ filter: `blur(${glowIntensity * 12}px)` }} />
               )}
-              <rect x={screenX - 10} y={34} width={20} height={VB_H - 68} rx={4}
+              <rect x={effectiveCatcherX - 10} y={34} width={20} height={VB_H - 68} rx={4}
                 fill="none" stroke="#F87171" strokeWidth={3} 
                 opacity={virtualCatcherFeedback ? 0.8 : 0}
                 style={{ filter: 'blur(3px)', transition: 'opacity 800ms ease-out' }}
                 pointerEvents="none"
               />
-              <rect x={screenX - 4} y={40} width={8} height={VB_H - 80} rx={2}
+              <rect x={effectiveCatcherX - 4} y={40} width={8} height={VB_H - 80} rx={2}
                 fill={sharp ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)'} />
-              <text x={screenX} y={26} fill="white" fontSize={14} fontWeight="bold" textAnchor="middle" opacity={0.7}>Catcher</text>
+              <text x={effectiveCatcherX} y={26} fill="white" fontSize={14} fontWeight="bold" textAnchor="middle" opacity={0.7}>Catcher</text>
               {showCatcherNudge && (
-                <text x={screenX + 35} y={26} fill="white" fontSize={14} fontWeight="bold" className="motion-safe:animate-[wiggleX_1.2s_infinite]">◀ ▶</text>
+                <text x={effectiveCatcherX + 35} y={26} fill="white" fontSize={14} fontWeight="bold" className="motion-safe:animate-[wiggleX_1.2s_infinite]">◀ ▶</text>
               )}
             </g>
           )}
@@ -581,6 +726,14 @@ export default function OpticsLab({
             {((!hasFocused && !hasInteracted) || result.isVirtual) && (
               <circle cx={objX} cy={AXIS_Y} r={18} fill="none" stroke="#4ade80" strokeWidth={2} className="animate-[pulse_1.5s_infinite_ease-in-out]" style={{ pointerEvents: 'none' }} />
             )}
+            
+            {introState === 'handoff' && !labMode && (
+              <g transform={`translate(${objX}, ${AXIS_Y + 30})`} pointerEvents="none" className="animate-[fadeIn_0.3s_ease-out]">
+                <text x={0} y={0} fontSize={40} textAnchor="middle" opacity={0.6}>👆</text>
+                <rect x={-90} y={15} width={180} height={30} rx={15} fill="#4ade80" />
+                <text x={0} y={35} fontSize={12} fill="black" fontWeight="bold" textAnchor="middle">Your turn! Drag the lighthouse</text>
+              </g>
+            )}
             <circle cx={objX} cy={AXIS_Y} r={result.isVirtual ? 30 : 22} fill="transparent" />
             <circle cx={objX} cy={AXIS_Y} r={10} fill="rgba(74,222,128,0.25)" stroke="#4ade80" strokeWidth={2} />
           </g>
@@ -590,7 +743,16 @@ export default function OpticsLab({
       </div>
 
       {/* Remote drag strip (mobile only) */}
-      <div className="md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none" style={{ touchAction: 'none' }}>
+      <div className={labMode ? "md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none" : "md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none max-md:order-4 max-md:-mt-2"} style={{ touchAction: 'none' }}>
+        {/* Mobile zones (simple mode) */}
+        {!labMode && device === 'convex_lens' && (
+          <>
+            <div className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full transition-opacity duration-150 bg-[#38BDF8]" style={{ left: `${(xForU(block.max_u) / VB_W) * 100}%`, width: `${((twof1x - xForU(block.max_u)) / VB_W) * 100}%`, opacity: u > 2 * focalLength ? 0.8 : 0.3 }} />
+            <div className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full transition-opacity duration-150 bg-[#FBBF24]" style={{ left: `${(twof1x / VB_W) * 100}%`, width: `${((f1x - twof1x) / VB_W) * 100}%`, opacity: u > focalLength && u <= 2 * focalLength ? 0.8 : 0.3 }} />
+            <div className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full transition-opacity duration-150 bg-[#C084FC]" style={{ left: `${(f1x / VB_W) * 100}%`, width: `${((CX - f1x) / VB_W) * 100}%`, opacity: u <= focalLength ? 0.8 : 0.3 }} />
+          </>
+        )}
+
         {/* Object knob */}
         {introStage >= 1 && (
           <div 
@@ -638,17 +800,17 @@ export default function OpticsLab({
         )}
 
         {/* Catcher knob */}
-        {!twistActive && introStage >= 3 && (
+        {labMode && !twistActive && introStage >= 3 && (
           <div 
             className="absolute top-1/2 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing w-[48px] h-[56px]"
             style={{ 
-              left: `clamp(24px, ${(screenX / VB_W) * 100}%, calc(100% - 24px))`,
+              left: `clamp(24px, ${(effectiveCatcherX / VB_W) * 100}%, calc(100% - 24px))`,
               transform: 'translate(-50%, -50%)',
               touchAction: 'none'
             }}
             role="slider"
             aria-label="Move catcher"
-            aria-valuenow={Math.round(screenU)}
+            aria-valuenow={Math.round(effectiveScreenU)}
             onPointerDown={(e) => {
               e.stopPropagation();
               draggingRef.current = 'screen';
@@ -700,15 +862,24 @@ export default function OpticsLab({
       </div>
 
       {/* virtual catcher message */}
-      <div className="h-[20px] md:h-[24px] flex items-center justify-center transition-opacity duration-300 -mt-1 md:mt-0" style={{ opacity: showVirtualMessage ? 1 : 0, pointerEvents: showVirtualMessage ? 'auto' : 'none' }}>
+      <div className={labMode ? "h-[20px] md:h-[24px] flex items-center justify-center transition-opacity duration-300 -mt-1 md:mt-0" : "hidden"} style={{ opacity: showVirtualMessage ? 1 : 0, pointerEvents: showVirtualMessage ? 'auto' : 'none' }}>
         <div className="text-sm text-[#F87171] font-medium max-w-lg text-center px-4">
           Virtual images can&apos;t be caught on a screen — they only exist for your eye.
         </div>
       </div>
 
-      {/* live image tag */}
-      <div className="flex flex-col items-center gap-1 md:gap-2">
-        {result.atInfinity ? (
+      <div className={labMode ? "flex flex-col items-center gap-1 md:gap-2" : "flex flex-col items-center gap-1 md:gap-2 max-md:order-5 max-md:my-2"}>
+        {!labMode && device === 'convex_lens' ? (
+          <div className="text-sm text-white/90 font-medium text-center px-4 max-w-lg leading-tight md:leading-normal">
+            {result.atInfinity 
+              ? "😮 Right on the edge: the picture is gone! Move the lighthouse a tiny bit."
+              : classifyForMission(result) === 'small_real' 
+              ? "📷 Far away: the picture is tiny and upside-down, just like a camera."
+              : classifyForMission(result) === 'big_real'
+              ? "🎬 Closer: the picture is HUGE, just like a projector."
+              : "🔍 Very close: it looks big and the right way up, just like a magnifying glass."}
+          </div>
+        ) : result.atInfinity ? (
           <div className="text-sm text-red-400 font-medium">→ Image gone to infinity</div>
         ) : (
           <div className="text-xs md:text-sm text-white/90 text-center px-2 md:px-4 max-w-lg leading-tight md:leading-normal">
@@ -718,7 +889,7 @@ export default function OpticsLab({
             — like a <em>{classifyForMission(result) === 'big_real' ? 'projector' : classifyForMission(result) === 'small_real' ? 'camera' : classifyForMission(result) === 'virtual_big' ? 'magnifying glass' : 'lens or mirror'}</em>.
           </div>
         )}
-        {!result.atInfinity && (
+        {!result.atInfinity && labMode && (
           <div className="flex flex-col items-center md:mt-1">
             <button onClick={() => setShowDetails(!showDetails)} className="text-[10px] text-white/50 hover:text-white/80 transition uppercase tracking-wider mb-1 md:mb-2 mt-1 md:mt-0">
               {showDetails ? 'Hide Details ▲' : 'Show Details ▼'}
@@ -735,7 +906,7 @@ export default function OpticsLab({
       </div>
 
       {/* half-cover surprise, offered once first mission is done */}
-      {block.allow_half_cover && !mirror && missionDone[0] && !twistActive && (
+      {block.allow_half_cover && !mirror && missionDone[0] && !twistActive && labMode && (
         <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => setHalfCovered?.(h => !h)}
@@ -752,7 +923,7 @@ export default function OpticsLab({
       )}
 
       {/* Flip the film button */}
-      {classifyForMission(result) === 'big_real' && screenDist <= 6 && filmFlipped === false && (
+      {classifyForMission(result) === 'big_real' && screenDist <= 6 && filmFlipped === false && labMode && (
         <div className="flex flex-col items-center gap-2 mt-2">
           <p className="text-white/90 text-sm font-medium">Wait, movies aren&apos;t upside down. How do we fix this?</p>
           <button
@@ -764,8 +935,12 @@ export default function OpticsLab({
         </div>
       )}
 
-      <p className="hidden md:block text-white/50 text-[11px] text-center max-w-md">Drag the green arrow along the line. Drag the white bar to catch the image.</p>
-      <p className="block md:hidden text-white/50 text-[11px] text-center max-w-md">Slide the knobs below the diagram to move the object and the catcher.</p>
+      {labMode && (
+        <>
+          <p className="hidden md:block text-white/50 text-[11px] text-center max-w-md">Drag the green arrow along the line. Drag the white bar to catch the image.</p>
+          <p className="block md:hidden text-white/50 text-[11px] text-center max-w-md">Slide the knobs below the diagram to move the object and the catcher.</p>
+        </>
+      )}
     </div>
   );
 }
