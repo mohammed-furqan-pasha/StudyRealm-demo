@@ -1,0 +1,113 @@
+# StudyRealm Demo Website Structure and Content
+
+This document outlines the detailed content, visual layout, and imagery for every section of the StudyRealm Demo single-page application.
+
+## 1. Lead Gate (Welcome Form Overlay)
+**What it is about:** A mandatory full-screen overlay form that users must complete to unlock the demo chapter. It acts as a lead generation gate.
+**What it looks like:** A split-screen modal on desktop. Left side shows the logo, a bold headline, and three value propositions with teal checkmarks. Right side contains a form. On mobile, the left side is hidden and the logo appears above the form. The background is frosted and the underlying website is blurred.
+**Header/Text:**
+- "See how StudyRealm transforms classrooms"
+- "Interactive 3D models"
+- "Auto-graded quizzes"
+- "NCF 2023 Compliant"
+- "Welcome to the Demo: Tell us a bit about yourself to unlock a fully interactive demo chapter."
+**Images:** 
+- `/logo.png` (StudyRealm Logo)
+**Form Fields:** 
+- Full Name
+- Role (Dropdown: Teacher, Principal / Management, Parent, Student, Other)
+- School / Organization
+- Mobile Number (+91 prefix)
+**Button:** "Experience the Demo →"
+
+## 2. Hero Section
+**What it is about:** The main landing section that introduces the platform, its value propositions, and trust metrics.
+**What it looks like:** A split-screen layout. The left side contains the navigation, the main headline, description text, call-to-action buttons, and a sleek row of trust metrics (stats). The right side features a composite mockup of the teacher and student apps overlapping each other on a glowing background.
+**Navigation Header:** 
+- Logo and "STUDYREALM" text
+- Links: Features, Main Website, Contact
+- Pill tag: "MSME · Govt. of India"
+**Header/Text:**
+- Tag: "Karnataka’s Premier LKG-10 Platform"
+- Headline: "Every student learns. Every teacher sees it."
+- Sub-description: "Fun lessons kids love, simple progress updates for teachers and parents, and lessons that follow India's latest school guidelines. No app to download."
+**Stats/Metrics:** 
+- "400+ Learning Moments"
+- "LKG - Class 10 All Grades"
+- "3 Boards CBSE · ICSE · State"
+- "NCF 2023 Auto-Mapped"
+**Images:**
+- `/logo.png` (Logo)
+- `/img/teacher-dashboard.png` (Teacher Dashboard mockup)
+- `/img/student-app-brain.png` (Student App mockup)
+**Buttons:** 
+- "Experience One Chapter →"
+- "Book a 30-Min Demo"
+
+## 3. The Full Loop Section (Part of HeroSection component)
+**What it is about:** Details how the platform keeps all stakeholders (students, teachers, parents) informed and engaged.
+**What it looks like:** A three-column card grid display. Each column represents a user persona (Student, Teacher, Parent) with a distinct color theme (Teal, Blue, Purple). Each card has an icon, a list of bullet points, and an embedded image of the respective app interface.
+**Header/Text:**
+- Tag: "The Full Loop"
+- Headline: "Everyone stays informed"
+**Cards Content:**
+1. **Student** (Teal theme)
+   - Points: "Learns through interactive 3D stories", "Everything is read aloud", "Practices without penalties"
+   - Image: `/img/student-app-brain.png`
+2. **Teacher** (Blue theme)
+   - Points: "Auto-mapped to NCF 2023 curriculum", "See instantly who needs help", "Runs friendly class quizzes"
+   - Image: `/img/teacher-dashboard.png`
+3. **Parent** (Purple theme)
+   - Points: "Simple daily updates on real progress", "No guessing if homework got done", "Fewer surprises and less back-and-forth"
+   - Image: `/img/parent-dashboard.png`
+**Button:** "Experience One Chapter →"
+
+## 4. Demo Chapter
+**What it is about:** An interactive chapter preview (Currently being changed and replaced with a new topic).
+
+## 5. Locked Features Section
+**What it is about:** Showcases premium dashboard features that require live classroom data, prompting users to book a demo or take a survey.
+**What it looks like:** A split-pane interactive UI on desktop. Left side contains a vertical list of clickable feature tabs. Clicking a tab updates the large image mockup on the right side. On mobile, it displays as a vertically stacked list of cards with inline images.
+**Header/Text:**
+- Tag: "Full Platform"
+- Headline: "Powerful Tools for Teachers and Management"
+- Description: "These features need live classroom data. Tell us about your school and we'll show them to you in a free demo."
+**Features List:**
+1. Teacher Dashboard (Class Overview): "See every student's progress at a glance — green, yellow, or red — updated live after every quiz." (Image: `/img/teacher-dashboard.png`)
+2. Progress Over Time (Weekly Trends): "See how your class is improving week by week, and catch problems early — before the exam." (Image: `/img/teacher-analytics.png`)
+3. Parent Dashboard (Daily Updates): "Parents see stars earned, chapters completed, and how their child is doing — every day, in plain language." (Image: `/img/parent-dashboard.png`)
+4. Friendly Competition (Class Leaderboard): "Students can see how they're doing compared to classmates — a fun way to stay motivated to practice." (No image)
+**Button:** "Take the Quick Survey →"
+
+## 6. Survey Section
+**What it is about:** An interactive voice-guided questionnaire tailored to the user's role (Teacher, Parent, Principal, etc.) selected in the Lead Gate.
+**What it looks like:** A centered card layout containing a progress bar, audio controls, and the active question. Questions are presented one by one. It uses TTS to read questions aloud and shows an animated GuideBot.
+**Header/Text:**
+- Tag: "Feedback Survey"
+- Intro Text: Dynamically loaded based on role (e.g., asking for feedback on the demo).
+**Content Structure:**
+- Audio Mute/Replay buttons.
+- Progress bar ("Question X of Y").
+- Multiple choice questions (MCQ) displayed as clickable option boxes.
+- Text input questions displayed as textareas.
+**Button:** "Start Survey", "Next", "Skip" (if optional), "Submit Answers"
+
+## 7. Contact Section
+**What it is about:** The final call-to-action for users to book a demo, contact the team, or view company information.
+**What it looks like:** A dark-themed footer section. The top has a header, the middle has a 3-column grid of contact action cards, below that is a 3-column grid of value propositions, and the bottom is the site footer.
+**Header/Text:**
+- Tag: "✦ Innovation Partnership Program"
+- Headline: "Join our Term-1 Pilot"
+- Description: "An exclusive Term-1 Pilot for forward-thinking Karnataka schools. No commitment required — start with a free demo."
+**Contact Cards (Action Cards):**
+1. Book a Demo (Primary): "A 30-minute session for your class." -> Links to Calendly.
+2. WhatsApp: "+91 90195 88700 / Quick questions? We reply in 1 hour." -> Links to wa.me.
+3. Email Us: "For proposals and partnerships." -> Links to hello@studyrealm.app.
+**Value Propositions ("Why Schools Say Yes"):**
+- "Boost Board Results": Mastery-first learning builds retention.
+- "Drive Admissions": A premium tech-stack attracts parents.
+- "Fewer Complaints": Daily visibility removes guesswork.
+**Footer Links:**
+- Company: StudyRealm Technologies, MSME Udyam Registered • Bangalore, Karnataka.
+- Platform: Main Website, Support & Help.
+- Legal & Trust: Privacy Policy, Terms & Conditions.

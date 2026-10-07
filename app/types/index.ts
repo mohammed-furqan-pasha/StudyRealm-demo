@@ -61,39 +61,14 @@ export interface StoryPanel {
   text: string;
 }
 
-export interface OpticsMission {
-  id: string;
-  goal: 'big_real' | 'small_real' | 'virtual_big' | 'vanish';
-  prompt: string;         // shown as a card, e.g. "Be a projector — get a big, sharp image"
-  audio: string;          // read aloud when the mission starts
-  success_audio: string;  // read aloud when the student hits the goal
-}
+export interface StainHookBlockData { type: 'stain_hook'; instruction: string; audio_instruction?: string; button_label: string; result_text: string; audio_result?: string; continue_label: string; stain_color: string; stain_color_after: string; image_before?: string; image_after?: string; }
 
-export interface OpticsLabBlockData {
-  type: 'optics_lab';
-  title: string;
-  instruction: string;
-  device: 'convex_lens' | 'concave_lens' | 'concave_mirror' | 'convex_mirror';
-  focal_length: number;     // positive magnitude
-  object_height: number;    // positive magnitude
-  min_u: number;
-  max_u: number;
-  default_u: number;
-  object_image_url?: string;
-  audio?: string;
-  missions: OpticsMission[];              // played in order; demo uses 3
-  allow_half_cover?: boolean;             // the "hand over half the lens" surprise
-  concave_twist?: {                       // the closing "try to make it big" fail-on-purpose beat
-    device: 'concave_lens';
-    focal_length: number;
-    prompt: string;
-    audio: string;
-    reveal_audio: string;
-  };
-}
+export interface KitchenLabItem { id: string; label: string; emoji: string; liquid_color: string; result_color: string; result_text: string; scale_pos: number; family: 'acid' | 'base' | 'neutral'; audio?: string; }
+export interface KitchenLabBlockData { type: 'kitchen_lab'; indicator_label: string; indicator_color: string; guided_ids: [string, string]; prompts: { first: string; second: string; others: string; done: string; }; items: KitchenLabItem[]; reveal: { lines: { emoji: string; text: string }[]; takeaway: string; teaser: string; bar_labels: { left: string; mid: string; right: string }; marker_pos: number; marker_text: string; continue_label: string }; mystery: { item: KitchenLabItem; question: string; yes_label: string; no_label: string; correct_text: string; nudge_text: string; audio_correct?: string; audio_nudge?: string }; closing: { text: string; audio?: string; continue_label: string }; }
 
 export type ContentBlock =
-  | OpticsLabBlockData
+  | KitchenLabBlockData
+  | StainHookBlockData
   | { type: 'story_panel'; panels: StoryPanel[] }
   | { type: 'tap_reveal'; asset: string; spots: TapRevealSpot[]; instruction?: string; style?: 'inline_labels' }
   | { type: 'flip_card'; front: string; back: string; audio_front: string; audio_back: string }

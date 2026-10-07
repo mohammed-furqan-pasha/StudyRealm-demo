@@ -3,127 +3,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { demoChapter } from '../data/demoChapter';
 import { ContentBlock, TapRevealSpot } from '../types';
-import OpticsDuo from './OpticsDuo';
+import StainHook from './StainHook';
+import KitchenLab from './KitchenLab';
 
 import { playAudio, visibleRatio, watchSectionVisibility, stopAudioFor } from '../lib/tts';
 
 import GuideBot from './GuideBot';
-
-// ─── STORY PANEL BLOCK ─────────────────────────────────────────────────────
-function Pencil({ yPos, offset }: { yPos: number, offset: number }) {
-  return (
-    <div 
-      className="absolute w-5 md:w-7 h-[300px] md:h-[400px] drop-shadow-xl transition-transform duration-75"
-      style={{
-        top: `${-10 + (yPos * 0.7)}%`,
-        left: `calc(50% + ${offset}px)`,
-        transform: 'translateX(-50%) rotate(18deg)',
-        transformOrigin: 'center'
-      }}
-    >
-      <div className="w-full h-full flex flex-col">
-         {/* Eraser */}
-         <div className="w-full h-6 md:h-8 bg-pink-400 rounded-t-md border-b-4 border-slate-300" />
-         {/* Body */}
-         <div className="w-full flex-1 bg-yellow-400 border-r-[6px] border-yellow-600 border-l-[4px] border-yellow-300 flex">
-            <div className="flex-1 border-r border-yellow-500/50"></div>
-         </div>
-         {/* Wood cone */}
-         <div className="w-0 h-0 border-l-[10px] md:border-l-[14px] border-l-transparent border-r-[10px] md:border-r-[14px] border-r-transparent border-t-[25px] md:border-t-[35px] border-t-[#d2b48c] relative mx-auto">
-            {/* Graphite */}
-            <div className="absolute -top-[25px] md:-top-[35px] -left-[3px] md:-left-[4px] w-0 h-0 border-l-[3px] md:border-l-[4px] border-l-transparent border-r-[3px] md:border-r-[4px] border-r-transparent border-t-[8px] md:border-t-[12px] border-t-slate-800" />
-         </div>
-      </div>
-    </div>
-  );
-}
-
-function StoryBlock({ block, onAutoRead }: { block: Extract<ContentBlock, {type:'story_panel'}>, onAutoRead: (t:string)=>void }) {
-  const [yPos, setYPos] = useState(10);
-  const [isDragging, setIsDragging] = useState(false);
-  const [hasDipped, setHasDipped] = useState(false);
-  const areaRef = useRef<HTMLDivElement>(null);
-  const cur = block.panels[0];
-
-  useEffect(() => {
-    if (hasDipped) {
-      onAutoRead(cur.text);
-    }
-  }, [hasDipped, onAutoRead, cur.text]);
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || !areaRef.current) return;
-    const rect = areaRef.current.getBoundingClientRect();
-    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-    setYPos(y);
-    if (y > 45 && !hasDipped) setHasDipped(true);
-  };
-
-  const formattedText = cur.text.replace('Light is.', '<span class="text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.8)] font-semibold">Light is.</span>');
-
-  return (
-    <div className="w-full flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full px-2 md:px-12 py-4 md:py-8">
-      {/* Interactive Left Side */}
-      <div className="w-full md:w-1/2 flex justify-center">
-        <div 
-          ref={areaRef}
-          className="relative w-full max-w-[320px] md:max-w-[400px] h-[360px] md:h-[500px] cursor-ns-resize touch-none"
-          onPointerDown={(e) => { setIsDragging(true); areaRef.current?.setPointerCapture(e.pointerId); }}
-          onPointerUp={(e) => { setIsDragging(false); areaRef.current?.releasePointerCapture(e.pointerId); }}
-          onPointerMove={handlePointerMove}
-          onPointerCancel={(e) => { setIsDragging(false); areaRef.current?.releasePointerCapture(e.pointerId); }}
-        >
-          <div className="absolute inset-0 flex justify-center items-end pointer-events-none z-10">
-            {/* Glass */}
-            <div className="absolute bottom-[40px] left-1/2 -translate-x-1/2 w-[140px] md:w-[180px] h-[180px] md:h-[240px] rounded-b-[32px] border-2 border-white/10 bg-blue-900/10 flex flex-col justify-end overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-sm">
-               {/* Water */}
-               <div className="w-full h-[120px] md:h-[170px] bg-blue-500/20 border-t-2 border-blue-400/30 relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-blue-400/10 to-transparent" />
-               </div>
-            </div>
-          </div>
-
-          {/* Top Half (Air) */}
-          <div className="absolute inset-0 pointer-events-none clip-air z-20">
-            <Pencil yPos={yPos} offset={0} />
-          </div>
-
-          {/* Bottom Half (Water - Refracted) */}
-          <div className="absolute inset-0 pointer-events-none clip-water z-20 opacity-90 brightness-75">
-            <Pencil yPos={yPos} offset={-16} />
-          </div>
-
-          {/* Prompt overlay */}
-          <div className={`absolute top-[20%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-500 ${hasDipped || isDragging ? 'opacity-0' : 'opacity-100 animate-bounce'}`}>
-            <span className="text-white text-sm font-medium bg-black/60 px-4 py-2 rounded-full backdrop-blur-md shadow-xl border border-white/10 whitespace-nowrap">
-              Drag pencil into water ↓
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Side (Text) */}
-      <div className="w-full md:w-1/2 flex flex-col justify-center text-center md:text-left">
-         <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 font-sans tracking-tight leading-tight">
-            Seeing is Not<br className="hidden md:block"/> Always Believing.
-         </h2>
-         
-         <div className={`transition-all duration-1000 ease-out ${hasDipped ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-           <p 
-             className="text-slate-400 text-lg md:text-xl leading-relaxed font-medium"
-             dangerouslySetInnerHTML={{ __html: formattedText }}
-           />
-         </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── TAP REVEAL BLOCK ──────────────────────────────────────────────────────
 function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentBlock, {type:'tap_reveal'}>, onAutoRead:(t:string)=>void, shouldStart: () => boolean }) {
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [openLabels, setOpenLabels] = useState<Set<string>>(new Set());
   const [activeLabel, setActiveLabel] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     onAutoRead(block.instruction || 'Tap the glowing dots to explore the Water Cycle diagram.');
@@ -147,56 +39,28 @@ function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentB
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <p className="text-white/80 text-sm text-center">{block.instruction || 'Tap the glowing dots to reveal the parts'}</p>
-      <div className="relative inline-block w-full rounded-2xl overflow-hidden" style={{ maxWidth: 420 }}>
-        <Image src={block.asset} alt="Water Cycle Diagram" width={800} height={800} className="w-full h-auto rounded-2xl" />
-        {block.style === 'inline_labels' && (
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 700 360">
-            <style>{`
-              @keyframes pulseAxis {
-                0% { opacity: 0; filter: drop-shadow(0 0 0px rgba(59,130,246,0)); }
-                20% { opacity: 1; filter: drop-shadow(0 0 12px rgba(96,165,250,1)); stroke: #60a5fa; }
-                80% { opacity: 1; filter: drop-shadow(0 0 8px rgba(59,130,246,0.8)); stroke: #3b82f6; }
-                100% { opacity: 0; filter: drop-shadow(0 0 0px rgba(59,130,246,0)); }
-              }
-            `}</style>
-            {/* 1. Solid rays using bench colors */}
-            <g opacity={1}>
-              {/* Parallel ray to lens, then through F2 to Image */}
-              <line x1={49} y1={150} x2={210} y2={150} stroke="#FBBF24" strokeWidth={4} />
-              <line x1={210} y1={150} x2={511} y2={264.6} stroke="#FBBF24" strokeWidth={4} />
-              {/* Center ray from Object to Image */}
-              <line x1={49} y1={150} x2={511} y2={264.6} stroke="#2dd4bf" strokeWidth={4} />
-            </g>
-
-            {/* 2. Principal Axis (Existing blue pulse) */}
-            <line 
-              x1={0} y1={190} x2={700} y2={190} 
-              stroke="#3b82f6" 
-              strokeWidth={3} 
-              strokeDasharray="10 10" 
-              opacity={0}
-              style={{ animation: openLabels.has('axis') ? 'pulseAxis 1s ease-out' : 'none' }} 
-            />
-
-            {/* 4. F and 2F tick marks matching bench colors */}
-            {[105, 315].map((x, i) => (
-              <line key={`f${i}`} x1={x} y1={190 - 8} x2={x} y2={190 + 8} stroke="#FBBF24" strokeWidth={3} />
-            ))}
-            {[0, 420].map((x, i) => (
-              <line key={`2f${i}`} x1={x} y1={190 - 6} x2={x} y2={190 + 6} stroke="rgba(251,191,36,0.7)" strokeWidth={3} />
-            ))}
-
-            {/* 3. Object and Image markers matching the bench icons */}
-            <g>
-              {/* Object (Green) */}
-              <line x1={49} y1={190} x2={49} y2={150} stroke="#4ade80" strokeWidth={5} />
-              <polygon points="49,140 41.5,154 56.5,154" fill="#4ade80" />
-              
-              {/* Image (Pink) */}
-              <line x1={511} y1={190} x2={511} y2={264.6} stroke="#f472b6" strokeWidth={5} />
-              <polygon points="511,274.6 503.5,260.6 518.5,260.6" fill="#f472b6" />
-            </g>
-          </svg>
+      <div className="relative w-full rounded-2xl aspect-[4/3] max-w-[520px] mx-auto overflow-hidden bg-slate-900 shadow-lg border border-white/10">
+        {!imgError ? (
+          <img 
+            src={block.asset} 
+            alt="Interactive Diagram" 
+            className="w-full h-full object-cover" 
+            onError={() => setImgError(true)} 
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 relative">
+            {/* faint grid */}
+            <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+            {block.spots.map(spot => {
+              const emojiMatch = spot.label.match(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u);
+              const emoji = emojiMatch ? emojiMatch[0] : '📍';
+              return (
+                <div key={`err-${spot.id}`} className="absolute text-[36px] drop-shadow-md pointer-events-none" style={{ left: `${spot.x}%`, top: `${spot.y}%`, transform: 'translate(-50%, -50%)' }}>
+                  {emoji}
+                </div>
+              );
+            })}
+          </div>
         )}
         {block.spots.map((spot: TapRevealSpot) => {
           const isAbove = spot.y > 40;
@@ -660,14 +524,14 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
             {/* Glass content panel */}
             <div
               key={current}
-              className={`w-full ${block.type === 'optics_lab' ? 'max-w-5xl' : block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto z-20 ${direction === 'right' ? 'slide-in-right' : 'slide-in-left'}`}
+              className={`w-full ${block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto z-20 ${direction === 'right' ? 'slide-in-right' : 'slide-in-left'}`}
             >
               <div 
                 className={`relative ${block.type === 'story_panel' ? '' : 'p-5 md:p-10'}`} 
                 style={block.type === 'story_panel' ? {} : { background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }}
               >
-                {block.type === 'story_panel' && <StoryBlock block={block} onAutoRead={autoRead} />}
-                {block.type === 'optics_lab' && <OpticsDuo block={block} onAutoRead={autoRead} onComplete={() => go(1)} />}
+                {block.type === 'stain_hook' && <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />}
+                {block.type === 'kitchen_lab' && <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />}
                 {block.type === 'tap_reveal' && <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />}
                 {block.type === 'flip_card' && <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />}
                 {block.type === 'celebration' && <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />}
@@ -676,7 +540,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
               {/* Slide type label */}
               <div className="text-center mt-6">
                 <span className="text-white/60 text-xs font-bold uppercase tracking-widest drop-shadow-md">
-                  {({story_panel:'Story',optics_lab:'Light Lab',tap_reveal:'Tap to Reveal',flip_card:'Flip Card',sequence:'Sequence',celebration:'Complete'} as Record<string, string>)[block.type as string]}
+                  {({story_panel:'Story',stain_hook:'Haldi Stain',kitchen_lab:'Kitchen Lab',tap_reveal:'Tap to Reveal',flip_card:'Flip Card',sequence:'Sequence',celebration:'Complete'} as Record<string, string>)[block.type as string]}
                 </span>
               </div>
             </div>
@@ -721,20 +585,6 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
       </div>
       <style>{`
         @keyframes shake {
-          0%,100% { transform: translateX(0); }
-          15%     { transform: translateX(-8px); }
-          30%     { transform: translateX(8px); }
-          45%     { transform: translateX(-6px); }
-          60%     { transform: translateX(6px); }
-          75%     { transform: translateX(-3px); }
-          90%     { transform: translateX(3px); }
-        }
-        .clip-air { clip-path: inset(0 0 160px 0); }
-        .clip-water { clip-path: inset(calc(100% - 160px) 0 0 0); }
-        @media (min-width: 768px) {
-          .clip-air { clip-path: inset(0 0 210px 0); }
-          .clip-water { clip-path: inset(calc(100% - 210px) 0 0 0); }
-        }
       `}</style>
     </section>
   );

@@ -1,108 +1,44 @@
 import { DemoChapter } from '../types';
 
 export const demoChapter: DemoChapter = {
-  title: 'Light: Real & Virtual Images',
-  subject: 'Physics',
-  classLevel: 'Class 10',
+  title: 'Why does haldi turn red with soap?',
+  subject: 'Science',
+  classLevel: 'Class 7',
   blocks: [
+    { type: 'stain_hook', instruction: 'Tap the soap to wash the haldi stain', audio_instruction: 'Tap the soap to wash the haldi stain.', button_label: '🧼 Add soap', result_text: 'It turned RED! 😮 Why?', audio_result: "Whoa! The yellow stain turned red. Why does that happen? Let's find out!", continue_label: "Let's find out ▸", stain_color: '#F2B705', stain_color_after: '#B3261E' },
     {
-      type: 'story_panel',
-      panels: [
-        {
-          asset: '/demo/pencil-in-water.png',
-          text: "Dip a straight pencil halfway into a glass of water and look from the side. It looks bent — snapped clean in two. But the pencil never moved. Your eyes aren't lying to you. Light is."
-        }
-      ]
-    },
-    {
-      type: 'optics_lab',
-      title: 'The Light Lab',
-      instruction: 'Drag the object. Catch its image on the Catcher.',
-      audio: "Meet the Light Lab. Drag the green arrow closer or further from the lens, and watch what happens on the other side. Try to catch a sharp image on the Catcher. Keep an eye on the panel beside it too — it'll show you what you're actually building.",
-      device: 'convex_lens',
-      focal_length: 10,
-      object_height: 4,
-      min_u: 3,
-      max_u: 35,
-      default_u: 30,
-      object_image_url: '/img/optics-bench.png',
-      allow_half_cover: true,
-      missions: [
-        {
-          id: 'camera',
-          goal: 'small_real',
-          prompt: 'Mission 1: Be a camera — make a SMALL, sharp image',
-          // @ts-expect-error adding optional field
-          simpleText: '📷 Be a camera: slide the lighthouse FAR from the lens',
-          audio: "First mission. A camera shrinks a big scene onto a tiny sensor. Move the object around, keeping it past the second F mark, to catch a sharp image on the Catcher.",
-          success_audio: "Perfect. That's a camera lens at work — the whole world, shrunk onto a small sensor."
-        },
-        {
-          id: 'projector',
-          goal: 'big_real',
-          prompt: 'Mission 2: Be a projector — make a BIG, sharp image',
-          // @ts-expect-error adding optional field
-          simpleText: '🎬 Be a projector: bring it CLOSER to get a HUGE picture',
-          audio: "Second mission. Movie projectors make tiny film frames look huge on a screen. Drag the object inward, between the two F marks, and catch a big sharp image on the Catcher.",
-          success_audio: "Yes! That's exactly how a projector throws a huge picture onto a screen from a tiny slide."
-        },
-        {
-          id: 'magnifier',
-          goal: 'virtual_big',
-          prompt: 'Mission 3: Be a magnifying glass — read tiny writing',
-          // @ts-expect-error adding optional field
-          simpleText: '🔍 Be a magnifier: bring it VERY CLOSE to the lens',
-          audio: "Last mission. Bring the object very close to the lens, closer than the first F mark, and look at what the Catcher does.",
-          success_audio: "The Catcher went blank — because this image can't be caught, only seen through the lens. That's a magnifying glass."
-        }
-      ],
-      concave_twist: {
-        device: 'concave_lens',
-        focal_length: 10,
-        prompt: 'Now try to make the image BIG',
-        audio: "One more lens for you to try. Move the object around and see if you can ever make a big image with this one.",
-        reveal_audio: "No matter where you put it, this lens only ever shrinks things and shows them the right way up. That's why this exact kind of lens sits inside a door peephole — it's built to shrink, not enlarge."
-      }
+      type: 'kitchen_lab', indicator_label: 'Turmeric paper', indicator_color: '#F2B705', guided_ids: ['lemon', 'soap'], prompts: { first: 'Tap the lemon 🍋 to test it on the strip', second: 'Now tap the soap 🧼', others: 'Try the other three bottles', done: 'Look at the strip colours. What do you notice?' }, items: [
+        { id: 'lemon', label: 'Lemon juice', emoji: '🍋', liquid_color: '#FDE68A', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 6, family: 'acid', audio: 'Lemon juice. The strip stays yellow.' },
+        { id: 'vinegar', label: 'Vinegar', emoji: '🍶', liquid_color: '#EBD9B4', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 16, family: 'acid', audio: 'Vinegar. Still yellow.' },
+        { id: 'water', label: 'Plain water', emoji: '💧', liquid_color: '#BFE3FF', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 50, family: 'neutral', audio: 'Plain water. Still yellow.' },
+        { id: 'baking_soda', label: 'Baking soda water', emoji: '🥄', liquid_color: '#F1F5F9', result_color: '#E8590C', result_text: 'Turned orange-red', scale_pos: 72, family: 'base', audio: 'Baking soda water. The strip turns orange.' },
+        { id: 'soap', label: 'Soap water', emoji: '🧼', liquid_color: '#D9F3F8', result_color: '#B3261E', result_text: 'Turned deep red!', scale_pos: 92, family: 'base', audio: 'Soap water. The strip turns deep red!' }],
+      reveal: { lines: [{ emoji: '🧼', text: 'Soap and baking soda are BASES. Turmeric turns red with bases.' }, { emoji: '🍋', text: 'Lemon and vinegar are ACIDS. Turmeric stays yellow with acids.' }, { emoji: '💧', text: 'Plain water is NEUTRAL. Turmeric stays yellow here too.' }], takeaway: 'Turmeric is a base detector!', teaser: "To tell acids from plain water, chemists use other indicators. You'll meet them in the full chapter.", bar_labels: { left: 'Acid', mid: 'Neutral', right: 'Base' }, marker_pos: 62, marker_text: 'Turmeric turns red from here', continue_label: 'Try a mystery bottle ▸' },
+      mystery: { item: { id: 'mystery', label: 'Mystery bottle', emoji: '❓', liquid_color: '#E0F2FE', result_color: '#B3261E', result_text: 'Turned deep red!', scale_pos: 95, family: 'base', audio: 'The strip turns deep red!' }, question: 'Is the mystery bottle a base?', yes_label: 'Yes, a base', no_label: 'No, not a base', correct_text: 'Yes! Red means base. It was washing-powder water, the same kind of thing that turned your shirt stain red.', nudge_text: 'Look at the strip again. Red means base. Yellow means not a base.', audio_correct: 'Yes! Red means base. It was washing powder water, the same kind of thing that turned your shirt stain red.', audio_nudge: 'Look at the strip again. Red means base. Yellow means not a base.' },
+      closing: { text: 'Your stomach makes acid. Antacid medicine is a base that calms it down. Your kitchen is a chemistry lab!', audio: 'Your stomach makes acid. Antacid medicine is a base that calms it down. Your kitchen is a chemistry lab!', continue_label: 'Keep going ▸' }
     },
     {
       type: 'tap_reveal',
-      asset: '/demo/lens-diagram.png',
-      instruction: 'Tap the glowing dots to name what you just built',
+      asset: '/demo/kitchen-acids-bases.png',
+      instruction: 'Tap the glowing dots to find acids and bases in your kitchen',
       spots: [
-        {
-          id: 'focal_point',
-          x: 15, y: 40,
-          label: '🎯 Focal Point (F)',
-          definition: 'The exact spot where all parallel light rays meet after bending through the lens.',
-          audio: 'This is the Focal Point. Parallel light rays hitting the lens all bend and meet exactly here.'
-        },
-        {
-          id: 'axis',
-          x: 90, y: 50,
-          label: '📏 Principal Axis',
-          definition: 'The invisible center line we use to measure distances for the lens and object.',
-          audio: 'This straight line running through the centre of the lens is the Principal Axis — everything is measured from here.'
-        },
-        {
-          id: 'image',
-          x: 73, y: 50,
-          label: '🖼️ The Image',
-          definition: 'The picture formed where all the light rays bouncing off the object finally meet again.',
-          audio: 'This is the image you built — the exact spot where the light rays from the object meet again.'
-        }
+        { id: 'lemon', x: 24, y: 34, label: '🍋 Lemon: an acid', definition: 'Sour things like lemon are acids. Turmeric stays yellow with them.', audio: 'Lemon is an acid. Sour things are usually acids. Turmeric stays yellow with them.' },
+        { id: 'curd', x: 74, y: 34, label: '🥛 Curd: an acid', definition: 'Curd tastes a little sour because it has a mild acid. Turmeric stays yellow with it.', audio: 'Curd has a mild acid in it, which is why it tastes a little sour.' },
+        { id: 'soap', x: 26, y: 72, label: '🧼 Soap: a base', definition: 'Soap feels slippery and is a base. It turns turmeric red, just like on your shirt.', audio: 'Soap is a base. It feels slippery, and it turns turmeric red, just like on your shirt.' },
+        { id: 'antacid', x: 74, y: 72, label: '💊 Antacid: a base', definition: 'Antacid medicine is a base. It calms the acid in your stomach when you have acidity.', audio: 'Antacid medicine is a base. It calms the acid in your stomach.' }
       ]
     },
     {
       type: 'flip_card',
-      front: 'A projector throws a picture onto a screen. Real image, or virtual image?',
-      audio_front: 'A projector throws a picture onto a screen. Is that a real image, or a virtual image?',
-      back: 'Real Image ✨',
-      audio_back: 'Real! A real image can always be caught on a screen, because the actual light rays meet there. A virtual image can never be caught — you can only see it by looking through the lens or mirror.'
+      front: 'A turmeric stain stays yellow when you add lemon juice. Is lemon juice a base?',
+      audio_front: 'A turmeric stain stays yellow when you add lemon juice. Is lemon juice a base?',
+      back: 'No, it is an acid 🍋',
+      audio_back: 'No. Lemon juice is an acid. Turmeric only turns red with bases, so it stays yellow with acids, and with plain water.'
     },
     {
       type: 'celebration',
-      title: '🎉 You just did real optics!',
-      subtitle: 'Class 10 · Physics · Light — Real & Virtual Images'
+      title: '🎉 You just did real chemistry!',
+      subtitle: 'Class 7 · Science · Acids & Bases'
     }
   ]
 };
