@@ -358,7 +358,7 @@ function SequenceBlock({ block, onAutoRead, shouldStart }: { block: Extract<Cont
 // ─── CELEBRATION BLOCK ─────────────────────────────────────────────────────
 function CelebrationBlock({ block, onContinue, onAutoRead }: { block: Extract<ContentBlock,{type:'celebration'}>, onContinue:()=>void, onAutoRead:(text:string)=>void }) {
   useEffect(() => {
-    onAutoRead('Amazing! You just completed this chapter. You are a star learner!');
+    onAutoRead('You did it! Acids and bases sounds like a hard chapter, but you just learned it from a haldi stain and a few kitchen bottles. Learning can be this simple.');
   }, [onAutoRead]);
 
   return (

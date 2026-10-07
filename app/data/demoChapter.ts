@@ -5,9 +5,9 @@ export const demoChapter: DemoChapter = {
   subject: 'Science',
   classLevel: 'Class 7',
   blocks: [
-    { type: 'stain_hook', instruction: 'Tap the soap to wash the haldi stain', audio_instruction: 'Tap the soap to wash the haldi stain.', button_label: '🧼 Add soap', result_text: 'It turned RED! 😮 Why?', audio_result: "Whoa! The yellow stain turned red. Why does that happen? Let's find out!", continue_label: "Let's find out ▸", stain_color: '#F2B705', stain_color_after: '#B3261E' },
+    { type: 'stain_hook', instruction: 'Oh no! A haldi stain on a clean shirt. Tap the soap to wash it', audio_instruction: 'Oh no! A yellow haldi stain on a clean white shirt. Tap the soap to wash it.', button_label: '🧼 Add soap', result_text: 'It turned RED! 😮 Why?', audio_result: "Wait... it did not wash away. It turned bright red! Why does yellow haldi turn red with soap? Let's find out!", continue_label: "Let's find out ▸", stain_color: '#F2B705', stain_color_after: '#B3261E' },
     {
-      type: 'kitchen_lab', indicator_label: 'Turmeric paper', indicator_color: '#F2B705', guided_ids: ['lemon', 'soap'], prompts: { first: 'Tap the lemon 🍋 to test it on the strip', second: 'Now tap the soap 🧼', others: 'Try the other three bottles', done: 'Look at the strip colours. What do you notice?' }, items: [
+      type: 'kitchen_lab', indicator_label: 'Turmeric paper', indicator_color: '#F2B705', guided_ids: ['lemon', 'soap'], prompts: { first: 'Tap the lemon 🍋 to test it on its strip', second: 'Now tap the soap 🧼', others: 'Try the other three bottles', done: 'Look at the five strips. Which ones turned red?' }, items: [
         { id: 'lemon', label: 'Lemon juice', emoji: '🍋', liquid_color: '#FDE68A', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 6, family: 'acid', audio: 'Lemon juice. The strip stays yellow.' },
         { id: 'vinegar', label: 'Vinegar', emoji: '🍶', liquid_color: '#EBD9B4', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 16, family: 'acid', audio: 'Vinegar. Still yellow.' },
         { id: 'water', label: 'Plain water', emoji: '💧', liquid_color: '#BFE3FF', result_color: '#F2B705', result_text: 'Still yellow', scale_pos: 50, family: 'neutral', audio: 'Plain water. Still yellow.' },
@@ -19,7 +19,7 @@ export const demoChapter: DemoChapter = {
     },
     {
       type: 'tap_reveal',
-      asset: '/demo/kitchen-acids-bases.png',
+      asset: '/demo/acid-base-tap-reveal.png',
       instruction: 'Tap the glowing dots to find acids and bases in your kitchen',
       spots: [
         { id: 'lemon', x: 24, y: 34, label: '🍋 Lemon: an acid', definition: 'Sour things like lemon are acids. Turmeric stays yellow with them.', audio: 'Lemon is an acid. Sour things are usually acids. Turmeric stays yellow with them.' },
@@ -37,8 +37,8 @@ export const demoChapter: DemoChapter = {
     },
     {
       type: 'celebration',
-      title: '🎉 You just did real chemistry!',
-      subtitle: 'Class 7 · Science · Acids & Bases'
+      title: '🎉 You just learned Acids & Bases!',
+      subtitle: 'Sounds like a hard chapter. You just learned it in minutes.'
     }
   ]
 };

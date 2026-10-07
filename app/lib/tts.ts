@@ -17,6 +17,13 @@ export function visibleRatio(el: Element | null): number {
   return Math.max(0, visible) / denom;
 }
 
+export function stripForSpeech(text: string): string {
+  if (!text) return '';
+  return text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D\u20E3▸→←↓]/gu, '')
+             .replace(/\s+/g, ' ')
+             .trim();
+}
+
 export function stopAudioFor(owner: string) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   ownerEpochs[owner] = epochOf(owner) + 1; // invalidates any playAudio call still waiting on its awaits
@@ -147,8 +154,8 @@ export async function playAudio(
   const myEpoch = epochOf(owner);
   const stale = () => myEpoch !== epochOf(owner);
 
-  if (!botEnabled || !text?.trim()) return;
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  if (!botEnabled || !text?.trim()) { onEnd?.(); return; }
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) { onEnd?.(); return; }
   
   // 1. Hard cancel and flush if we are starting new speech
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
@@ -158,31 +165,31 @@ export async function playAudio(
   // 2. Micro-delay — lets the engine fully flush before we queue new speech
   //    This is the key fix for the Chrome resume-loop bug
   await new Promise(resolve => setTimeout(resolve, 80));
-  if (stale()) return;
+  if (stale()) { onEnd?.(); return; }
 
   // 3. If something snuck in during the flush gap, cancel again
   if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
     window.speechSynthesis.cancel();
     await new Promise(resolve => setTimeout(resolve, 50));
-    if (stale()) return;
+    if (stale()) { onEnd?.(); return; }
   }
   
   // 4. Await voices
   await preloadVoices();
-  if (stale()) return;
+  if (stale()) { onEnd?.(); return; }
 
   // 4.5. Re-check right before speaking — this closes the race window.
   // Everything above this line can take a noticeable moment (voice loading
   // especially), and the caller's visibility may have changed since they
   // first decided to call playAudio.
-  if (stale()) return;
+  if (stale()) { onEnd?.(); return; }
   if (shouldStart) {
     const res = shouldStart();
-    if (!res) return;
+    if (!res) { onEnd?.(); return; }
   }
   
   // 5. Build utterance
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(stripForSpeech(text));
   const voice = getBestVoice(langCode);
   if (voice) utterance.voice = voice;
   
@@ -221,10 +228,10 @@ export async function playAudio(
   // 7. One last check immediately before speak() — covers the (rare) case
   // where state changed in the microtask gap between the check above and
   // utterance construction.
-  if (stale()) return;
+  if (stale()) { onEnd?.(); return; }
   if (shouldStart) {
     const res = shouldStart();
-    if (!res) return;
+    if (!res) { onEnd?.(); return; }
   }
 
   // 8. Speak
