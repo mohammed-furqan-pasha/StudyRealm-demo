@@ -35,6 +35,10 @@ export default function OpticsLab({
   labMode = true,
   introState,
   setIntroState,
+  toggleLabMode,
+  cameraStoryState,
+  exploreFlipped,
+  storyFinishedNaturally,
 }: {
   block: OpticsLabBlockData;
   onAutoRead: (t: string) => void;
@@ -51,6 +55,10 @@ export default function OpticsLab({
   labMode?: boolean;
   introState?: 'idle' | 'playing' | 'handoff' | 'done';
   setIntroState?: (state: 'idle' | 'playing' | 'handoff' | 'done') => void;
+  toggleLabMode?: () => void;
+  cameraStoryState?: 'idle' | 'playing' | 'done';
+  exploreFlipped?: boolean;
+  storyFinishedNaturally?: boolean;
 }) {
   const [device, setDevice] = useState<OpticsDevice>(block.device);
   const [focalLength, setFocalLength] = useState(block.focal_length);
@@ -79,6 +87,18 @@ export default function OpticsLab({
   const [showVirtualMessage, setShowVirtualMessage] = useState(false);
   const virtualFeedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const virtualMsgTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [showStoryHandoff, setShowStoryHandoff] = useState(false);
+  const storyHandoffShownRef = useRef(false);
+
+  useEffect(() => {
+    if (storyFinishedNaturally && !storyHandoffShownRef.current) {
+      storyHandoffShownRef.current = true;
+      setShowStoryHandoff(true);
+      const t = setTimeout(() => setShowStoryHandoff(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [storyFinishedNaturally]);
 
   const mirror = device === 'concave_mirror' || device === 'convex_mirror';
   const result: OpticsResult = useMemo(
@@ -138,9 +158,15 @@ export default function OpticsLab({
   // check mission completion whenever the object moves
   useEffect(() => {
     if (introState === 'playing' || introState === 'handoff') return;
+    if (cameraStoryState === 'playing') return;
     if (twistActive || allDone || !currentMission) return;
     const goal = classifyForMission(result);
     if (goal !== currentMission.goal) return;
+    
+    if (!labMode && currentMission.goal === 'small_real') {
+      if (!storyFinishedNaturally && !exploreFlipped) return;
+    }
+
     // for real-image goals, also require the screen to be roughly at the sharp spot
     if (!result.isVirtual && !result.atInfinity) {
       const dist = Math.abs(effectiveScreenU - Math.abs(result.v));
@@ -459,7 +485,7 @@ export default function OpticsLab({
   ) : null;
 
   return (
-    <div className={labMode ? "flex flex-col items-center gap-2 md:gap-3 w-full" : "flex flex-col items-center gap-2 md:gap-3 w-full max-md:contents"}>
+    <div className={labMode ? "flex flex-col items-center gap-2 md:gap-3 w-full" : "contents"}>
       <style>{`
         @keyframes wiggleX {
           0%, 100% { transform: translateX(0); }
@@ -467,13 +493,23 @@ export default function OpticsLab({
           75% { transform: translateX(6px); }
         }
       `}</style>
-      <p className="hidden md:block text-white text-sm text-center font-medium">{block.title}</p>
+      <p className={labMode ? "hidden md:block text-white text-sm text-center font-medium" : "hidden"}>{block.title}</p>
 
-      {/* mission / twist chip */}
-      {introStage >= 3 && (
-        <div className={labMode 
-          ? "px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none"
-          : "px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none max-md:order-1 max-md:mt-2 max-md:w-[90%]"} style={{
+      {/* switch button for lab mode */}
+      {labMode && toggleLabMode && (
+        <button
+          role="switch"
+          aria-checked={true}
+          onClick={toggleLabMode}
+          className="absolute right-1 top-10 md:-top-1 md:right-0 z-20 min-h-[44px] px-4 rounded-full bg-black/40 border border-white/20 text-white/90 text-xs md:text-sm font-medium backdrop-blur-md hover:bg-black/60 transition"
+        >
+          Hide the physics
+        </button>
+      )}
+
+      {/* mission / twist chip (lab mode) */}
+      {introStage >= 3 && labMode && (
+        <div className="px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150 max-w-full text-center line-clamp-2 md:line-clamp-none" style={{
           background: twistActive ? 'rgba(248,113,113,0.18)' : 'rgba(45,212,191,0.18)',
           border: `1px solid ${twistActive ? 'rgba(248,113,113,0.4)' : 'rgba(45,212,191,0.4)'}`,
           color: twistActive ? '#f87171' : '#2dd4bf',
@@ -486,6 +522,38 @@ export default function OpticsLab({
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Top Header in Simple Mode */}
+      {!labMode && (
+        <div className="w-full flex flex-wrap items-start gap-2 order-1 mt-2 w-[94%] sm:w-full mx-auto md:mb-1">
+          {introStage >= 3 && (
+            <div className="flex-1 min-w-[200px] px-4 py-2 md:py-1.5 rounded-2xl md:rounded-full text-[11px] md:text-xs font-bold transition-colors duration-150" style={{
+              background: twistActive ? 'rgba(248,113,113,0.18)' : 'rgba(45,212,191,0.18)',
+              border: `1px solid ${twistActive ? 'rgba(248,113,113,0.4)' : 'rgba(45,212,191,0.4)'}`,
+              color: twistActive ? '#f87171' : '#2dd4bf',
+            }}>
+              <div key={label} className="animate-[fadeIn_0.15s_ease-out] flex items-center justify-start gap-2 text-left">
+                <span>{label}</span>
+                {effectiveFlipped && (
+                  <button onClick={() => setFilmFlipped?.(false)} className="underline opacity-80 hover:opacity-100 text-[#2dd4bf] whitespace-nowrap shrink-0">
+                    Flip back
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          {toggleLabMode && (
+            <button
+              role="switch"
+              aria-checked={false}
+              onClick={toggleLabMode}
+              className="shrink-0 ml-auto min-h-[44px] px-4 rounded-full bg-black/40 border border-white/20 text-white/90 text-xs md:text-sm font-medium backdrop-blur-md hover:bg-black/60 transition"
+            >
+              🔬 Show the physics
+            </button>
+          )}
         </div>
       )}
 
@@ -506,13 +574,13 @@ export default function OpticsLab({
         </div>
       )}
       <div
-        className={labMode ? "relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[140px] md:h-auto" : "relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[120px] md:h-auto max-md:order-3"}
-        style={{ background: 'rgba(0,0,0,0.35)', maxWidth: 640 }}
+        className={labMode ? "relative w-[calc(100%+1.5rem)] md:w-full rounded-2xl overflow-hidden select-none touch-none h-[140px] md:h-auto" : "relative w-full rounded-2xl overflow-hidden select-none touch-none h-[120px] md:h-[170px] order-3"}
+        style={labMode ? { background: 'rgba(0,0,0,0.35)', maxWidth: 640 } : { background: 'rgba(0,0,0,0.35)' }}
         onPointerMove={onPointerMove}
         onPointerUp={stopDrag}
         onPointerLeave={stopDrag}
       >
-        <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 md:static md:translate-y-0">
+        <div className={labMode ? "absolute top-1/2 left-0 w-full -translate-y-1/2 md:relative md:top-0 md:translate-y-0" : "absolute top-1/2 left-0 w-full -translate-y-1/2"}>
           <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} className="w-full h-auto">
           {/* principal axis */}
           {labMode && <line x1={20} y1={AXIS_Y} x2={VB_W - 20} y2={AXIS_Y} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" />}
@@ -530,21 +598,6 @@ export default function OpticsLab({
               <rect x={f1x} y={AXIS_Y - 4} width={CX - f1x} height={8} rx={4}
                     fill="#C084FC" opacity={u <= focalLength ? 0.35 : 0.15} style={{ transition: 'opacity 150ms ease-out' }} />
 
-              {/* Chips under the track */}
-              <g transform={`translate(${xForU(block.max_u) + (twof1x - xForU(block.max_u)) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u > 2 * focalLength ? 1 : 0.5 }}>
-                <text textAnchor="middle" fontSize={20} y={0}>📷</text>
-                <text textAnchor="middle" fontSize={12} fill="#38BDF8" fontWeight="bold" y={16}>Far away</text>
-              </g>
-
-              <g transform={`translate(${twof1x + (f1x - twof1x) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u > focalLength && u <= 2 * focalLength ? 1 : 0.5 }}>
-                <text textAnchor="middle" fontSize={20} y={0}>🎬</text>
-                <text textAnchor="middle" fontSize={12} fill="#FBBF24" fontWeight="bold" y={16}>Closer</text>
-              </g>
-
-              <g transform={`translate(${f1x + (CX - f1x) / 2}, ${AXIS_Y + 28})`} style={{ transition: 'opacity 150ms ease-out', opacity: u <= focalLength ? 1 : 0.5 }}>
-                <text textAnchor="middle" fontSize={20} y={0}>🔍</text>
-                <text textAnchor="middle" fontSize={12} fill="#C084FC" fontWeight="bold" y={16}>Very close</text>
-              </g>
             </g>
           )}
 
@@ -734,6 +787,13 @@ export default function OpticsLab({
                 <text x={0} y={35} fontSize={12} fill="black" fontWeight="bold" textAnchor="middle">Your turn! Drag the lighthouse</text>
               </g>
             )}
+            {showStoryHandoff && !labMode && (
+              <g transform={`translate(${objX}, ${AXIS_Y + 30})`} pointerEvents="none" className="animate-[fadeIn_0.3s_ease-out] z-50">
+                <text x={0} y={0} fontSize={40} textAnchor="middle" opacity={0.6}>👆</text>
+                <rect x={-100} y={15} width={200} height={30} rx={15} fill="#4ade80" />
+                <text x={0} y={35} fontSize={12} fill="black" fontWeight="bold" textAnchor="middle">Now slide the lighthouse closer</text>
+              </g>
+            )}
             <circle cx={objX} cy={AXIS_Y} r={result.isVirtual ? 30 : 22} fill="transparent" />
             <circle cx={objX} cy={AXIS_Y} r={10} fill="rgba(74,222,128,0.25)" stroke="#4ade80" strokeWidth={2} />
           </g>
@@ -743,7 +803,7 @@ export default function OpticsLab({
       </div>
 
       {/* Remote drag strip (mobile only) */}
-      <div className={labMode ? "md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none" : "md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none max-md:order-4 max-md:-mt-2"} style={{ touchAction: 'none' }}>
+      <div className={labMode ? "md:hidden relative w-[calc(100%+1.5rem)] -mx-3 h-[56px] mt-1 select-none" : "md:hidden relative w-full h-[56px] mt-1 select-none order-4"} style={{ touchAction: 'none' }}>
         {/* Mobile zones (simple mode) */}
         {!labMode && device === 'convex_lens' && (
           <>
@@ -861,6 +921,29 @@ export default function OpticsLab({
         )}
       </div>
 
+      {/* HTML Zone Labels for Simple View */}
+      {!labMode && device === 'convex_lens' && (
+        <div className="relative w-full h-[40px] order-5 md:mt-1 pointer-events-none">
+          <div className="absolute flex justify-between" style={{
+            left: `${(xForU(block.max_u) / VB_W) * 100}%`,
+            width: `${((CX - 15 - xForU(block.max_u)) / VB_W) * 100}%`,
+          }}>
+            <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-0 md:gap-1.5 transition-opacity" style={{ opacity: u > 2 * focalLength ? 1 : 0.4 }}>
+              <span className="text-[18px] leading-none">📷</span>
+              <span className="text-xs md:text-sm text-[#38BDF8] font-bold leading-tight">Far away</span>
+            </div>
+            <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-0 md:gap-1.5 transition-opacity" style={{ opacity: u > focalLength && u <= 2 * focalLength ? 1 : 0.4 }}>
+              <span className="text-[18px] leading-none">🎬</span>
+              <span className="text-xs md:text-sm text-[#FBBF24] font-bold leading-tight">Closer</span>
+            </div>
+            <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-0 md:gap-1.5 transition-opacity" style={{ opacity: u <= focalLength ? 1 : 0.4 }}>
+              <span className="text-[18px] leading-none">🔍</span>
+              <span className="text-xs md:text-sm text-[#C084FC] font-bold leading-tight text-center md:whitespace-nowrap">Very close</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* virtual catcher message */}
       <div className={labMode ? "h-[20px] md:h-[24px] flex items-center justify-center transition-opacity duration-300 -mt-1 md:mt-0" : "hidden"} style={{ opacity: showVirtualMessage ? 1 : 0, pointerEvents: showVirtualMessage ? 'auto' : 'none' }}>
         <div className="text-sm text-[#F87171] font-medium max-w-lg text-center px-4">
@@ -868,7 +951,7 @@ export default function OpticsLab({
         </div>
       </div>
 
-      <div className={labMode ? "flex flex-col items-center gap-1 md:gap-2" : "flex flex-col items-center gap-1 md:gap-2 max-md:order-5 max-md:my-2"}>
+      <div className={labMode ? "flex flex-col items-center gap-1 md:gap-2" : "flex flex-col items-center gap-1 md:gap-2 order-6 my-2 transition-opacity duration-200"} style={{ opacity: !labMode && classifyForMission(result) === 'small_real' ? 0 : 1 }}>
         {!labMode && device === 'convex_lens' ? (
           <div className="text-sm text-white/90 font-medium text-center px-4 max-w-lg leading-tight md:leading-normal">
             {result.atInfinity 

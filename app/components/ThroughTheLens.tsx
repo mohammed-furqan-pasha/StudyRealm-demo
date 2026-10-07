@@ -61,10 +61,10 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
 
   return (
     <div
-      className={`relative w-full rounded-2xl overflow-hidden mb-20 md:mb-0 ${active ? 'ring-2 ring-yellow-400' : ''}`}
+      className={`relative rounded-2xl overflow-hidden ${labMode ? 'w-full mb-20 md:mb-0' : 'w-full h-full flex flex-col'} ${active ? 'ring-2 ring-yellow-400' : ''}`}
       style={{ 
-        background: 'rgba(0,0,0,0.35)', 
-        border: `2px solid ${!labMode && device === 'convex_lens' ? ZONE_COLORS[mode] : 'rgba(255,255,255,0.18)'}`, 
+        background: labMode ? 'rgba(0,0,0,0.35)' : 'transparent', 
+        border: labMode ? '2px solid rgba(255,255,255,0.18)' : 'none', 
         overflow: 'hidden',
         transition: 'border-color 150ms ease-out'
       }}
@@ -74,8 +74,8 @@ export default function ThroughTheLens({ worldImageUrl, result, device, active, 
         <p className="text-sm font-bold transition-colors duration-150" style={{ color: !labMode && device === 'convex_lens' ? ZONE_COLORS[mode] : 'white' }}>{info.label} Mode</p>
       </div>
 
-      <div className={labMode ? "w-full h-[180px] md:h-auto flex justify-center items-center" : "w-full h-[240px] md:h-auto flex justify-center items-center"}>
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="max-w-full h-full md:w-full md:h-auto" style={{ touchAction: visualMode === 'virtual_big' ? 'none' : undefined }}>
+      <div className={labMode ? "w-full h-[180px] md:h-auto flex justify-center items-center" : "w-full flex-1 min-h-0 flex justify-center items-center"}>
+        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className={labMode ? "max-w-full h-full md:w-full md:h-auto" : "max-w-full max-h-full"} style={{ touchAction: visualMode === 'virtual_big' ? 'none' : undefined }}>
           {visualMode === 'small_real' ? (
             <CameraScene worldImageUrl={worldImageUrl} scaleY={scaleY} screenDist={screenDist} />
           ) : visualMode === 'big_real' ? (
