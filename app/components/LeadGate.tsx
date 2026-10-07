@@ -51,7 +51,7 @@ export default function LeadGate({ onSubmit }: Props) {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!validate()) return;
     setLoading(true);
@@ -63,10 +63,12 @@ export default function LeadGate({ onSubmit }: Props) {
         mobile: form.mobile,
         timestamp: new Date().toLocaleString('en-IN', { hour12: false }),
       });
-      await fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
+      fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors', keepalive: true })
+        .catch((err) => console.error('Lead submit failed:', err));
     } catch { /* silent — no-cors won't throw usefully */ }
     setSubmitted(true);
-    setTimeout(() => { setLoading(false); onSubmit(form); }, 800);
+    onSubmit(form);
+    setLoading(false);
   };
 
   const inputClasses = "w-full border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition text-sm bg-white";
