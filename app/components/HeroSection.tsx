@@ -1,24 +1,21 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { scrollToSection } from '../lib/scrollTo';
+import { useReveal } from '../lib/useReveal';
 
-export default function HeroSection() {
+export default function HeroSection({ ready = true }: { ready?: boolean }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const pillsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('opacity-100', 'translate-y-0'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
+  useReveal(wrapperRef, ready);
 
   const scrollToDemo = () => {
-    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+    scrollToSection('demo');
   };
 
   return (
-    <>
+    <div ref={wrapperRef} className="contents">
       {/* Slide 1: Hero */}
       <section className="min-h-svh md:min-h-[100dvh] w-full snap-start overflow-hidden md:overflow-x-clip md:overflow-y-visible bg-white flex flex-col">
         {/* Nav */}
@@ -40,24 +37,24 @@ export default function HeroSection() {
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 w-full flex-1">
             {/* Left: Text Content */}
             <div className="flex-1 flex flex-col items-center justify-center md:justify-center md:self-center md:items-start text-center md:text-left w-full pb-24 md:pb-0">
-              <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-4 py-2 rounded-full mb-6">
+              <div className="reveal inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-4 py-2 rounded-full mb-6" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
                 <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
                 Karnataka’s Premier LKG-10 Platform
               </div>
 
-              <h1 className="text-[28px] md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.15] mb-6 tracking-tight">
+              <h1 className="reveal text-[28px] md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.15] mb-6 tracking-tight" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
                 Every student learns.<br />
                 <span className="text-teal-600">
                   Every teacher sees it.
                 </span>
               </h1>
 
-              <p className="text-base md:text-xl text-slate-600 max-w-lg mb-8 leading-relaxed font-medium">
+              <p className="reveal text-base md:text-xl text-slate-600 max-w-lg mb-8 leading-relaxed font-medium" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
                 Fun lessons kids love, simple progress updates for teachers and parents,
                 and lessons that follow India&apos;s latest school guidelines. No app to download.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-8 md:mb-8 w-full sm:w-auto">
+              <div className="reveal flex flex-col sm:flex-row gap-3 md:gap-4 mb-8 md:mb-8 w-full sm:w-auto" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
                 <button
                   onClick={scrollToDemo}
                   className="px-8 py-4 rounded-xl text-white font-bold text-base transition-all bg-teal-500 hover:bg-teal-600 shadow-md hover:shadow-lg active:scale-95 w-full sm:w-auto"
@@ -66,6 +63,7 @@ export default function HeroSection() {
                 </button>
                 <a
                   href="#contact"
+                  onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}
                   className="px-8 py-4 rounded-xl text-slate-700 font-bold text-base border-2 border-slate-200 hover:border-teal-300 hover:text-teal-600 transition w-full sm:w-auto text-center flex items-center justify-center"
                 >
                   Book a 30-Min Demo
@@ -73,7 +71,7 @@ export default function HeroSection() {
               </div>
 
               {/* Stats - Sleek Trust Bar */}
-              <div ref={pillsRef} className="grid grid-cols-2 md:flex md:flex-wrap items-center justify-center md:justify-start gap-y-4 gap-x-2 md:gap-x-8 w-full scale-90 md:scale-100 origin-left pb-2 md:pb-0">
+              <div ref={pillsRef} className="reveal grid grid-cols-2 md:flex md:flex-wrap items-center justify-center md:justify-start gap-y-4 gap-x-2 md:gap-x-8 w-full scale-90 md:scale-100 origin-left pb-2 md:pb-0" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
                 {[
                   { n: '400+', label: 'Learning Moments' },
                   { n: 'LKG - Class 10', label: 'All Grades' },
@@ -125,7 +123,7 @@ export default function HeroSection() {
       {/* Slide 2: The Full Loop (Now includes CTA) */}
       <section id="features" className="min-h-svh md:min-h-[100dvh] w-full snap-start overflow-visible md:overflow-x-clip bg-slate-50 border-t border-slate-100 flex flex-col justify-center items-center pt-24 pb-28 md:py-4">
         <div className="w-full max-w-7xl px-4 md:px-6 flex flex-col md:h-full justify-center md:max-h-full">
-          <div className="text-center mb-4 md:mb-8 shrink-0">
+          <div className="reveal text-center mb-4 md:mb-8 shrink-0" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
             <p className="text-slate-500 font-bold text-[10px] md:text-sm uppercase tracking-widest mb-1 md:mb-2">The Full Loop</p>
             <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
               Everyone stays informed
@@ -134,7 +132,7 @@ export default function HeroSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 shrink overflow-visible md:min-h-0 md:overflow-y-auto w-full">
             {/* Student Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
+            <div className="reveal rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-teal-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">
@@ -175,7 +173,7 @@ export default function HeroSection() {
             </div>
 
             {/* Teacher Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
+            <div className="reveal rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-blue-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">
@@ -215,7 +213,7 @@ export default function HeroSection() {
             </div>
 
             {/* Parent Card */}
-            <div className="rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group">
+            <div className="reveal rounded-2xl md:rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col relative shrink-0 md:min-h-[280px] overflow-hidden group" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
               <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-purple-500"></div>
               <div className="p-4 md:p-6 flex flex-col md:h-full">
                 <div className="flex items-center gap-3 mb-2 md:mb-4">
@@ -256,7 +254,7 @@ export default function HeroSection() {
           </div>
           
           {/* Direct CTA attached to Full Loop */}
-          <div className="mt-6 md:mt-8 shrink-0 flex flex-col items-center">
+          <div className="reveal mt-6 md:mt-8 shrink-0 flex flex-col items-center" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
             <p className="text-slate-500 mb-3 font-bold tracking-wide uppercase text-[10px] md:text-xs">See what a real chapter feels like</p>
             <button
               onClick={scrollToDemo}
@@ -267,6 +265,6 @@ export default function HeroSection() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

@@ -486,7 +486,7 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
   const progress = ((current + 1) / total) * 100;
 
   return (
-    <section id="demo" ref={containerRef} className="relative w-full h-screen overflow-hidden flex flex-col bg-[#0F172A]">
+    <section id="demo" ref={containerRef} className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-[#0F172A]">
       {/* Ambient premium science background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-teal-500/5 rounded-full blur-[120px] animate-[pulse_8s_ease-in-out_infinite]" />
@@ -500,8 +500,8 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
         </span>
         <div className="flex-1 bg-white/20 rounded-full h-1 overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, background: '#FBBF24' }}
+            className="h-full rounded-full"
+            style={{ width: '100%', transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 500ms ease-out', background: '#FBBF24' }}
           />
         </div>
       </div>
@@ -518,13 +518,13 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
         </button>
 
         {/* Scroll Wrapper */}
-        <div ref={scrollRef} className={`w-full h-full ${canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'} [scrollbar-width:thin]`}>
+        <div ref={scrollRef} className={`w-full h-full ${canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'} [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.28)_transparent]`}>
           {/* Inner centering div */}
           <div ref={innerRef} className="min-h-full w-full flex flex-col items-center justify-center pb-24 md:pb-0">
             {/* Glass content panel */}
             <div
               key={current}
-              className={`w-full ${block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto z-20 ${direction === 'right' ? 'slide-in-right' : 'slide-in-left'}`}
+              className={`w-full ${block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto z-20 ${direction === 'right' ? 'slide-up-next' : 'slide-up-prev'}`}
             >
               <div 
                 className={`relative ${block.type === 'story_panel' ? '' : 'p-5 md:p-10'}`} 

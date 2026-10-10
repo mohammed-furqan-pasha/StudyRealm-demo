@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
+import { scrollToSection } from '../lib/scrollTo';
+import { useReveal } from '../lib/useReveal';
 import { 
   LayoutDashboard, 
   TrendingUp, 
@@ -58,19 +60,21 @@ const features: Feature[] = [
 
 export default function LockedFeatures() {
   const [activeFeature, setActiveFeature] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  useReveal(sectionRef);
 
   return (
-    <section className="min-h-svh lg:min-h-[100dvh] lg:h-auto overflow-visible lg:overflow-visible flex flex-col justify-center items-center px-4 md:px-6 bg-slate-50 border-t border-slate-100 w-full pt-20 pb-28 lg:pt-8 lg:pb-8">
+    <section ref={sectionRef} className="min-h-svh lg:min-h-[100dvh] lg:h-auto overflow-visible lg:overflow-visible flex flex-col justify-center items-center px-4 md:px-6 bg-slate-50 border-t border-slate-100 w-full pt-20 pb-28 lg:pt-8 lg:pb-8">
       <div className="max-w-6xl mx-auto w-full flex flex-col lg:h-auto justify-center lg:max-h-none">
         {/* Header */}
         <div className="text-center mb-4 lg:mb-5 shrink-0">
-          <p className="text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-1 md:mb-2">
+          <p className="reveal text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-1 md:mb-2" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
             Full Platform
           </p>
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <h2 className="reveal text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif', '--reveal-delay': '70ms' } as React.CSSProperties}>
             Powerful Tools for Teachers and Management
           </h2>
-          <p className="text-slate-600 text-sm md:text-base max-w-2xl mx-auto">
+          <p className="reveal text-slate-600 text-sm md:text-base max-w-2xl mx-auto" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
             These features need live classroom data. Tell us about your school and we&apos;ll show them to you in a free demo.
           </p>
         </div>
@@ -78,7 +82,7 @@ export default function LockedFeatures() {
         {/* Desktop: Interactive Feature Panel */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-8 lg:items-stretch items-start shrink min-h-0">
           {/* Left: List of features */}
-          <div className="col-span-5 flex flex-col gap-2 shrink overflow-hidden h-full">
+          <div className="reveal col-span-5 flex flex-col gap-2 shrink overflow-hidden h-full" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
             {features.map((f, idx) => (
               <button 
                 key={f.id}
@@ -189,9 +193,9 @@ export default function LockedFeatures() {
         </div>
 
         {/* Unified CTA */}
-        <div className="mt-5 lg:mt-8 flex justify-center shrink-0 static lg:relative lg:z-10">
+        <div className="reveal mt-5 lg:mt-8 flex justify-center shrink-0 static lg:relative lg:z-10" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
           <button 
-            onClick={() => document.getElementById('survey')?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => scrollToSection('survey')}
             className="w-full lg:w-auto bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm md:text-base px-8 py-3 rounded-full shadow-lg hover:shadow-teal-600/20 transition-all transform hover:-translate-y-1"
           >
             Take the Quick Survey →

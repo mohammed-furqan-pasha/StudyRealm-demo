@@ -8,6 +8,7 @@ import LockedFeatures from './components/LockedFeatures';
 import ContactSection from './components/ContactSection';
 import SurveySection from './components/SurveySection';
 import { LeadFormData } from './types';
+import { scrollToSection } from './lib/scrollTo';
 
 export default function Home() {
   const [gateOpen, setGateOpen] = useState(true);
@@ -20,7 +21,7 @@ export default function Home() {
 
   const handleDemoComplete = () => {
     setTimeout(() => {
-      featuresRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollToSection(featuresRef.current);
     }, 400);
   };
 
@@ -30,8 +31,8 @@ export default function Home() {
         setLeadData(data);
         setGateOpen(false);
       }} />}
-      <main className={`h-[100dvh] overflow-y-auto overflow-x-hidden snap-y snap-mandatory md:snap-proximity scroll-smooth ${gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}`}>
-        <HeroSection />
+      <main className={`h-[100dvh] overflow-y-auto overflow-x-hidden page-scroller ${gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}`}>
+        <HeroSection ready={!gateOpen} />
         <div className="snap-start shrink-0">
           <DemoPlayer onComplete={handleDemoComplete} isActive={!gateOpen} />
         </div>

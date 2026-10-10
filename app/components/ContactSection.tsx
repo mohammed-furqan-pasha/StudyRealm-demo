@@ -2,6 +2,8 @@
 
 import { Calendar, Mail, TrendingUp, Building2, Phone } from 'lucide-react';
 import Image from 'next/image';
+import { useRef } from 'react';
+import { useReveal } from '../lib/useReveal';
 
 const CALENDLY_LINK = "https://calendly.com/studyrealmtechnologies";
 const WHATSAPP_NUMBER = "919019588700";
@@ -17,8 +19,11 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 export default function ContactSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  useReveal(sectionRef);
+
   return (
-    <section id="contact" className="min-h-[100dvh] overflow-y-auto md:overflow-visible flex flex-col justify-between pt-8 pb-0 md:py-6 px-5 md:px-6 bg-slate-900 text-white snap-start">
+    <section ref={sectionRef} id="contact" className="min-h-[100dvh] overflow-y-auto md:overflow-visible flex flex-col justify-between pt-8 pb-0 md:py-6 px-5 md:px-6 bg-slate-900 text-white snap-start">
       <div className="max-w-5xl mx-auto w-full flex flex-col h-full justify-between">
         
         {/* Top: Header */}
@@ -26,7 +31,7 @@ export default function ContactSection() {
           <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[10px] font-bold px-3 py-1.5 rounded-full mb-3 uppercase tracking-widest shadow-[0_0_15px_rgba(20,184,166,0.1)]">
             ✦ Innovation Partnership Program
           </div>
-          <h2 className="text-2xl md:text-4xl font-bold mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <h2 className="reveal text-2xl md:text-4xl font-bold mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif', '--reveal-delay': '0ms' } as React.CSSProperties}>
             Join our Term-1 Pilot
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto text-xs leading-relaxed hidden sm:block">
@@ -44,17 +49,19 @@ export default function ContactSection() {
             rel="noopener noreferrer"
             className={`col-span-2 md:col-span-1 group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/80 backdrop-blur-md border border-white/10 p-4 md:p-5 text-center transition-all shadow-2xl shadow-black/40 relative overflow-hidden shrink-0 ${isPlaceholder(CALENDLY_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:shadow-teal-900/30 hover:border-teal-500/50'}`}
           >
-            {/* Subtle highlight gradient */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-400/30 to-transparent"></div>
-            
-            <div>
-              <Calendar className="w-8 h-8 text-teal-400 mb-2 mx-auto opacity-90 group-hover:scale-110 transition-transform duration-300" />
-              <h3 className="font-bold text-white text-base md:text-lg mb-1">Book a Demo</h3>
-              <p className="text-slate-400 text-[11px] mb-4">A 30-minute session for your class.</p>
+            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
+              {/* Subtle highlight gradient */}
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-400/30 to-transparent"></div>
+              
+              <div>
+                <Calendar className="w-8 h-8 text-teal-400 mb-2 mx-auto opacity-90 group-hover:scale-110 transition-transform duration-300" />
+                <h3 className="font-bold text-white text-base md:text-lg mb-1">Book a Demo</h3>
+                <p className="text-slate-400 text-[11px] mb-4">A 30-minute session for your class.</p>
+              </div>
+              <span className={`inline-block text-white text-[11px] md:text-xs font-bold px-4 py-2.5 rounded-full transition w-full shadow-lg ${isPlaceholder(CALENDLY_LINK) ? 'bg-slate-700' : 'bg-teal-600 hover:bg-teal-500'}`}>
+                {isPlaceholder(CALENDLY_LINK) ? 'Coming soon' : 'Open Calendar →'}
+              </span>
             </div>
-            <span className={`inline-block text-white text-[11px] md:text-xs font-bold px-4 py-2.5 rounded-full transition w-full shadow-lg ${isPlaceholder(CALENDLY_LINK) ? 'bg-slate-700' : 'bg-teal-600 hover:bg-teal-500'}`}>
-              {isPlaceholder(CALENDLY_LINK) ? 'Coming soon' : 'Open Calendar →'}
-            </span>
           </a>
 
           {/* WhatsApp - SECONDARY CTA */}
@@ -64,15 +71,17 @@ export default function ContactSection() {
             rel="noopener noreferrer"
             className={`group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-3 md:p-5 text-center transition-all shadow-xl shadow-black/30 shrink-0 ${isPlaceholder(WHATSAPP_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:bg-[#1e293b]/80 hover:border-white/20'}`}
           >
-            <div>
-              <WhatsAppIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
-              <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">WhatsApp</h3>
-              <p className="hidden md:block text-slate-400 text-[11px] mb-4">Quick questions? We reply in 1 hour.<br/><span className="text-slate-300 font-semibold">{isPlaceholder(WHATSAPP_NUMBER) ? '+91 XXXXX XXXXX' : '+91 90195 88700'}</span></p>
-            </div>
-            <div>
-              <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 ${isPlaceholder(WHATSAPP_LINK) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
-                {isPlaceholder(WHATSAPP_LINK) ? 'Coming soon' : 'Chat Now →'}
-              </span>
+            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
+              <div>
+                <WhatsAppIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
+                <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">WhatsApp</h3>
+                <p className="hidden md:block text-slate-400 text-[11px] mb-4">Quick questions? We reply in 1 hour.<br/><span className="text-slate-300 font-semibold">{isPlaceholder(WHATSAPP_NUMBER) ? '+91 XXXXX XXXXX' : '+91 90195 88700'}</span></p>
+              </div>
+              <div>
+                <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 ${isPlaceholder(WHATSAPP_LINK) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
+                  {isPlaceholder(WHATSAPP_LINK) ? 'Coming soon' : 'Chat Now →'}
+                </span>
+              </div>
             </div>
           </a>
 
@@ -81,19 +90,21 @@ export default function ContactSection() {
             href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
             className={`group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-3 md:p-5 text-center transition-all shadow-xl shadow-black/30 shrink-0 ${isPlaceholder(EMAIL_ADDRESS) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:bg-[#1e293b]/80 hover:border-white/20'}`}
           >
-            <div>
-              <Mail className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
-              <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">Email Us</h3>
-              <p className="hidden md:block text-slate-400 text-[11px] mb-4">For proposals and partnerships.</p>
+            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
+              <div>
+                <Mail className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
+                <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">Email Us</h3>
+                <p className="hidden md:block text-slate-400 text-[11px] mb-4">For proposals and partnerships.</p>
+              </div>
+              <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 truncate ${isPlaceholder(EMAIL_ADDRESS) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
+                {isPlaceholder(EMAIL_ADDRESS) ? 'Coming soon' : 'Email →'}
+              </span>
             </div>
-            <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 truncate ${isPlaceholder(EMAIL_ADDRESS) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
-              {isPlaceholder(EMAIL_ADDRESS) ? 'Coming soon' : 'Email →'}
-            </span>
           </a>
         </div>
 
         {/* Middle-Bottom: 3 Value Proposition Columns */}
-        <div className="shrink-0 mt-6 md:mt-0">
+        <div className="reveal shrink-0 mt-6 md:mt-0" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
           <div className="text-center mb-4 md:mb-6">
             <h3 className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em]">Why Schools Say Yes</h3>
           </div>
