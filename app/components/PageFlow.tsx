@@ -160,13 +160,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     } catch {}
   }, []);
 
-  const [debugStats, setDebugStats] = useState<{
-    drops: number;
-    total: number;
-    rate: number;
-    monitored: number;
-  }>(() => ({ drops: 0, total: 0, rate: 0, monitored: 0 }));
-
   const activeMonitorCleanupRef = useRef<(() => void) | null>(null);
 
   // Text phase: Record<pageId, 'hidden' | 'enter' | 'leave' | 'done'>
@@ -525,14 +518,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
             if (frameCount > 5) {
               const dropRate = dropCount / frameCount;
-              if (process.env.NODE_ENV !== 'production') {
-                setDebugStats({
-                  drops: dropCount,
-                  total: frameCount,
-                  rate: Math.round(dropRate * 100),
-                  monitored: monitoredTransitionsRef.current,
-                });
-              }
               if (dropRate > 0.15) {
                 const currentTier = tierRef.current;
                 const nextTier = downgradeTier(currentTier);
@@ -542,7 +527,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   try {
                     sessionStorage.setItem(SESSION_QUALITY_KEY, nextTier);
                   } catch {}
-                  console.info('[quality] downgrade');
                 }
               }
             }
@@ -569,9 +553,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           if (transitionRef.current.id !== thisTransId) return;
           transRef.current = false;
           setStagePrevId(null);
-          if (toId) {
-            markSettled(toId);
-          }
         }, unlockMs);
 
         // 3. Total duration / at rest: totalMs
@@ -610,9 +591,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setIsStagedNav(false);
         setLeavingId(null);
         transRef.current = true;
-        if (toId) {
-          markSettled(toId);
-        }
         wheelActiveDuringLockRef.current = true;
         window.dispatchEvent(new Event('scroll'));
 
@@ -736,11 +714,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       settleRafsRef.current.push(raf2Id);
     });
     settleRafsRef.current.push(raf1Id);
-
-    const autoTimer = setTimeout(() => {
-      markSettled(activeId);
-    }, 850);
-    settleTimersRef.current.push(autoTimer);
 
     return () => {
       cancelAnimationFrame(raf1Id);
@@ -965,18 +938,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     index < pages.length - 2 ? pages[index + 2]?.id : undefined,
   ].filter((id): id is string => Boolean(id));
 
-  // TEMP-DEBUG: development-only logger for active page phase and settled state
-  const activePageId = pages[index]?.id;
-  const activeEffectivePhase = (isDesktop && !locked && activePageId)
-    ? (settled[activePageId] ? 'done' : 'enter')
-    : (activePageId ? textPhase[activePageId] : 'hidden');
-  const activeSettled = activePageId ? !!settled[activePageId] : false;
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && activePageId) {
-      console.debug('[pageflow]', activePageId, activeEffectivePhase, activeSettled);
-    }
-  }, [activePageId, activeEffectivePhase, activeSettled]);
 
   return (
     <PagerContext.Provider value={{
@@ -1101,9 +1062,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                 }
               }
 
-              const effectivePhase = (isActive && !locked)
-                ? ((isTransitioning || isArriving) ? (settled[p.id] ? 'done' : 'enter') : 'done')
-                : textPhase[p.id];
+              const effectivePhase = (isDesktop && isActive && !locked) ? (settled[p.id] ? 'done' : 'enter') : textPhase[p.id];
 
               return (
                 <m.div
@@ -1276,19 +1235,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
               </>
             )}
 
-            {/* Development-only TEMP-DEBUG overlay */}
-            {process.env.NODE_ENV !== 'production' && (
-              <div
-                className="fixed bottom-3 right-3 z-50 pointer-events-none bg-black/85 text-white font-mono text-[11px] px-2.5 py-1.5 rounded border border-white/20 select-none shadow-lg tracking-wider"
-                style={{ backdropFilter: 'none' }}
-              >
-                <span className="text-amber-400 font-bold mr-1.5">[TEMP-DEBUG]</span>
-                <span>tier: <strong className="text-teal-300">{tier}</strong></span>
-                <span className="ml-2 text-white/70">
-                  drops: {debugStats.drops}/{debugStats.total} ({debugStats.rate}%) [{debugStats.monitored}/2]
-                </span>
-              </div>
-            )}
 
             <div className="sr-only" aria-live="polite">
               Page {index + 1} of {pages.length}: {activePage?.label}
