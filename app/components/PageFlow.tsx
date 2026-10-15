@@ -1,8 +1,17 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, forwardRef, useImperativeHandle, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, forwardRef, useImperativeHandle, useCallback, ReactNode } from 'react';
 import { LazyMotion, domAnimation, m, MotionConfig, useReducedMotion } from 'motion/react';
 import Stage from './Stage';
 import { isStaged, isStageMode, isFadeMode, PAIR_TIMING, PHONE_TIMING, TIME_SCALE, ARRIVAL_ENABLED, ARRIVAL_TIMING } from '../lib/stageScenes';
+import {
+  detectTier,
+  Tier,
+  TIER_SCALE,
+  QualityContext,
+  downgradeTier,
+  SESSION_QUALITY_KEY,
+  SESSION_MONITORED_COUNT_KEY,
+} from '../lib/quality';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
@@ -19,7 +28,7 @@ interface Page {
   gestures?: boolean;
 }
 
-export type TextPhase = 'hidden' | 'enter' | 'leave';
+export type TextPhase = 'hidden' | 'enter' | 'leave' | 'done';
 
 interface PagerContextType {
   goTo: (id: string) => void;
@@ -127,7 +136,40 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   const [leavingId, setLeavingId] = useState<string | null>(null);
   const shouldReduceMotion = useReducedMotion();
 
-  // Text phase: Record<pageId, 'hidden' | 'enter' | 'leave'>
+  // Quality tier state (SSR default 'full', set in layout effect before first transition)
+  const [tier, setTier] = useState<Tier>('full');
+  const tierRef = useRef<Tier>(tier);
+  tierRef.current = tier;
+
+  useIsomorphicLayoutEffect(() => {
+    const initialTier = detectTier();
+    setTier(initialTier);
+    tierRef.current = initialTier;
+  }, []);
+
+  const effectiveTimeScale = isDesktop ? (TIME_SCALE * (TIER_SCALE[tier] ?? 1)) : TIME_SCALE;
+
+  // Frame monitor for desktop: runs during the first two choreographed transitions of the session
+  const monitoredTransitionsRef = useRef<number>(0);
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const storedCount = sessionStorage.getItem(SESSION_MONITORED_COUNT_KEY);
+      if (storedCount) {
+        monitoredTransitionsRef.current = parseInt(storedCount, 10) || 0;
+      }
+    } catch {}
+  }, []);
+
+  const [debugStats, setDebugStats] = useState<{
+    drops: number;
+    total: number;
+    rate: number;
+    monitored: number;
+  }>(() => ({ drops: 0, total: 0, rate: 0, monitored: 0 }));
+
+  const activeMonitorCleanupRef = useRef<(() => void) | null>(null);
+
+  // Text phase: Record<pageId, 'hidden' | 'enter' | 'leave' | 'done'>
   const [textPhase, setTextPhase] = useState<Record<string, TextPhase>>(() => {
     const initial: Record<string, TextPhase> = {};
     pages.forEach((p, i) => {
@@ -136,6 +178,27 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     return initial;
   });
   const textPhaseRef = useRef(textPhase);
+
+  // Settled state for active page text animations: Record<pageId, boolean>
+  const [settled, setSettled] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    pages.forEach((p) => {
+      initial[p.id] = false;
+    });
+    return initial;
+  });
+  const settledRef = useRef(settled);
+  settledRef.current = settled;
+
+  const settleTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const settleRafsRef = useRef<number[]>([]);
+
+  const clearSettleTimers = () => {
+    settleTimersRef.current.forEach((t) => clearTimeout(t));
+    settleTimersRef.current = [];
+    settleRafsRef.current.forEach((r) => cancelAnimationFrame(r));
+    settleRafsRef.current = [];
+  };
 
   const [textNavTiming, setTextNavTiming] = useState<{ dir: 1 | -1; delay: string }>({
     dir: 1,
@@ -147,30 +210,21 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     pagesRef.current = pages;
   }, [pages]);
 
-  const mountTimeRef = useRef(typeof performance !== 'undefined' ? performance.now() : Date.now());
-  const loggedPhasesRef = useRef<Record<string, TextPhase>>({});
-
-  // TEMP-DEBUG
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && isDesktop) {
-      pages.forEach((p, i) => {
-        const isActive = i === index;
-        const effective = (isActive && !locked && textPhase[p.id] === 'hidden') ? 'enter' : textPhase[p.id];
-        if (loggedPhasesRef.current[p.id] !== effective) {
-          loggedPhasesRef.current[p.id] = effective;
-          const msSinceMount = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - mountTimeRef.current);
-          console.debug('[pageflow]', p.id, effective, textNavTiming?.delay ?? '300ms', msSinceMount); // TEMP-DEBUG
-        }
-      });
-    }
-  }, [isDesktop, index, locked, textPhase, pages, textNavTiming]);
-
   const prevLockedRef = useRef(locked);
   useEffect(() => {
     if (prevLockedRef.current && !locked) {
+      clearSettleTimers();
+      setSettled((prev) => ({ ...prev, hero: false }));
+      settledRef.current.hero = false;
+
       const currentPages = pagesRef.current;
       const currentId = currentPages[indexRef.current]?.id;
-      const isHeroArrival = isDesktop && ARRIVAL_ENABLED && !shouldReduceMotion && currentId === 'hero';
+      if (currentId && currentId !== 'hero') {
+        setSettled((prev) => ({ ...prev, [currentId]: false }));
+        settledRef.current[currentId] = false;
+      }
+
+      const isHeroArrival = isDesktop && ARRIVAL_ENABLED && !shouldReduceMotion && tier !== 'minimal' && currentId === 'hero';
 
       if (isHeroArrival) {
         const nextId = ++transitionCounterRef.current;
@@ -186,13 +240,13 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         textPhaseRef.current = nextPhases;
         setTextPhase(nextPhases);
 
-        const arrivalTextDelayMs = Math.round(ARRIVAL_TIMING.textDelayMs * TIME_SCALE);
+        const arrivalTextDelayMs = Math.round(ARRIVAL_TIMING.textDelayMs * effectiveTimeScale);
         setTextNavTiming({
           dir: 1,
           delay: `${arrivalTextDelayMs}ms`,
         });
 
-        const arrivalTotalMs = Math.round(ARRIVAL_TIMING.totalMs * TIME_SCALE);
+        const arrivalTotalMs = Math.round(ARRIVAL_TIMING.totalMs * effectiveTimeScale);
         const arrivalUnlockMs = Math.round(arrivalTotalMs * 0.85);
 
         transRef.current = true;
@@ -226,6 +280,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setIsArriving(false);
       }
     } else if (!prevLockedRef.current && locked) {
+      clearSettleTimers();
       const currentPages = pagesRef.current;
       const nextPhases: Record<string, TextPhase> = {};
       currentPages.forEach((p) => {
@@ -267,6 +322,10 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   const clearTransitionTimers = () => {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
+    if (activeMonitorCleanupRef.current) {
+      activeMonitorCleanupRef.current();
+      activeMonitorCleanupRef.current = null;
+    }
   };
 
   const wheelQuietTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -275,6 +334,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   useEffect(() => {
     return () => {
       clearTransitionTimers();
+      clearSettleTimers();
       if (wheelQuietTimerRef.current) {
         clearTimeout(wheelQuietTimerRef.current);
         wheelQuietTimerRef.current = null;
@@ -290,6 +350,16 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   const lockedRef = useRef(locked);
   const isDesktopRef = useRef(isDesktop);
   const pendingIsDesktopRef = useRef<boolean | null>(null);
+
+  const goToRef = useRef<(id: string) => void>(() => {});
+  const nextRef = useRef<() => void>(() => {});
+  const prevRef = useRef<() => void>(() => {});
+
+  indexRef.current = index;
+  transRef.current = isTransitioning;
+  lockedRef.current = locked;
+  isDesktopRef.current = isDesktop;
+  pagesRef.current = pages;
 
   useEffect(() => { indexRef.current = index; }, [index]);
   useEffect(() => { transRef.current = isTransitioning; }, [isTransitioning]);
@@ -323,10 +393,11 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
   const goTo = (id: string) => {
     if (lockedRef.current || transRef.current) return;
-    const targetIndex = pages.findIndex(p => p.id === id);
+    const currentPages = pagesRef.current;
+    const targetIndex = currentPages.findIndex(p => p.id === id);
     if (targetIndex !== -1 && targetIndex !== indexRef.current) {
-      const fromId = pages[indexRef.current]?.id;
-      const toId = pages[targetIndex]?.id;
+      const fromId = currentPages[indexRef.current]?.id;
+      const toId = currentPages[targetIndex]?.id;
       const isDesktopNav = isDesktopRef.current;
       // On desktop, all transitions between stage and fade modes run through the choreographed path
       const isChoreographed = isDesktopNav
@@ -335,6 +406,17 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       const isFwd = targetIndex > indexRef.current;
 
       clearTransitionTimers();
+      clearSettleTimers();
+
+      // goTo sets settled[toId] = false and settled[fromId] = false
+      setSettled((prev) => {
+        const next = { ...prev };
+        if (toId) next[toId] = false;
+        if (fromId) next[fromId] = false;
+        return next;
+      });
+      if (toId) settledRef.current[toId] = false;
+      if (fromId) settledRef.current[fromId] = false;
 
       const nextId = ++transitionCounterRef.current;
       const thisTransId = nextId;
@@ -357,11 +439,11 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         // CHOREOGRAPHED PATH (desktop all, mobile hero <-> aha)
         const isFadeTransition = isFadeMode(fromId) || isFadeMode(toId);
         const timingKey = isFwd ? 'fwd' : 'back';
-        const stagedTiming = isDesktop ? PAIR_TIMING[timingKey] : PHONE_TIMING[timingKey];
+        const stagedTiming = isDesktopNav ? PAIR_TIMING[timingKey] : PHONE_TIMING[timingKey];
 
         // Synchronously update textPhase and textNavTiming for desktop
         const nextPhases: Record<string, TextPhase> = {};
-        pages.forEach((p) => {
+        currentPages.forEach((p) => {
           if (p.id === toId) {
             nextPhases[p.id] = 'enter';
           } else if (p.id === fromId) {
@@ -373,35 +455,98 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         textPhaseRef.current = nextPhases;
         setTextPhase(nextPhases);
 
-        const desktopDelayMs = Math.round(PAIR_TIMING[timingKey].textDelayMs * TIME_SCALE);
+        const navEffectiveTimeScale = isDesktopNav ? (TIME_SCALE * (TIER_SCALE[tierRef.current] ?? 1)) : TIME_SCALE;
+        const desktopDelayMs = Math.round(PAIR_TIMING[timingKey].textDelayMs * navEffectiveTimeScale);
         setTextNavTiming({
           dir: isFwd ? 1 : -1,
           delay: `${desktopDelayMs}ms`,
         });
 
-        // Timing: desktop vs phone vs reduced motion
+        // Timing: desktop vs phone vs reduced motion / minimal
         let totalMs: number;
         let unlockMs: number;
         let leaveDurationMs: number;
 
-        if (shouldReduceMotion) {
+        const isMinimalOrReduced = shouldReduceMotion || (isDesktopNav && tierRef.current === 'minimal');
+
+        if (isMinimalOrReduced) {
           totalMs = 300;
           unlockMs = 300;
           leaveDurationMs = 300;
         } else if (isDesktopNav) {
           const rawTextDelayMs = PAIR_TIMING[timingKey].textDelayMs;
-          unlockMs = Math.round((rawTextDelayMs + 700) * TIME_SCALE);
-          totalMs = unlockMs + Math.round(600 * TIME_SCALE);
+          unlockMs = Math.round((rawTextDelayMs + 700) * navEffectiveTimeScale);
+          totalMs = unlockMs + Math.round(1000 * navEffectiveTimeScale);
           if (isFadeMode(fromId)) {
-            leaveDurationMs = Math.round(450 * TIME_SCALE);
+            leaveDurationMs = Math.round(450 * navEffectiveTimeScale);
           } else {
-            leaveDurationMs = Math.round(520 * TIME_SCALE);
+            leaveDurationMs = Math.round(520 * navEffectiveTimeScale);
           }
         } else {
-          // stage <-> stage desktop or phone
+          // stage <-> stage desktop or phone (phone fallback)
           totalMs = Math.round(stagedTiming.totalMs * TIME_SCALE);
           unlockMs = Math.round(PHONE_TIMING[timingKey].unlockMs * TIME_SCALE);
           leaveDurationMs = Math.round(320 * TIME_SCALE);
+        }
+
+        // Frame monitor: desktop only, first 2 choreographed transitions of session
+        const shouldMonitor = isDesktopNav && monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
+        if (shouldMonitor) {
+          if (activeMonitorCleanupRef.current) {
+            activeMonitorCleanupRef.current();
+            activeMonitorCleanupRef.current = null;
+          }
+
+          let monitorRafId: number | null = null;
+          let lastTime = performance.now();
+          let frameCount = 0;
+          let dropCount = 0;
+
+          const onFrame = (now: number) => {
+            const delta = now - lastTime;
+            lastTime = now;
+            frameCount++;
+            if (delta > 33) {
+              dropCount++;
+            }
+            monitorRafId = requestAnimationFrame(onFrame);
+          };
+          monitorRafId = requestAnimationFrame(onFrame);
+
+          activeMonitorCleanupRef.current = () => {
+            if (monitorRafId !== null) {
+              cancelAnimationFrame(monitorRafId);
+              monitorRafId = null;
+            }
+            monitoredTransitionsRef.current += 1;
+            try {
+              sessionStorage.setItem(SESSION_MONITORED_COUNT_KEY, String(monitoredTransitionsRef.current));
+            } catch {}
+
+            if (frameCount > 5) {
+              const dropRate = dropCount / frameCount;
+              if (process.env.NODE_ENV !== 'production') {
+                setDebugStats({
+                  drops: dropCount,
+                  total: frameCount,
+                  rate: Math.round(dropRate * 100),
+                  monitored: monitoredTransitionsRef.current,
+                });
+              }
+              if (dropRate > 0.15) {
+                const currentTier = tierRef.current;
+                const nextTier = downgradeTier(currentTier);
+                if (nextTier !== currentTier) {
+                  tierRef.current = nextTier;
+                  setTier(nextTier);
+                  try {
+                    sessionStorage.setItem(SESSION_QUALITY_KEY, nextTier);
+                  } catch {}
+                  console.info('[quality] downgrade');
+                }
+              }
+            }
+          };
         }
 
         setPrevIndex(indexRef.current);
@@ -429,6 +574,10 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         // 3. Total duration / at rest: totalMs
         const t3 = setTimeout(() => {
           if (transitionRef.current.id !== thisTransId) return;
+          if (activeMonitorCleanupRef.current) {
+            activeMonitorCleanupRef.current();
+            activeMonitorCleanupRef.current = null;
+          }
           setIsTransitioning(false);
           setIsStagedNav(false);
           if (scrollRefs.current[targetIndex]) {
@@ -480,24 +629,147 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   };
 
   const next = () => {
-    if (indexRef.current < pages.length - 1) {
-      goTo(pages[indexRef.current + 1].id);
+    const currentPages = pagesRef.current;
+    if (indexRef.current < currentPages.length - 1) {
+      goToRef.current(currentPages[indexRef.current + 1].id);
     }
   };
 
   const prev = () => {
+    const currentPages = pagesRef.current;
     if (indexRef.current > 0) {
-      goTo(pages[indexRef.current - 1].id);
+      goToRef.current(currentPages[indexRef.current - 1].id);
     }
   };
 
-  useImperativeHandle(ref, () => ({ goTo }));
+  goToRef.current = goTo;
+  nextRef.current = next;
+  prevRef.current = prev;
+
+  useImperativeHandle(ref, () => ({ goTo: (id: string) => goToRef.current(id) }), []);
+
+  const markSettled = useCallback((pageId: string) => {
+    setSettled((prev) => {
+      if (prev[pageId]) return prev;
+      return { ...prev, [pageId]: true };
+    });
+    settledRef.current[pageId] = true;
+  }, []);
+
+  const runSettleCheck = useCallback(() => {
+    if (!isDesktopRef.current || lockedRef.current) return;
+    const currentPages = pagesRef.current;
+    const activeIdx = indexRef.current;
+    const activePage = currentPages[activeIdx];
+    if (!activePage) return;
+    const activeId = activePage.id;
+
+    if (settledRef.current[activeId]) return;
+
+    const wrapper = scrollRefs.current[activeIdx];
+    if (!wrapper) return;
+
+    const checkTransId = transitionRef.current.id;
+
+    const rawAnims: any[] = typeof (wrapper as any).getAnimations === 'function'
+      ? (wrapper as any).getAnimations({ subtree: true })
+      : [];
+    const anims = rawAnims.filter(
+      (a) => a.animationName && /^st(Word|Reveal)(In|Out)$/.test(a.animationName)
+    );
+
+    if (anims.length === 0) {
+      markSettled(activeId);
+      return;
+    }
+
+    Promise.allSettled(anims.map((a) => a.finished)).then(() => {
+      if (transitionRef.current.id !== checkTransId) return;
+      markSettled(activeId);
+    });
+
+    let maxEndTime = 0;
+    for (const a of anims) {
+      const timing = a.effect?.getComputedTiming?.();
+      const end = typeof timing?.endTime === 'number' ? timing.endTime : 0;
+      const current = typeof a.currentTime === 'number' ? a.currentTime : 0;
+      const remaining = Math.max(0, end - current);
+      if (remaining > maxEndTime) {
+        maxEndTime = remaining;
+      }
+    }
+    const safetyDelay = (maxEndTime || 1500) + 400;
+
+    const safetyTimer = setTimeout(() => {
+      if (transitionRef.current.id !== checkTransId) return;
+      markSettled(activeId);
+    }, safetyDelay);
+    settleTimersRef.current.push(safetyTimer);
+  }, [markSettled]);
+
+  // Settle check trigger (a): two animation frames after active page's phase enters 'enter'
+  useEffect(() => {
+    if (!isDesktop || locked) return;
+    const activePage = pages[index];
+    if (!activePage) return;
+    const activeId = activePage.id;
+
+    if (settled[activeId]) return;
+
+    clearSettleTimers();
+
+    let raf2Id: number;
+    const raf1Id = requestAnimationFrame(() => {
+      raf2Id = requestAnimationFrame(() => {
+        runSettleCheck();
+      });
+      settleRafsRef.current.push(raf2Id);
+    });
+    settleRafsRef.current.push(raf1Id);
+
+    return () => {
+      cancelAnimationFrame(raf1Id);
+      if (raf2Id) cancelAnimationFrame(raf2Id);
+    };
+  }, [index, locked, isDesktop, transition.id, pages, runSettleCheck]);
+
+  // Settle check triggers: (b) on visibilitychange (to visible), (c) on window resize (debounced 150ms)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const activePage = pagesRef.current[indexRef.current];
+        if (activePage && !settledRef.current[activePage.id]) {
+          runSettleCheck();
+        }
+      }
+    };
+
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const activePage = pagesRef.current[indexRef.current];
+        if (activePage && !settledRef.current[activePage.id]) {
+          runSettleCheck();
+        }
+      }, 150);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
+  }, [runSettleCheck]);
 
   // KEYBOARD NAVIGATION
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (lockedRef.current || transRef.current) return;
-      const currentPage = pages[indexRef.current];
+      const currentPage = pagesRef.current[indexRef.current];
       if (currentPage?.id === 'demo' || currentPage?.gestures === false) return;
 
       const target = e.target as HTMLElement;
@@ -506,24 +778,24 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       if (isDesktopRef.current) {
         if (e.key === 'ArrowDown' || e.key === 'PageDown') {
           e.preventDefault();
-          next();
+          nextRef.current();
         } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
           e.preventDefault();
-          prev();
+          prevRef.current();
         }
       } else {
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          next();
+          nextRef.current();
         } else if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          prev();
+          prevRef.current();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pages]);
+  }, []);
 
   // WHEEL & TOUCH GESTURES
   useEffect(() => {
@@ -555,7 +827,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
       if (!isDesktopRef.current) return;
 
-      const currentPage = pages[indexRef.current];
+      const currentPage = pagesRef.current[indexRef.current];
       if (currentPage?.id === 'demo' || currentPage?.gestures === false) return;
 
       const target = e.target as HTMLElement;
@@ -575,14 +847,14 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       e.preventDefault();
 
       if (dir > 0) {
-        if (indexRef.current < pages.length - 1) {
+        if (indexRef.current < pagesRef.current.length - 1) {
           wheelActiveDuringLockRef.current = true;
-          next();
+          nextRef.current();
         }
       } else {
         if (indexRef.current > 0) {
           wheelActiveDuringLockRef.current = true;
-          prev();
+          prevRef.current();
         }
       }
     };
@@ -605,7 +877,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         touchValid = false; return;
       }
 
-      const currentPage = pages[indexRef.current];
+      const currentPage = pagesRef.current[indexRef.current];
       if (currentPage?.id === 'demo' || currentPage?.gestures === false || lockedRef.current || transRef.current) {
         touchValid = false; return;
       }
@@ -623,7 +895,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       if (isDesktopRef.current || !touchValid) return;
       touchValid = false;
       if (lockedRef.current || transRef.current) return;
-      const currentPage = pages[indexRef.current];
+      const currentPage = pagesRef.current[indexRef.current];
       if (currentPage?.id === 'demo' || currentPage?.gestures === false) return;
 
       const endX = e.changedTouches[0].clientX;
@@ -640,12 +912,12 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       const scrollDir = dx < 0 ? 1 : -1;
       if (canScrollXInDirection(touchTarget, pageEl, scrollDir)) return;
 
-      const hasNext = dx < 0 && indexRef.current < pages.length - 1;
+      const hasNext = dx < 0 && indexRef.current < pagesRef.current.length - 1;
       const hasPrev = dx > 0 && indexRef.current > 0;
       if (hasNext) {
-        next();
+        nextRef.current();
       } else if (hasPrev) {
-        prev();
+        prevRef.current();
       }
     };
 
@@ -662,29 +934,62 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         wheelQuietTimerRef.current = null;
       }
     };
-  }, [pages]);
+  }, []);
 
   const activePage = pages[index];
   const isForward = index > prevIndex;
   const duration = isForward ? 0.65 : 0.55;
 
+  const neighbourIds = [
+    index > 0 ? pages[index - 1]?.id : undefined,
+    index < pages.length - 1 ? pages[index + 1]?.id : undefined,
+  ].filter((id): id is string => Boolean(id));
+
+  const twoStepIds = [
+    index > 1 ? pages[index - 2]?.id : undefined,
+    index < pages.length - 2 ? pages[index + 2]?.id : undefined,
+  ].filter((id): id is string => Boolean(id));
+
+  // TEMP-DEBUG: development-only logger for active page phase and settled state
+  const activePageId = pages[index]?.id;
+  const activeEffectivePhase = (isDesktop && !locked && activePageId)
+    ? (settled[activePageId] ? 'done' : 'enter')
+    : (activePageId ? textPhase[activePageId] : 'hidden');
+  const activeSettled = activePageId ? !!settled[activePageId] : false;
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && activePageId) {
+      console.debug('[pageflow]', activePageId, activeEffectivePhase, activeSettled);
+    }
+  }, [activePageId, activeEffectivePhase, activeSettled]);
+
   return (
-    <PagerContext.Provider value={{ goTo, next, prev, index, id: activePage?.id }}>
-      <MotionConfig reducedMotion="user">
-        <LazyMotion features={domAnimation}>
-          <div ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden bg-slate-900">
-            <Stage
-              currentId={activePage?.id || ''}
-              prevId={isDesktop ? stagePrevId : (prevIndex !== null && pages[prevIndex] ? pages[prevIndex].id : null)}
-              direction={transition.dir}
-              transitioning={isTransitioning}
-              desktop={isDesktop}
-              reducedMotion={!!shouldReduceMotion}
-              transitionId={transition.id}
-              enteredAt={enteredAt}
-              locked={locked}
-              arriving={isArriving}
-            />
+    <PagerContext.Provider value={{
+      goTo: (id: string) => goToRef.current(id),
+      next: () => nextRef.current(),
+      prev: () => prevRef.current(),
+      index,
+      id: activePage?.id
+    }}>
+      <QualityContext.Provider value={{ tier }}>
+        <MotionConfig reducedMotion="user">
+          <LazyMotion features={domAnimation}>
+            <div ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden bg-slate-900">
+              <Stage
+                currentId={activePage?.id || ''}
+                prevId={isDesktop ? stagePrevId : (prevIndex !== null && pages[prevIndex] ? pages[prevIndex].id : null)}
+                direction={transition.dir}
+                transitioning={isTransitioning}
+                desktop={isDesktop}
+                reducedMotion={!!shouldReduceMotion}
+                tier={tier}
+                transitionId={transition.id}
+                enteredAt={enteredAt}
+                locked={locked}
+                arriving={isArriving}
+                neighbourIds={neighbourIds}
+                twoStepIds={twoStepIds}
+              />
             {pages.map((p, i) => {
               const isActive = i === index;
               const isLeavingPage = isStagedNav && p.id === leavingId;
@@ -715,23 +1020,23 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                     if (isTransitioning) {
                       const leavingPageId = leavingId || transition.fromId;
                       const leavingIsStage = leavingPageId ? isStageMode(leavingPageId) : false;
-                      transitionObj = shouldReduceMotion
+                      transitionObj = (shouldReduceMotion || tier === 'minimal')
                         ? { duration: 0.3 }
                         : {
                             opacity: {
-                              duration: 0.5 * TIME_SCALE,
-                              delay: leavingIsStage ? 0.6 * TIME_SCALE : 0,
+                              duration: 0.5 * effectiveTimeScale,
+                              delay: leavingIsStage ? 0.6 * effectiveTimeScale : 0,
                             },
                           };
                     } else {
                       transitionObj = { duration: 0 };
                     }
                   } else if (p.id === leavingId) {
-                    transitionObj = shouldReduceMotion
+                    transitionObj = (shouldReduceMotion || tier === 'minimal')
                       ? { duration: 0.3 }
                       : {
                           opacity: {
-                            duration: 0.45 * TIME_SCALE,
+                            duration: 0.45 * effectiveTimeScale,
                             delay: 0,
                           },
                         };
@@ -780,7 +1085,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                 }
               }
 
-              const effectivePhase = (isActive && !locked && textPhase[p.id] === 'hidden') ? 'enter' : textPhase[p.id];
+              const effectivePhase = (isDesktop && isActive && !locked) ? (settled[p.id] ? 'done' : 'enter') : textPhase[p.id];
 
               return (
                 <m.div
@@ -793,7 +1098,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                     ...(isDesktop ? ({
                       '--text-dir': textNavTiming?.dir ?? 1,
                       '--text-delay': textNavTiming?.delay || '300ms',
-                      '--ts': TIME_SCALE,
+                      '--ts': effectiveTimeScale,
                     } as React.CSSProperties) : {}),
                   }}
                   initial={false}
@@ -817,7 +1122,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                       staged: isStaged(p.id),
                       desktop: isDesktop,
                       textDelayMs: isStagedNav
-                        ? Math.round((isDesktop ? PAIR_TIMING : PHONE_TIMING)[transition.dir === -1 ? 'back' : 'fwd'].textDelayMs * TIME_SCALE)
+                        ? Math.round((isDesktop ? PAIR_TIMING : PHONE_TIMING)[transition.dir === -1 ? 'back' : 'fwd'].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE))
                         : 250,
                       isLeaving: isStagedNav && p.id === leavingId,
                       transitionId: transition.id,
@@ -862,7 +1167,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   <div className="absolute bottom-[28px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-auto select-none">
                     <button
                       type="button"
-                      onClick={index > 0 ? prev : undefined}
+                      onClick={index > 0 ? () => prevRef.current() : undefined}
                       disabled={index === 0}
                       aria-disabled={index === 0}
                       aria-label="Previous scene"
@@ -884,7 +1189,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
                     <button
                       type="button"
-                      onClick={index < pages.length - 1 ? next : undefined}
+                      onClick={index < pages.length - 1 ? () => nextRef.current() : undefined}
                       disabled={index >= pages.length - 1}
                       aria-disabled={index >= pages.length - 1}
                       aria-label="Next scene"
@@ -912,7 +1217,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   <div
                     aria-label={`Scene ${index + 1} of ${pages.length}`}
                     className={`absolute z-30 pointer-events-auto flex items-center justify-center bg-slate-900/85 border border-white/15 text-white select-none shadow-lg px-3.5 py-2 rounded-full text-xs font-semibold tabular-nums tracking-wider ${
-                      activePage?.id === 'contact' ? 'bottom-20 left-4' : 'bottom-4 left-4'
+                      activePage?.id === 'contact' ? 'bottom-20 left-4' : 'bottom-[max(16px,env(safe-area-inset-bottom,0px))] left-4'
                     }`}
                   >
                     <span>
@@ -921,11 +1226,11 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   </div>
 
                   {/* Prev / Next Chevrons (bottom-center) */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 pointer-events-auto select-none">
+                  <div className="absolute bottom-[max(16px,env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 pointer-events-auto select-none">
                     {index > 0 && (
                       <button
                         type="button"
-                        onClick={prev}
+                        onClick={() => prevRef.current()}
                         aria-label="Previous scene"
                         className="w-11 h-11 rounded-full bg-slate-900/85 border border-white/15 text-white flex items-center justify-center hover:bg-slate-800 transition active:scale-95 shadow-lg select-none [touch-action:manipulation]"
                       >
@@ -938,7 +1243,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                     {index < pages.length - 1 && (
                       <button
                         type="button"
-                        onClick={next}
+                        onClick={() => nextRef.current()}
                         aria-label="Next scene"
                         className="w-11 h-11 rounded-full bg-slate-900/85 border border-white/15 text-white flex items-center justify-center hover:bg-slate-800 transition active:scale-95 shadow-lg select-none [touch-action:manipulation]"
                       >
@@ -952,13 +1257,28 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
               </>
             )}
 
+            {/* Development-only TEMP-DEBUG overlay */}
+            {process.env.NODE_ENV !== 'production' && (
+              <div
+                className="fixed bottom-3 right-3 z-50 pointer-events-none bg-black/85 text-white font-mono text-[11px] px-2.5 py-1.5 rounded border border-white/20 select-none shadow-lg tracking-wider"
+                style={{ backdropFilter: 'none' }}
+              >
+                <span className="text-amber-400 font-bold mr-1.5">[TEMP-DEBUG]</span>
+                <span>tier: <strong className="text-teal-300">{tier}</strong></span>
+                <span className="ml-2 text-white/70">
+                  drops: {debugStats.drops}/{debugStats.total} ({debugStats.rate}%) [{debugStats.monitored}/2]
+                </span>
+              </div>
+            )}
+
             <div className="sr-only" aria-live="polite">
               Page {index + 1} of {pages.length}: {activePage?.label}
             </div>
           </div>
         </LazyMotion>
       </MotionConfig>
-    </PagerContext.Provider>
+    </QualityContext.Provider>
+  </PagerContext.Provider>
   );
 });
 

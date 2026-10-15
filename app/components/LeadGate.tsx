@@ -114,8 +114,10 @@ export default function LeadGate({ onSubmit }: Props) {
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
+                <label htmlFor="lead-name" className="block text-sm font-medium text-slate-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
                 <input
+                  id="lead-name"
+                  name="name"
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -129,8 +131,10 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">I am a <span className="text-red-400">*</span></label>
+                <label htmlFor="lead-role" className="block text-sm font-medium text-slate-700 mb-1.5">I am a <span className="text-red-400">*</span></label>
                 <select
+                  id="lead-role"
+                  name="role"
                   value={form.role}
                   onChange={e => setForm(f => ({ ...f, role: e.target.value as LeadFormData['role'] }))}
                   className={inputClasses}
@@ -145,8 +149,10 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* School */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">{form.role === 'Parent' || form.role === 'Student' ? "Child's school" : "School / Organization"} <span className="text-red-400">*</span></label>
+                <label htmlFor="lead-school" className="block text-sm font-medium text-slate-700 mb-1.5">{form.role === 'Parent' || form.role === 'Student' ? "Child's school" : "School / Organization"} <span className="text-red-400">*</span></label>
                 <input
+                  id="lead-school"
+                  name="schoolName"
                   type="text"
                   value={form.schoolName}
                   onChange={e => setForm(f => ({ ...f, schoolName: e.target.value }))}
@@ -160,12 +166,14 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* Mobile */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label htmlFor="lead-mobile" className="block text-sm font-medium text-slate-700 mb-1.5">
                   {form.role === 'Student' ? "Parent's Mobile Number" : "Mobile Number"} <span className="text-red-400">*</span>
                 </label>
                 <div className="flex">
                   <span className="inline-flex items-center px-4 border border-r-0 border-slate-200 rounded-l-xl bg-slate-50 text-slate-500 text-sm font-medium">+91</span>
                   <input
+                    id="lead-mobile"
+                    name="mobile"
                     type="tel"
                     value={form.mobile}
                     onChange={e => setForm(f => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))}

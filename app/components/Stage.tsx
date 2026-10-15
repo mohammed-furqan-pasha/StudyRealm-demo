@@ -22,6 +22,8 @@ import {
   ARRIVAL_TIMING,
 } from '../lib/stageScenes';
 
+import { Tier, TIER_SCALE } from '../lib/quality';
+
 export interface StageProps {
   currentId: string;
   prevId: string | null;
@@ -29,10 +31,13 @@ export interface StageProps {
   transitioning: boolean;
   desktop: boolean;
   reducedMotion: boolean;
+  tier?: Tier;
   transitionId?: number;
   enteredAt?: Record<string, number>;
   locked?: boolean;
   arriving?: boolean;
+  neighbourIds?: string[];
+  twoStepIds?: string[];
 }
 
 function StagePlate({
@@ -44,6 +49,8 @@ function StagePlate({
   desktop,
   reducedMotion,
   transitioning,
+  tier = 'full',
+  effectiveTimeScale = TIME_SCALE,
 }: {
   scene: StageScene;
   state: 'active' | 'leaving' | 'hidden';
@@ -53,6 +60,8 @@ function StagePlate({
   desktop: boolean;
   reducedMotion: boolean;
   transitioning: boolean;
+  tier?: Tier;
+  effectiveTimeScale?: number;
 }) {
   const [imgError, setImgError] = useState(false);
 
@@ -61,13 +70,14 @@ function StagePlate({
   const isStageToStage = isCurrentStage && isPrevStage;
   const isFadeToStage = !isPrevStage && isCurrentStage;
   const isStageToFade = isPrevStage && !isCurrentStage;
-  const hasHazePair = desktop && prevId !== null && hasHaze(currentId, prevId);
+  const hasHazePair = desktop && tier === 'full' && prevId !== null && hasHaze(currentId, prevId);
+  const isMinimal = reducedMotion || (desktop && tier === 'minimal');
 
   let initial: false | { opacity: number } = false;
   let animate: { opacity: number } = { opacity: state === 'hidden' ? 0 : 1 };
   let transition: Record<string, any> = { duration: 0 };
 
-  if (reducedMotion) {
+  if (isMinimal) {
     if (state === 'active') {
       initial = { opacity: 0 };
       animate = { opacity: 1 };
@@ -86,12 +96,12 @@ function StagePlate({
       animate = { opacity: state === 'hidden' ? 0 : 1 };
       transition = { duration: 0 };
     } else if (isFadeToStage) {
-      // fade -> stage (e.g. demo -> features): mount and fade in over 0.4 * TIME_SCALE
+      // fade -> stage (e.g. demo -> features): mount and fade in over 0.4 * effectiveTimeScale
       if (state === 'active') {
         initial = { opacity: 0 };
         animate = { opacity: 1 };
         transition = {
-          duration: 0.4 * TIME_SCALE,
+          duration: 0.4 * effectiveTimeScale,
           ease: EASE_OUT,
         };
       }
@@ -99,11 +109,11 @@ function StagePlate({
       // stage -> fade (e.g. aha -> demo or features -> demo)
       if (state === 'leaving') {
         if (direction === -1) {
-          // Backward mirror of fade -> stage: fade out over 0.4 * TIME_SCALE
+          // Backward mirror of fade -> stage: fade out over 0.4 * effectiveTimeScale
           initial = { opacity: 1 };
           animate = { opacity: 0 };
           transition = {
-            duration: 0.4 * TIME_SCALE,
+            duration: 0.4 * effectiveTimeScale,
             ease: EASE_IN,
           };
         } else {
@@ -125,8 +135,8 @@ function StagePlate({
             initial = { opacity: 0 };
             animate = { opacity: 1 };
             transition = {
-              delay: (PAIR_TIMING.fwd.plateIn.delay * TIME_SCALE) / 1000,
-              duration: (PAIR_TIMING.fwd.plateIn.duration * TIME_SCALE) / 1000,
+              delay: (PAIR_TIMING.fwd.plateIn.delay * effectiveTimeScale) / 1000,
+              duration: (PAIR_TIMING.fwd.plateIn.duration * effectiveTimeScale) / 1000,
               ease: EASE_OUT,
             };
           }
@@ -139,21 +149,21 @@ function StagePlate({
             initial = { opacity: 1 };
             animate = { opacity: 0 };
             transition = {
-              delay: (PAIR_TIMING.back.plateOut.delay * TIME_SCALE) / 1000,
-              duration: (PAIR_TIMING.back.plateOut.duration * TIME_SCALE) / 1000,
+              delay: (PAIR_TIMING.back.plateOut.delay * effectiveTimeScale) / 1000,
+              duration: (PAIR_TIMING.back.plateOut.duration * effectiveTimeScale) / 1000,
               ease: EASE_IN,
             };
           }
         }
       } else {
         // Every other stage pair crossfades its plates:
-        // incoming plate above, fade 0.45 * TIME_SCALE at delay 0.5 * TIME_SCALE
+        // incoming plate above, fade 0.45 * effectiveTimeScale at delay 0.5 * effectiveTimeScale
         if (state === 'active') {
           initial = { opacity: 0 };
           animate = { opacity: 1 };
           transition = {
-            delay: 0.5 * TIME_SCALE,
-            duration: 0.45 * TIME_SCALE,
+            delay: 0.5 * effectiveTimeScale,
+            duration: 0.45 * effectiveTimeScale,
             ease: EASE_OUT,
           };
         } else if (state === 'leaving') {
@@ -262,6 +272,8 @@ function StageObjectElement({
   reducedMotion,
   locked = false,
   arriving = false,
+  tier = 'full',
+  effectiveTimeScale = TIME_SCALE,
 }: {
   obj: StageObject;
   index: number;
@@ -272,6 +284,8 @@ function StageObjectElement({
   reducedMotion: boolean;
   locked?: boolean;
   arriving?: boolean;
+  tier?: Tier;
+  effectiveTimeScale?: number;
 }) {
   const [imgError, setImgError] = useState(false);
 
@@ -281,6 +295,8 @@ function StageObjectElement({
   const travel = desktop ? obj.travelY : obj.travelX;
   const axis = desktop ? 'y' : 'x';
   const scale = desktop ? 1 : 0.75;
+  const isMinimal = reducedMotion || (desktop && tier === 'minimal');
+  const activeTimeScale = desktop ? effectiveTimeScale : TIME_SCALE;
 
   let initial: false | Record<string, string | number> = false;
   let animate: Record<string, any> = { opacity: state === 'hidden' ? 0 : 1, x: 0, y: 0 };
@@ -290,10 +306,10 @@ function StageObjectElement({
     initial = false;
     animate = { opacity: 0, x: 0, y: 0 };
     transition = { duration: 0 };
-  } else if (desktop && arriving && !reducedMotion) {
+  } else if (desktop && arriving && !isMinimal) {
     const timing = obj.timing.enterFwd;
-    const duration = (timing.duration * scale * TIME_SCALE) / 1000;
-    const delay = ((timing.delay + ARRIVAL_TIMING.objectsDelayMs) * scale * TIME_SCALE) / 1000;
+    const duration = (timing.duration * scale * activeTimeScale) / 1000;
+    const delay = ((timing.delay + ARRIVAL_TIMING.objectsDelayMs) * scale * activeTimeScale) / 1000;
 
     initial = { [axis]: travel, opacity: 0 };
     animate = { [axis]: 0, opacity: [0, 1, 1] };
@@ -310,7 +326,7 @@ function StageObjectElement({
         ease: 'linear',
       },
     };
-  } else if (reducedMotion) {
+  } else if (isMinimal) {
     if (state === 'active') {
       initial = transitioning ? { opacity: 0 } : false;
       animate = { opacity: 1, x: 0, y: 0 };
@@ -332,8 +348,8 @@ function StageObjectElement({
       // Backward: comes from -travel to 0 with EASE_OUT and enterBack
       const fromPos = isFwd ? travel : `-${travel}`;
       const timing = isFwd ? obj.timing.enterFwd : obj.timing.enterBack;
-      const duration = (timing.duration * scale * TIME_SCALE) / 1000;
-      const delay = (timing.delay * scale * TIME_SCALE) / 1000;
+      const duration = (timing.duration * scale * activeTimeScale) / 1000;
+      const delay = (timing.delay * scale * activeTimeScale) / 1000;
 
       initial = { [axis]: fromPos, opacity: 0 };
       animate = { [axis]: 0, opacity: [0, 1, 1] };
@@ -356,8 +372,8 @@ function StageObjectElement({
       // Backward: goes to +travel with EASE_IN and exitBack
       const targetPos = isFwd ? `-${travel}` : travel;
       const timing = isFwd ? obj.timing.exitFwd : obj.timing.exitBack;
-      const duration = (timing.duration * scale * TIME_SCALE) / 1000;
-      const delay = (timing.delay * scale * TIME_SCALE) / 1000;
+      const duration = (timing.duration * scale * activeTimeScale) / 1000;
+      const delay = (timing.delay * scale * activeTimeScale) / 1000;
 
       initial = { [axis]: 0, opacity: 1 };
       animate = { [axis]: targetPos, opacity: [1, 1, 0] };
@@ -430,10 +446,12 @@ function StageHazePlate({
   src,
   direction,
   transitioning,
+  effectiveTimeScale = TIME_SCALE,
 }: {
   src: string;
   direction: 1 | -1;
   transitioning?: boolean;
+  effectiveTimeScale?: number;
 }) {
   const [imgError, setImgError] = useState(false);
 
@@ -467,13 +485,13 @@ function StageHazePlate({
   const animate = isFwd ? { opacity: 1 } : { opacity: 0 };
   const transition = isFwd
     ? {
-        delay: (PAIR_TIMING.fwd.hazeIn.delay * TIME_SCALE) / 1000,
-        duration: (PAIR_TIMING.fwd.hazeIn.duration * TIME_SCALE) / 1000,
+        delay: (PAIR_TIMING.fwd.hazeIn.delay * effectiveTimeScale) / 1000,
+        duration: (PAIR_TIMING.fwd.hazeIn.duration * effectiveTimeScale) / 1000,
         ease: EASE_OUT,
       }
     : {
-        delay: (PAIR_TIMING.back.hazeOut.delay * TIME_SCALE) / 1000,
-        duration: (PAIR_TIMING.back.hazeOut.duration * TIME_SCALE) / 1000,
+        delay: (PAIR_TIMING.back.hazeOut.delay * effectiveTimeScale) / 1000,
+        duration: (PAIR_TIMING.back.hazeOut.duration * effectiveTimeScale) / 1000,
         ease: EASE_IN,
       };
 
@@ -504,24 +522,37 @@ export function Stage({
   transitioning,
   desktop,
   reducedMotion,
+  tier = 'full',
   transitionId,
   enteredAt = {},
   locked = false,
   arriving = false,
+  neighbourIds = [],
+  twoStepIds = [],
 }: StageProps) {
   if (!STAGE_ENABLED) return null;
 
-  // Preloading neighbouring scene assets when current page is a staged scene
+  const activeTier: Tier = tier || 'full';
+  const effectiveTimeScale = desktop ? (TIME_SCALE * (TIER_SCALE[activeTier] ?? 1)) : TIME_SCALE;
+  const isMinimal = reducedMotion || (desktop && activeTier === 'minimal');
+
+  // Preloading neighbouring scene assets from every page (including demo and survey)
+  const neighbourKey = neighbourIds.join(',');
+  const twoStepKey = twoStepIds.join(',');
+
   useEffect(() => {
-    if (!STAGE_ENABLED || !isStaged(currentId)) return;
+    if (!STAGE_ENABLED) return;
 
     const conn = (typeof navigator !== 'undefined' && (navigator as any).connection) || null;
     if (conn?.saveData || conn?.effectiveType === '2g' || conn?.effectiveType === 'slow-2g') {
       return;
     }
 
+    let isCancelled = false;
+
     const runPreload = () => {
-      preloadNeighbouringStageAssets(currentId, desktop);
+      if (isCancelled) return;
+      preloadNeighbouringStageAssets(currentId, desktop, neighbourIds, twoStepIds);
     };
 
     const win = typeof window !== 'undefined' ? (window as any) : null;
@@ -535,13 +566,14 @@ export function Stage({
     }
 
     return () => {
+      isCancelled = true;
       if (typeof win.cancelIdleCallback === 'function') {
         win.cancelIdleCallback(handle);
       } else {
         clearTimeout(handle);
       }
     };
-  }, [currentId, desktop]);
+  }, [currentId, desktop, neighbourKey, twoStepKey]);
 
   const isCurrentStage = isStageMode(currentId);
   const isPrevStage = prevId !== null && isStageMode(prevId);
@@ -565,11 +597,12 @@ export function Stage({
 
   if (!currentScene && !prevScene) return null;
 
-  // Haze is shown only during desktop staged transitions between pairs with haze (and not reduced motion)
+  // Haze is shown only during desktop staged transitions between pairs with haze, on 'full' tier, and not reduced motion
   const showHaze =
     desktop &&
+    activeTier === 'full' &&
     isStagePair &&
-    !reducedMotion &&
+    !isMinimal &&
     prevId !== null &&
     hasHaze(currentId, prevId);
 
@@ -590,6 +623,8 @@ export function Stage({
           desktop={desktop}
           reducedMotion={reducedMotion}
           transitioning={transitioning}
+          tier={activeTier}
+          effectiveTimeScale={effectiveTimeScale}
         />
       )}
 
@@ -605,6 +640,8 @@ export function Stage({
           desktop={desktop}
           reducedMotion={reducedMotion}
           transitioning={transitioning}
+          tier={activeTier}
+          effectiveTimeScale={effectiveTimeScale}
         />
       )}
 
@@ -615,6 +652,7 @@ export function Stage({
           src={HAZE.src}
           direction={direction}
           transitioning={transitioning}
+          effectiveTimeScale={effectiveTimeScale}
         />
       )}
 
@@ -631,6 +669,8 @@ export function Stage({
           reducedMotion={reducedMotion}
           locked={locked}
           arriving={arriving}
+          tier={activeTier}
+          effectiveTimeScale={effectiveTimeScale}
         />
       ))}
 
@@ -645,6 +685,8 @@ export function Stage({
           direction={direction}
           desktop={desktop}
           reducedMotion={reducedMotion}
+          tier={activeTier}
+          effectiveTimeScale={effectiveTimeScale}
         />
       ))}
     </div>

@@ -39,6 +39,13 @@ const FEATURES_OBJECT_HORIZON: SceneObject = {
 
 const FEATURES_SCENE_OBJECTS: SceneObject[] = [FEATURES_OBJECT_HORIZON];
 
+const IMAGE_DIMENSIONS: Record<string, { width: number; height: number }> = {
+  '/img/parent-dashboard.png': { width: 1920, height: 1080 },
+  '/img/teacher-analytics.png': { width: 1920, height: 1080 },
+  '/img/teacher-dashboard.png': { width: 1892, height: 1080 },
+  '/img/student-app-brain.png': { width: 895, height: 544 },
+};
+
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
   TrendingUp,
@@ -115,7 +122,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
       >
         {/* Tag */}
         <StageReveal order={0} className="w-full">
-          <div className="uppercase text-[12px] sm:text-[13px] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
+          <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
             {config.tag}
           </div>
         </StageReveal>
@@ -123,12 +130,12 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
         {/* Headline: Word-by-word reveal */}
         <SplitHeadline
           lines={config.headlineLines}
-          className="text-white font-semibold text-[clamp(2.6rem,4.9vw,5.5rem)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+          className="text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
         />
 
         {/* Description: 24px below headline */}
         <StageReveal order={2} className="w-full">
-          <p className="mt-[24px] text-white/90 text-[clamp(1rem,1.25vw,1.25rem)] max-w-[560px] font-normal leading-relaxed line-clamp-3 [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]">
+          <p className="mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[560px] font-normal leading-relaxed line-clamp-3 [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]">
             {config.description}
           </p>
         </StageReveal>
@@ -138,7 +145,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
           <button
             type="button"
             onClick={() => goTo('survey')}
-            className="mt-[28px] h-[52px] px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
+            className="mt-[28px] h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
             style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
           >
             <span>{cleanCtaLabel}</span>
@@ -193,6 +200,8 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
                   <img
                     src={activeCard.image}
                     alt={activeCard.title}
+                    width={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.width : undefined}
+                    height={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.height : undefined}
                     loading="lazy"
                     onError={() => handleImageError(activeCard.id)}
                     draggable={false}
@@ -343,6 +352,8 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
                   <img
                     src={activeCard.image}
                     alt={activeCard.title}
+                    width={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.width : undefined}
+                    height={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.height : undefined}
                     loading="lazy"
                     onError={() => handleImageError(activeCard.id)}
                     draggable={false}

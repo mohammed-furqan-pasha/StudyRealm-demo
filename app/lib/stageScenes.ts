@@ -42,7 +42,7 @@ export interface StageScene {
 }
 
 export const HERO_OBJECT_CLASS =
-  'absolute left-0 right-0 mx-auto top-[18%] w-[86vw] max-w-[420px] h-auto pointer-events-none object-contain md:left-[68.5%] md:right-auto md:mx-0 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[63vw] md:max-w-[1250px]';
+  'absolute left-0 right-0 mx-auto top-[calc(var(--topbar-h)+4px)] w-[var(--ph-obj-w)] h-auto pointer-events-none object-contain md:left-auto md:right-0 md:mx-0 md:top-1/2 md:-translate-y-1/2 md:w-[min(63vw,133dvh)] md:max-w-none';
 
 export const STAGE_SCENES: Record<string, StageScene> = {
   hero: {
@@ -268,44 +268,99 @@ export const isStaged = (id: string): boolean => {
 
 const preloadedSrcs = new Set<string>();
 
-export function preloadImage(src: string): void {
-  if (!src || typeof window === 'undefined' || preloadedSrcs.has(src)) return;
+export function preloadImage(src: string): Promise<void> {
+  if (!src || typeof window === 'undefined') return Promise.resolve();
+  if (preloadedSrcs.has(src)) return Promise.resolve();
   preloadedSrcs.add(src);
-  try {
-    const img = new Image();
-    img.src = src;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => {});
+
+  return new Promise<void>((resolve) => {
+    try {
+      const img = new Image();
+      img.src = src;
+      if (typeof img.decode === 'function') {
+        img.decode().then(() => resolve()).catch(() => resolve());
+      } else {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      }
+    } catch {
+      resolve();
     }
-  } catch {
-    // ignore errors
-  }
+  });
 }
 
-export function preloadNeighbouringStageAssets(currentId: string, desktop: boolean): void {
-  if (typeof window === 'undefined') return;
+export function preloadSceneAssets(sceneId: string, desktop: boolean, currentId?: string): Promise<void> {
+  const scene = STAGE_SCENES[sceneId];
+  if (!scene || !isStaged(sceneId)) return Promise.resolve();
+
+  const promises: Promise<void>[] = [];
+
+  const plateSrc = desktop ? scene.plate.lg : scene.plate.sm;
+  if (plateSrc) {
+    promises.push(preloadImage(plateSrc));
+  }
+
+  for (const obj of scene.objects) {
+    if (!desktop && !obj.showOnPhone) continue;
+    if (obj.src) {
+      promises.push(preloadImage(obj.src));
+    }
+  }
+
+  if (desktop && currentId && hasHaze(currentId, sceneId)) {
+    promises.push(preloadImage(HAZE.src));
+  }
+
+  return Promise.all(promises).then(() => {});
+}
+
+export const DEFAULT_PAGE_ORDER = ['hero', 'aha', 'demo', 'features', 'survey', 'contact'];
+
+export function preloadNeighbouringStageAssets(
+  currentId: string,
+  desktop: boolean,
+  neighbourIds: string[] = [],
+  twoStepIds: string[] = []
+): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
 
   const conn = (navigator as any)?.connection;
   if (conn?.saveData || conn?.effectiveType === '2g' || conn?.effectiveType === 'slow-2g') {
-    return;
+    return Promise.resolve();
   }
 
-  const otherIds = Object.keys(STAGE_SCENES).filter((id) => id !== currentId);
-  for (const otherId of otherIds) {
-    const scene = STAGE_SCENES[otherId];
-    if (!scene) continue;
+  const curIdx = DEFAULT_PAGE_ORDER.indexOf(currentId);
 
-    const plateSrc = desktop ? scene.plate.lg : scene.plate.sm;
-    preloadImage(plateSrc);
+  const resolvedNeighbours = neighbourIds.length > 0 ? neighbourIds : (
+    curIdx !== -1
+      ? [
+          curIdx >= 1 ? DEFAULT_PAGE_ORDER[curIdx - 1] : null,
+          curIdx <= DEFAULT_PAGE_ORDER.length - 2 ? DEFAULT_PAGE_ORDER[curIdx + 1] : null,
+        ].filter((id): id is string => Boolean(id))
+      : []
+  );
 
-    for (const obj of scene.objects) {
-      if (!desktop && !obj.showOnPhone) continue;
-      preloadImage(obj.src);
-    }
+  const resolvedTwoStep = twoStepIds.length > 0 ? twoStepIds : (
+    curIdx !== -1
+      ? [
+          curIdx >= 2 ? DEFAULT_PAGE_ORDER[curIdx - 2] : null,
+          curIdx <= DEFAULT_PAGE_ORDER.length - 3 ? DEFAULT_PAGE_ORDER[curIdx + 2] : null,
+        ].filter((id): id is string => Boolean(id))
+      : []
+  );
 
-    if (desktop && hasHaze(currentId, otherId)) {
-      preloadImage(HAZE.src);
-    }
-  }
+  // Preload immediate neighbour staged scenes
+  const firstBatch = resolvedNeighbours
+    .filter((id) => isStaged(id))
+    .map((id) => preloadSceneAssets(id, desktop, currentId));
+
+  return Promise.all(firstBatch).then(() => {
+    // Chain scenes two steps away after immediate batch resolves
+    const secondBatch = resolvedTwoStep
+      .filter((id) => isStaged(id))
+      .map((id) => preloadSceneAssets(id, desktop, currentId));
+    return Promise.all(secondBatch).then(() => {});
+  });
 }
+
 

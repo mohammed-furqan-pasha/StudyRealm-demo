@@ -685,47 +685,49 @@ export default function DemoPlayer({
               className="min-h-full w-full flex flex-col items-center pt-2 pb-2 md:pt-[72px] md:pb-0"
             >
               {/* Centered group wrapper with margin-block auto for scroll-safe centering */}
-              <div
-                key={current}
-                className={`w-full ${
-                  block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'
-                } mx-auto z-20 flex flex-col items-center my-auto ${
-                  direction === 'right' ? 'slide-up-next' : 'slide-up-prev'
-                }`}
-              >
-                {/* Fake glass content panel */}
+              <div className="st-reveal w-full flex flex-col items-center my-auto" style={{ '--o': 0, '--rise': '14vh' } as React.CSSProperties}>
                 <div
-                  className={`demo-card-frame relative w-full ${
-                    block.type === 'story_panel' ? '' : 'p-5 md:p-10'
+                  key={current}
+                  className={`w-full ${
+                    block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'
+                  } mx-auto z-20 flex flex-col items-center my-auto ${
+                    direction === 'right' ? 'slide-up-next' : 'slide-up-prev'
                   }`}
-                  style={
-                    block.type === 'story_panel'
-                      ? {}
-                      : {
-                          background:
-                            'linear-gradient(180deg, rgba(10,40,58,0.82), rgba(6,22,38,0.88))',
-                          border: '1px solid rgba(94,234,212,0.28)',
-                          boxShadow:
-                            '0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14)',
-                          borderRadius: '20px',
-                        }
-                  }
                 >
-                  {block.type === 'stain_hook' && (
-                    <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />
-                  )}
-                  {block.type === 'kitchen_lab' && (
-                    <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
-                  )}
-                  {block.type === 'tap_reveal' && (
-                    <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
-                  )}
-                  {block.type === 'flip_card' && (
-                    <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
-                  )}
-                  {block.type === 'celebration' && (
-                    <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
-                  )}
+                  {/* Fake glass content panel */}
+                  <div
+                    className={`demo-card-frame relative w-full ${
+                      block.type === 'story_panel' ? '' : 'p-5 md:p-10'
+                    }`}
+                    style={
+                      block.type === 'story_panel'
+                        ? {}
+                        : {
+                            background:
+                              'linear-gradient(180deg, rgba(10,40,58,0.82), rgba(6,22,38,0.88))',
+                            border: '1px solid rgba(94,234,212,0.28)',
+                            boxShadow:
+                              '0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+                            borderRadius: '20px',
+                          }
+                    }
+                  >
+                    {block.type === 'stain_hook' && (
+                      <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                    )}
+                    {block.type === 'kitchen_lab' && (
+                      <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                    )}
+                    {block.type === 'tap_reveal' && (
+                      <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                    )}
+                    {block.type === 'flip_card' && (
+                      <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                    )}
+                    {block.type === 'celebration' && (
+                      <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

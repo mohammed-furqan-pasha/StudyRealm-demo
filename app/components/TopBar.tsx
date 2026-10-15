@@ -8,7 +8,7 @@ export default function TopBar() {
 
   return (
     <nav
-      className="flex-none flex items-center justify-between px-[5%] pt-[28px] pb-4 z-30"
+      className="flex-none flex items-center justify-between pl-[max(5%,env(safe-area-inset-left,0px))] pr-[max(5%,env(safe-area-inset-right,0px))] pt-[max(28px,env(safe-area-inset-top,0px))] pb-4 z-30"
       style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
     >
       <div className="flex items-center gap-3">

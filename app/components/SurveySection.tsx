@@ -318,10 +318,11 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
         ref={containerRef}
         className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[72px] pb-6 md:pb-0 text-left"
       >
-        <div
-          style={SURVEY_GLASS_CARD_STYLE}
-          className="survey-glass-card w-full max-w-2xl p-6 md:p-8 flex flex-col my-auto shrink-0 shadow-2xl md:max-h-[calc(100dvh-192px)]"
-        >
+        <div className="st-reveal w-full max-w-2xl my-auto shrink-0 flex flex-col items-center" style={{ '--o': 0, '--rise': '14vh' } as React.CSSProperties}>
+          <div
+            style={SURVEY_GLASS_CARD_STYLE}
+            className="survey-glass-card w-full max-w-2xl p-6 md:p-8 flex flex-col my-auto shrink-0 shadow-2xl md:max-h-[calc(100dvh-192px)]"
+          >
           {/* Audio Controls */}
           <div className="survey-header-row flex justify-between items-center mb-4 md:mb-6 border-b border-white/10 pb-3 md:pb-4 shrink-0">
             <div className="uppercase text-[12px] tracking-[0.2em] text-white/80 font-medium select-none">
@@ -408,11 +409,13 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
                             {q.prompt}
                           </legend>
                           <div className="survey-options-group flex flex-col gap-[10px]">
-                            {q.options.map((opt) => {
+                            {q.options.map((opt, optIdx) => {
                               const isSelected = val === opt;
+                              const optionId = `${q.id}-opt-${optIdx}`;
                               return (
                                 <label
                                   key={opt}
+                                  htmlFor={optionId}
                                   className={`survey-option-item flex items-center gap-3 p-[12px_16px] rounded-xl border transition-all cursor-pointer select-none focus-within:ring-2 focus-within:ring-teal-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-900 ${
                                     isSelected
                                       ? 'bg-teal-500 border-teal-400 text-white shadow-lg shadow-teal-500/20'
@@ -420,6 +423,7 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
                                   }`}
                                 >
                                   <input
+                                    id={optionId}
                                     type="radio"
                                     name={q.id}
                                     value={opt}
@@ -468,6 +472,7 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
                           </label>
                           <textarea
                             id={q.id}
+                            name={q.id}
                             rows={4}
                             placeholder={q.placeholder}
                             value={val}
@@ -530,6 +535,7 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
             )}
           </div>
         </div>
+      </div>
 
         {botEnabled && isIntersecting && !isSubmitted && (
           <GuideBot isReading={speaking} onTap={replay} />

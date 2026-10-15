@@ -101,7 +101,7 @@ export default function Home() {
         setLeadData(data);
         setGateOpen(false);
       }} />}
-      <div className={gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}>
+      <div className={gateOpen ? 'pointer-events-none select-none overflow-hidden' : ''}>
         <PageFlow ref={flowRef} locked={gateOpen} pages={pages} />
       </div>
     </>

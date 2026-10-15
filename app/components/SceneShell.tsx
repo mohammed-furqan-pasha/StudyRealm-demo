@@ -425,7 +425,7 @@ export interface StageRevealProps {
 
 export function StageReveal({
   order,
-  rise = '10vh',
+  rise = '10dvh',
   children,
   className = '',
 }: StageRevealProps) {

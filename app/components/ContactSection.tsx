@@ -331,14 +331,14 @@ export default function ContactSection({
         {/* Top: Header */}
         <div className="text-center shrink-0 mb-3 md:mb-5 flex flex-col items-center">
           <StageReveal order={0} className="w-full text-center">
-            <p className="uppercase tracking-[0.2em] text-[12px] md:text-[13px] text-white/80 font-medium mb-1.5 md:mb-2 text-center select-none">
+            <p className="uppercase tracking-[0.2em] text-[12px] md:text-[length:calc(13*var(--u))] text-white/80 font-medium mb-1.5 md:mb-2 text-center select-none">
               {config.tag}
             </p>
           </StageReveal>
 
           <SplitHeadline
             lines={[config.headline]}
-            className="font-semibold text-white tracking-tight leading-[1.12] mb-2 md:mb-2.5 text-center text-[clamp(2.2rem,3.8vw,4.2rem)]"
+            className="font-semibold text-white tracking-tight leading-[1.12] mb-2 md:mb-2.5 text-center text-[max(clamp(2.2rem,3.8vw,4.2rem),3.5vw)]"
           />
 
           <StageReveal order={2} className="w-full text-center">

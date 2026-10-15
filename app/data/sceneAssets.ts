@@ -13,7 +13,7 @@ export const SCENES: Record<SceneKey, SceneAsset> = {
     bgColor: '#0F3A52',
     gradient: 'linear-gradient(180deg, #0A2441 0%, #12506B 45%, #1B6D87 62%, #D98C68 90%, #8A6A7E 100%)',
     lg: '/scenes/hero-lg.webp',
-    sm: '/scenes/hero-sm.webp',
+    sm: '/scenes/hero-lg.webp',
     position: '50% 85%',
   },
   aha: {

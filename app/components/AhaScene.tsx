@@ -144,7 +144,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
       >
         {/* Tag: plain uppercase text, 12 to 13px, letter-spacing 0.2em, white at 80% */}
         <StageReveal order={0} className="w-full">
-          <div className="uppercase text-[12px] sm:text-[13px] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
+          <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
             {config.tag}
           </div>
         </StageReveal>
@@ -152,13 +152,13 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
         {/* Headline: <SplitHeadline lines={config.headlineLines} /> in Outfit, weight 600, font-size clamp(2.6rem, 4.9vw, 5.5rem), line-height 1.08, letter-spacing -0.02em, white */}
         <SplitHeadline
           lines={config.headlineLines}
-          className="aha-headline text-white font-semibold text-[clamp(2.6rem,4.9vw,5.5rem)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
+          className="aha-headline text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
         />
 
         {/* Hint: white at 90%, font-size clamp(1rem, 1.25vw, 1.25rem), max-width 560px, 24px below headline */}
         <StageReveal order={2} className="w-full">
           <p
-            className="aha-hint mt-[24px] text-white/90 text-[clamp(1rem,1.25vw,1.25rem)] max-w-[560px] font-normal leading-relaxed [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+            className="aha-hint mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[max(560px,29.2vw)] font-normal leading-relaxed [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
             style={{ fontFamily: 'var(--font-outfit), sans-serif', textShadow: '0 2px 24px rgba(5,20,40,0.45)' }}
           >
             {config.hint}
@@ -173,7 +173,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                 type="button"
                 onClick={() => goTo('demo')}
                 style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-                className="h-[52px] px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
+                className="h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
               >
                 <span>{config.ctaLabel ?? 'Now try the chapter'}</span>
                 <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
@@ -185,7 +185,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
 
       {/* Desktop Right Side Band (>= 768px): right 5%, top 96px, bottom 88px, display flex, align-items center */}
       <div
-        className="hidden md:flex md:items-center md:absolute md:right-[5%] md:top-[96px] md:bottom-[88px] md:w-[clamp(400px,32vw,620px)] z-20 pointer-events-none"
+        className="hidden md:flex md:items-center md:absolute md:right-[5%] md:top-[96px] md:bottom-[88px] md:w-[max(clamp(400px,32vw,620px),32.3vw)] z-20 pointer-events-none"
         style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
       >
         <StageReveal order={3} rise="14vh" className="w-full max-h-full pointer-events-auto">
@@ -199,6 +199,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                 childName={childName}
                 setChildName={setChildName}
                 effectiveName={effectiveChildName}
+                layout="d"
               />
             </div>
           ) : role === 'Other' ? (
@@ -239,7 +240,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
         style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
       >
         {/* Mobile Header: Tag, Headline, Hint */}
-        <div className="text-center shrink-0 mb-3 flex flex-col items-center">
+        <div className="text-center shrink-0 mb-2 flex flex-col items-center">
           <StageReveal order={0}>
             <div className="uppercase text-[12px] tracking-[0.2em] text-white/80 font-medium mb-1.5">
               {config.tag}
@@ -248,12 +249,12 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
 
           <SplitHeadline
             lines={config.headlineLines}
-            className="aha-headline text-2xl sm:text-3xl font-semibold text-white leading-tight tracking-tight mb-2 text-center [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
+            className="aha-headline text-xl sm:text-2xl font-semibold text-white leading-tight tracking-tight mb-2 text-center [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
           />
 
           <StageReveal order={2}>
             <p
-              className="aha-hint text-white/90 text-xs sm:text-sm leading-relaxed max-w-sm [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+              className="aha-hint hidden text-white/90 text-xs sm:text-sm leading-relaxed max-w-sm [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
               style={{ fontFamily: 'var(--font-outfit), sans-serif', textShadow: '0 2px 24px rgba(5,20,40,0.45)' }}
             >
               {config.hint}
@@ -271,6 +272,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                 childName={childName}
                 setChildName={setChildName}
                 effectiveName={effectiveChildName}
+                layout="m"
               />
             ) : role === 'Other' ? (
               <OtherViews
@@ -557,7 +559,7 @@ function TeacherHeatmap({
       </div>
 
       {/* Legend row: Strong 75+, Needs revision 50–74, Critical below 50 */}
-      <div className="flex items-center gap-3.5 mb-2.5 text-[12px] text-slate-300 select-none">
+      <div className="flex items-center gap-3.5 mb-2.5 text-[11px] md:text-[12px] text-slate-300 select-none">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#14B8A6] shrink-0" />
           <span>Strong {TEACHER_STRONG_FROM}+</span>
@@ -573,11 +575,11 @@ function TeacherHeatmap({
       </div>
 
       {/* Grid: 22px repeat(5, 1fr), gap 5px */}
-      <div role="grid" aria-label="Class Mastery Matrix" className="w-full">
+      <div role="grid" aria-label="Class Mastery Matrix" className="w-full pb-3 md:pb-0">
         {/* Header Row: Column Labels */}
         <div
           role="row"
-          className="grid gap-[5px] mb-[5px] text-[11px] font-medium text-slate-300 text-center items-center select-none"
+          className="grid gap-[4px] md:gap-[5px] mb-[4px] md:mb-[5px] text-[11px] font-medium text-slate-300 text-center items-center select-none"
           style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
         >
           <div role="columnheader" aria-label="Roll number" />
@@ -595,12 +597,12 @@ function TeacherHeatmap({
         </div>
 
         {/* Student Rows */}
-        <div className="space-y-[5px]" role="presentation">
+        <div className="space-y-[4px] md:space-y-[5px]" role="presentation">
           {TEACHER_SAMPLE.students.map((st, rIdx) => (
             <div
               key={st}
               role="row"
-              className="grid gap-[5px] items-center"
+              className="grid gap-[4px] md:gap-[5px] items-center"
               style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
             >
               <div
@@ -643,7 +645,7 @@ function TeacherHeatmap({
                       fontFamily: 'var(--font-outfit), sans-serif',
                       fontSize: 'clamp(13px, 0.95vw, 17px)',
                     }}
-                    className={`relative h-11 md:h-[clamp(30px,3.6dvh,40px)] rounded-[10px] border font-medium flex items-center justify-center select-none cursor-pointer transition-none ${toneClass} ${outlineClass} focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none`}
+                    className={`relative h-10 md:h-[clamp(30px,3.6dvh,40px)] rounded-[10px] border font-medium flex items-center justify-center select-none cursor-pointer transition-none ${toneClass} ${outlineClass} focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none`}
                   >
                     {/* Critical pulsing ring (until visitor selects any cell) */}
                     {!hasUserSelected && isCritical && !isSelected && (
@@ -672,7 +674,7 @@ function TeacherHeatmap({
         {/* Footer row: Concept averages */}
         <div
           role="row"
-          className="teacher-matrix-footer grid gap-[5px] mt-[5px] text-[11px] text-slate-400 text-center items-center select-none"
+          className="teacher-matrix-footer hidden md:grid gap-[5px] mt-[5px] text-[11px] text-slate-400 text-center items-center select-none"
           style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
         >
           <div role="rowheader" className="font-medium text-center flex items-center justify-center">
@@ -698,8 +700,8 @@ function TeacherHeatmap({
 
       {/* Detail area below the grid */}
       <div
-        className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-[128px] flex flex-col justify-between"
-        style={{ background: 'rgba(4, 14, 28, 0.72)' }}
+        className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-0 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
+        style={{ background: 'var(--detail-bg, rgba(4, 14, 28, 0.72))' }}
       >
         {selectedCell.detail ? (
           <div className="space-y-1.5">
@@ -746,7 +748,7 @@ function TeacherHeatmap({
         )}
 
         {/* Concept reteaching context line */}
-        <div className="text-[12px] text-slate-300 leading-normal pt-2 border-t border-white/10 mt-2">
+        <div className="hidden md:block text-[12px] text-slate-300 leading-normal pt-2 border-t border-white/10 mt-2">
           <span>
             {selectedConceptStats.belowSixty} of {selectedConceptStats.total} students are below 60% in {selectedCell.concept}.
           </span>
@@ -767,12 +769,15 @@ function ParentPhonePreview({
   childName,
   setChildName,
   effectiveName,
+  layout = 'd',
 }: {
   childName: string;
   setChildName: (name: string) => void;
   effectiveName: string;
+  layout?: 'd' | 'm';
 }) {
   const activeDaysCount = PARENT_SAMPLE.weekDays.filter(Boolean).length;
+  const inputId = `child-name-${layout}`;
 
   return (
     <div
@@ -786,13 +791,14 @@ function ParentPhonePreview({
       {/* Input for Child Name */}
       <div className="w-full text-left">
         <label
-          htmlFor="child-name-input"
+          htmlFor={inputId}
           className="block text-[13px] font-semibold text-slate-200 mb-1"
         >
           Child&apos;s first name:
         </label>
         <input
-          id="child-name-input"
+          id={inputId}
+          name="childName"
           type="text"
           maxLength={20}
           autoComplete="off"
@@ -1035,6 +1041,7 @@ function OtherViews({
               childName={childName}
               setChildName={setChildName}
               effectiveName={effectiveChildName}
+              layout={isMobile ? 'm' : 'd'}
             />
           </div>
         </div>
