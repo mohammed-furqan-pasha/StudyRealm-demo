@@ -569,6 +569,9 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           if (transitionRef.current.id !== thisTransId) return;
           transRef.current = false;
           setStagePrevId(null);
+          if (toId) {
+            markSettled(toId);
+          }
         }, unlockMs);
 
         // 3. Total duration / at rest: totalMs
@@ -580,6 +583,10 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           }
           setIsTransitioning(false);
           setIsStagedNav(false);
+          transRef.current = false;
+          if (toId) {
+            markSettled(toId);
+          }
           if (scrollRefs.current[targetIndex]) {
             scrollRefs.current[targetIndex]!.scrollTop = 0;
           }
@@ -603,6 +610,9 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setIsStagedNav(false);
         setLeavingId(null);
         transRef.current = true;
+        if (toId) {
+          markSettled(toId);
+        }
         wheelActiveDuringLockRef.current = true;
         window.dispatchEvent(new Event('scroll'));
 
@@ -726,6 +736,11 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       settleRafsRef.current.push(raf2Id);
     });
     settleRafsRef.current.push(raf1Id);
+
+    const autoTimer = setTimeout(() => {
+      markSettled(activeId);
+    }, 850);
+    settleTimersRef.current.push(autoTimer);
 
     return () => {
       cancelAnimationFrame(raf1Id);
@@ -1006,7 +1021,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
                 if (isStagePage) {
                   // 'stage' mode pages: always { opacity: 1, x: 0, y: 0 } with transition { duration: 0 };
-                  animateObj = { opacity: 1, x: 0, y: 0 };
+                  animateObj = { opacity: 1, x: 0, y: 0, visibility: isDesktopWrapperVisible ? ('visible' as const) : ('hidden' as const) };
                   transitionObj = { duration: 0 };
                 } else {
                   // 'fade' mode pages (demo, survey): active { opacity: 1 }, inactive { opacity: 0 }
@@ -1014,6 +1029,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                     opacity: isActive ? 1 : 0,
                     x: 0,
                     y: 0,
+                    visibility: isDesktopWrapperVisible ? ('visible' as const) : ('hidden' as const),
                   };
 
                   if (isActive) {
@@ -1085,7 +1101,9 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                 }
               }
 
-              const effectivePhase = (isDesktop && isActive && !locked) ? (settled[p.id] ? 'done' : 'enter') : textPhase[p.id];
+              const effectivePhase = (isActive && !locked)
+                ? ((isTransitioning || isArriving) ? (settled[p.id] ? 'done' : 'enter') : 'done')
+                : textPhase[p.id];
 
               return (
                 <m.div
@@ -1095,6 +1113,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   style={{
                     zIndex: i + 1,
                     visibility: isDesktop ? (isDesktopWrapperVisible ? 'visible' : 'hidden') : undefined,
+                    display: isDesktop ? (isDesktopWrapperVisible ? undefined : 'none') : (isActive || isLeavingPage ? undefined : 'none'),
                     ...(isDesktop ? ({
                       '--text-dir': textNavTiming?.dir ?? 1,
                       '--text-delay': textNavTiming?.delay || '300ms',

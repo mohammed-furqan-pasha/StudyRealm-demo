@@ -152,12 +152,14 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
             alt=""
             aria-hidden="true"
             draggable={false}
-            loading={scene === 'hero' ? 'eager' : 'lazy'}
+            width={1920}
+            height={1080}
+            loading="eager"
             onLoad={() => setBgLoaded(true)}
             onError={() => setBgError(true)}
             className="w-full h-full object-cover transition-opacity duration-500"
             style={{
-              opacity: bgLoaded && !bgError ? 1 : 0,
+              opacity: bgError ? 0 : 1,
               display: bgError ? 'none' : undefined,
               objectPosition: sceneConfig.position ?? '50% 50%',
             }}
@@ -267,8 +269,11 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     if (desktop) return;
     if (!isCurrent || isLeaving) {
       setSettled(false);
+    } else {
+      const timer = setTimeout(() => setSettled(true), 800);
+      return () => clearTimeout(timer);
     }
-  }, [desktop, isCurrent, isLeaving]);
+  }, [desktop, isCurrent, isLeaving, transitionId]);
 
   if (desktop) {
     let wordIndex = 0;
@@ -389,7 +394,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
                   className="inline-block overflow-hidden pb-1 align-bottom mr-[0.28em] last:mr-0"
                 >
                   <m.span
-                    key={isDesktopStaged ? `word-${currentIdx}-${word}-t${transitionId}` : undefined}
+                    key={`word-${currentIdx}-${word}-t${transitionId}`}
                     className="inline-block"
                     aria-hidden="true"
                     initial={initialObj}
@@ -446,8 +451,11 @@ export function StageReveal({
     if (desktop) return;
     if (!isCurrent || isLeaving) {
       setSettled(false);
+    } else {
+      const timer = setTimeout(() => setSettled(true), 800);
+      return () => clearTimeout(timer);
     }
-  }, [desktop, isCurrent, isLeaving]);
+  }, [desktop, isCurrent, isLeaving, transitionId]);
 
   if (!staged) {
     return <div className={className}>{children}</div>;
@@ -539,9 +547,9 @@ export function StageReveal({
 
   return (
     <m.div
-      key={isDesktopStaged ? `reveal-${order}-t${transitionId}` : undefined}
+      key={`reveal-${order}-t${transitionId}`}
       className={className}
-      initial={isDesktopStaged ? initialTarget : false}
+      initial={initialTarget}
       animate={animateTarget}
       transition={transitionConfig}
       onAnimationComplete={() => {
