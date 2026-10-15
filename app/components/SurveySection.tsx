@@ -163,31 +163,88 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
   if (isSubmitted) {
     return (
       <SceneShell scene="survey">
+        <style>{`
+          @media (min-width: 768px) {
+            .survey-glass-card {
+              max-height: calc(100dvh - 192px);
+              display: flex;
+              flex-direction: column;
+            }
+            .survey-middle-scroll {
+              flex: 1 1 0%;
+              min-height: 0;
+              overflow-y: auto;
+              scrollbar-width: thin;
+              scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+            }
+            .survey-middle-scroll::-webkit-scrollbar {
+              width: 6px;
+            }
+            .survey-middle-scroll::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .survey-middle-scroll::-webkit-scrollbar-thumb {
+              background: rgba(255, 255, 255, 0.28);
+              border-radius: 9999px;
+            }
+          }
+          @media (min-width: 768px) and (max-height: 899.98px) {
+            .survey-glass-card {
+              padding: 20px 24px !important;
+            }
+            .survey-header-row {
+              margin-bottom: 12px !important;
+              padding-bottom: 8px !important;
+            }
+            .survey-progress-row {
+              margin-bottom: 12px !important;
+            }
+            .survey-question-prompt {
+              font-size: clamp(17px, 1.5vw, 22px) !important;
+              line-height: 1.3 !important;
+              margin-bottom: 10px !important;
+            }
+            .survey-options-group {
+              gap: 8px !important;
+            }
+            .survey-option-item {
+              padding: 10px 14px !important;
+            }
+            .survey-footer-row {
+              margin-top: 12px !important;
+              padding-top: 0px !important;
+            }
+          }
+        `}</style>
         {/* Static Veil for Content Contrast */}
         <div
           className="absolute inset-0 pointer-events-none z-0"
-          style={{ background: 'rgba(3,8,18,0.55)' }}
+          style={{ background: 'rgba(3,8,18,0.40)' }}
           aria-hidden="true"
         />
         <section
           id="survey"
-          className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[88px] pb-6 md:pb-0 text-center"
+          className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[72px] pb-6 md:pb-0 text-center"
         >
           <div
             style={SURVEY_GLASS_CARD_STYLE}
-            className="w-full max-w-md p-6 sm:p-8 text-center flex flex-col items-center my-auto shrink-0 shadow-2xl"
+            className="survey-glass-card w-full max-w-md p-6 sm:p-8 text-center flex flex-col items-center my-auto shrink-0 shadow-2xl md:max-h-[calc(100dvh-192px)]"
           >
-            <h3 className="text-2xl font-bold text-white mb-2">Thank you!</h3>
-            <p className="text-slate-300 mb-6 leading-relaxed text-sm sm:text-base">
-              Your feedback helps us make StudyRealm better.
-            </p>
-            <button
-              type="button"
-              onClick={onContinue}
-              className="min-h-[48px] px-8 py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 flex items-center justify-center cursor-pointer select-none"
-            >
-              Continue ▸
-            </button>
+            <div className="survey-middle-scroll md:flex-1 md:min-h-0 md:overflow-y-auto flex flex-col items-center justify-center [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.28)_transparent]">
+              <h3 className="text-2xl font-bold text-white mb-2">Thank you!</h3>
+              <p className="text-slate-300 mb-6 leading-relaxed text-sm sm:text-base">
+                Your feedback helps us make StudyRealm better.
+              </p>
+            </div>
+            <div className="survey-footer-row shrink-0 w-full flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={onContinue}
+                className="min-h-[48px] px-8 py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 flex items-center justify-center cursor-pointer select-none"
+              >
+                Continue ▸
+              </button>
+            </div>
           </div>
         </section>
       </SceneShell>
@@ -196,23 +253,77 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
 
   return (
     <SceneShell scene="survey">
+      <style>{`
+        @media (min-width: 768px) {
+          .survey-glass-card {
+            max-height: calc(100dvh - 192px);
+            display: flex;
+            flex-direction: column;
+          }
+          .survey-middle-scroll {
+            flex: 1 1 0%;
+            min-height: 0;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+          }
+          .survey-middle-scroll::-webkit-scrollbar {
+            width: 6px;
+          }
+          .survey-middle-scroll::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .survey-middle-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.28);
+            border-radius: 9999px;
+          }
+        }
+        @media (min-width: 768px) and (max-height: 899.98px) {
+          .survey-glass-card {
+            padding: 20px 24px !important;
+          }
+          .survey-header-row {
+            margin-bottom: 12px !important;
+            padding-bottom: 8px !important;
+          }
+          .survey-progress-row {
+            margin-bottom: 12px !important;
+          }
+          .survey-question-prompt {
+            font-size: clamp(17px, 1.5vw, 22px) !important;
+            line-height: 1.3 !important;
+            margin-bottom: 10px !important;
+          }
+          .survey-options-group {
+            gap: 8px !important;
+          }
+          .survey-option-item {
+            padding: 10px 14px !important;
+          }
+          .survey-footer-row {
+            margin-top: 12px !important;
+            padding-top: 0px !important;
+          }
+        }
+      `}</style>
+
       {/* Static Veil for Content Contrast */}
       <div
         className="absolute inset-0 pointer-events-none z-0"
-        style={{ background: 'rgba(3,8,18,0.55)' }}
+        style={{ background: 'rgba(3,8,18,0.40)' }}
         aria-hidden="true"
       />
       <section
         id="survey"
         ref={containerRef}
-        className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[88px] pb-6 md:pb-0 text-left"
+        className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[72px] pb-6 md:pb-0 text-left"
       >
         <div
           style={SURVEY_GLASS_CARD_STYLE}
-          className="w-full max-w-2xl p-6 md:p-8 flex flex-col my-auto shrink-0 shadow-2xl"
+          className="survey-glass-card w-full max-w-2xl p-6 md:p-8 flex flex-col my-auto shrink-0 shadow-2xl md:max-h-[calc(100dvh-192px)]"
         >
           {/* Audio Controls */}
-          <div className="flex justify-between items-center mb-4 md:mb-6 border-b border-white/10 pb-3 md:pb-4 shrink-0">
+          <div className="survey-header-row flex justify-between items-center mb-4 md:mb-6 border-b border-white/10 pb-3 md:pb-4 shrink-0">
             <div className="uppercase text-[12px] tracking-[0.2em] text-white/80 font-medium select-none">
               Feedback Survey
             </div>
@@ -246,7 +357,7 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
 
           {/* Progress */}
           {currentIndex >= 0 && currentIndex < totalQuestions && (
-            <div className="mb-4 md:mb-6 shrink-0">
+            <div className="survey-progress-row mb-4 md:mb-6 shrink-0">
               <div className="flex justify-between text-xs font-medium text-slate-400 mb-1.5">
                 <span aria-live="polite">
                   Question {currentIndex + 1} of {totalQuestions}
@@ -265,106 +376,112 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
           )}
 
           {/* Content */}
-          <div key={currentIndex} className="transition-opacity duration-200">
+          <div key={currentIndex} className="transition-opacity duration-200 md:flex-1 md:min-h-0 md:flex md:flex-col">
             {currentIndex === -1 ? (
-              <div className="text-center py-4 md:py-8">
-                <p className="text-lg md:text-xl text-white font-medium leading-relaxed mb-6 md:mb-8">
-                  {surveySet.intro}
-                </p>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-8 py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 cursor-pointer select-none"
-                >
-                  Start Survey
-                </button>
-              </div>
+              <>
+                <div className="survey-middle-scroll md:flex-1 md:min-h-0 md:overflow-y-auto text-center py-4 md:py-8">
+                  <p className="text-lg md:text-xl text-white font-medium leading-relaxed mb-6 md:mb-8">
+                    {surveySet.intro}
+                  </p>
+                </div>
+                <div className="survey-footer-row mt-4 md:mt-6 flex justify-center shrink-0 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-8 py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 cursor-pointer select-none"
+                  >
+                    Start Survey
+                  </button>
+                </div>
+              </>
             ) : currentIndex < totalQuestions ? (
-              <div className="pb-2">
-                {(() => {
-                  const q = surveySet.questions[currentIndex];
-                  const val = answers.find((a) => a.questionId === q.id)?.value || '';
+              <>
+                <div className="survey-middle-scroll md:flex-1 md:min-h-0 md:overflow-y-auto pb-1 pr-1 md:pr-1.5">
+                  {(() => {
+                    const q = surveySet.questions[currentIndex];
+                    const val = answers.find((a) => a.questionId === q.id)?.value || '';
 
-                  if (q.type === 'mcq') {
-                    return (
-                      <fieldset className="border-none p-0 m-0">
-                        <legend className="text-lg md:text-xl text-white font-bold mb-3 md:mb-4 w-full leading-snug">
-                          {q.prompt}
-                        </legend>
-                        <div className="flex flex-col gap-[10px]">
-                          {q.options.map((opt) => {
-                            const isSelected = val === opt;
-                            return (
-                              <label
-                                key={opt}
-                                className={`flex items-center gap-3 p-[12px_16px] rounded-xl border transition-all cursor-pointer select-none focus-within:ring-2 focus-within:ring-teal-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-900 ${
-                                  isSelected
-                                    ? 'bg-teal-500 border-teal-400 text-white shadow-lg shadow-teal-500/20'
-                                    : 'bg-white/5 border-white/15 text-slate-200 hover:bg-white/10 hover:border-white/25'
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={q.id}
-                                  value={opt}
-                                  checked={isSelected}
-                                  onChange={(e) =>
-                                    handleMCQChange(q.id, q.prompt, e.target.value)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                    if (q.type === 'mcq') {
+                      return (
+                        <fieldset className="border-none p-0 m-0">
+                          <legend className="survey-question-prompt text-lg md:text-xl text-white font-bold mb-3 md:mb-4 w-full leading-snug">
+                            {q.prompt}
+                          </legend>
+                          <div className="survey-options-group flex flex-col gap-[10px]">
+                            {q.options.map((opt) => {
+                              const isSelected = val === opt;
+                              return (
+                                <label
+                                  key={opt}
+                                  className={`survey-option-item flex items-center gap-3 p-[12px_16px] rounded-xl border transition-all cursor-pointer select-none focus-within:ring-2 focus-within:ring-teal-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-900 ${
                                     isSelected
-                                      ? 'bg-white text-teal-600'
-                                      : 'border border-white/30 bg-white/5'
-                                  }`}
-                                  aria-hidden="true"
-                                >
-                                  {isSelected && (
-                                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                                  )}
-                                </div>
-                                <span
-                                  style={{ fontSize: 'clamp(15px, 1.05vw, 18px)' }}
-                                  className={`leading-snug ${
-                                    isSelected ? 'font-bold text-white' : 'font-medium'
+                                      ? 'bg-teal-500 border-teal-400 text-white shadow-lg shadow-teal-500/20'
+                                      : 'bg-white/5 border-white/15 text-slate-200 hover:bg-white/10 hover:border-white/25'
                                   }`}
                                 >
-                                  {opt}
-                                </span>
-                              </label>
-                            );
-                          })}
+                                  <input
+                                    type="radio"
+                                    name={q.id}
+                                    value={opt}
+                                    checked={isSelected}
+                                    onChange={(e) =>
+                                      handleMCQChange(q.id, q.prompt, e.target.value)
+                                    }
+                                    className="sr-only"
+                                  />
+                                  <div
+                                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                                      isSelected
+                                        ? 'bg-white text-teal-600'
+                                        : 'border border-white/30 bg-white/5'
+                                    }`}
+                                    aria-hidden="true"
+                                  >
+                                    {isSelected && (
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                    )}
+                                  </div>
+                                  <span
+                                    style={{ fontSize: 'clamp(15px, 1.05vw, 18px)' }}
+                                    className={`leading-snug ${
+                                      isSelected ? 'font-bold text-white' : 'font-medium'
+                                    }`}
+                                  >
+                                    {opt}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </fieldset>
+                      );
+                    }
+
+                    if (q.type === 'text') {
+                      return (
+                        <div className="flex flex-col">
+                          <label
+                            htmlFor={q.id}
+                            className="survey-question-prompt text-lg md:text-xl text-white font-bold mb-3 md:mb-4 block leading-snug"
+                          >
+                            {q.prompt}
+                          </label>
+                          <textarea
+                            id={q.id}
+                            rows={4}
+                            placeholder={q.placeholder}
+                            value={val}
+                            onChange={(e) => handleTextChange(q.id, q.prompt, e.target.value)}
+                            className="w-full bg-white/5 border border-white/15 rounded-xl p-3 md:p-4 text-white placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/50 transition resize-none text-sm md:text-base leading-relaxed"
+                          />
                         </div>
-                      </fieldset>
-                    );
-                  }
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
 
-                  if (q.type === 'text') {
-                    return (
-                      <div className="flex flex-col">
-                        <label
-                          htmlFor={q.id}
-                          className="text-lg md:text-xl text-white font-bold mb-4 block leading-snug"
-                        >
-                          {q.prompt}
-                        </label>
-                        <textarea
-                          id={q.id}
-                          rows={4}
-                          placeholder={q.placeholder}
-                          value={val}
-                          onChange={(e) => handleTextChange(q.id, q.prompt, e.target.value)}
-                          className="w-full bg-white/5 border border-white/15 rounded-xl p-3 md:p-4 text-white placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/50 transition resize-none text-sm md:text-base leading-relaxed"
-                        />
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
-                <div className="mt-6 md:mt-8 flex justify-end shrink-0">
+                <div className="survey-footer-row mt-4 md:mt-6 flex justify-end shrink-0 pt-2">
                   {(() => {
                     const q = surveySet.questions[currentIndex];
                     const val = answers.find((a) => a.questionId === q.id)?.value || '';
@@ -387,25 +504,29 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
                     );
                   })()}
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="text-center py-4 md:py-8">
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">
-                  All done!
-                </h3>
-                <p className="text-slate-300 mb-6 md:mb-8 font-medium">
-                  Ready to submit your answers?
-                </p>
-                <button
-                  type="button"
-                  onClick={submitSurvey}
-                  disabled={isSubmitting}
-                  aria-disabled={isSubmitting}
-                  className="px-6 md:px-8 py-2.5 md:py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center mx-auto select-none cursor-pointer"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Answers'}
-                </button>
-              </div>
+              <>
+                <div className="survey-middle-scroll md:flex-1 md:min-h-0 md:overflow-y-auto text-center py-4 md:py-8">
+                  <h3 className="text-xl md:text-2xl font-bold text-white mb-3 md:mb-4">
+                    All done!
+                  </h3>
+                  <p className="text-slate-300 mb-6 md:mb-8 font-medium">
+                    Ready to submit your answers?
+                  </p>
+                </div>
+                <div className="survey-footer-row mt-4 md:mt-6 flex justify-center shrink-0 pt-2">
+                  <button
+                    type="button"
+                    onClick={submitSurvey}
+                    disabled={isSubmitting}
+                    aria-disabled={isSubmitting}
+                    className="px-6 md:px-8 py-2.5 md:py-3 bg-teal-500 hover:bg-teal-400 active:scale-95 text-white font-bold rounded-full transition shadow-lg shadow-teal-500/25 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center mx-auto select-none cursor-pointer"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Answers'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

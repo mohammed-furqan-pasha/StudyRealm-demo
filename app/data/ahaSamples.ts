@@ -41,7 +41,7 @@ export interface TeacherSample {
   grid: Record<string, Record<string, TeacherCell>>;
 }
 
-export const TEACHER_CRITICAL_BELOW = 60;
+export const TEACHER_CRITICAL_BELOW = 50;
 export const TEACHER_STRONG_FROM = 75;
 
 export const TEACHER_SAMPLE: TeacherSample = {
@@ -65,7 +65,7 @@ export const TEACHER_SAMPLE: TeacherSample = {
       Indicators: { student: '02', concept: 'Indicators', pct: 62 },
       Acids: { student: '02', concept: 'Acids', pct: 66 },
       Bases: { student: '02', concept: 'Bases', pct: 70 },
-      Neutralisation: { student: '02', concept: 'Neutralisation', pct: 62 },
+      Neutralisation: { student: '02', concept: 'Neutralisation', pct: 58 },
       'Natural dyes': { student: '02', concept: 'Natural dyes', pct: 64 },
     },
     '03': {
@@ -86,7 +86,7 @@ export const TEACHER_SAMPLE: TeacherSample = {
           action: 'Show the haldi and soap test, then ask the class to predict what lemon juice will do.',
         },
       },
-      Acids: { student: '04', concept: 'Acids', pct: 63 },
+      Acids: { student: '04', concept: 'Acids', pct: 55 },
       Bases: {
         student: '04',
         concept: 'Bases',
@@ -97,11 +97,11 @@ export const TEACHER_SAMPLE: TeacherSample = {
           action: 'List the bases found at home and test two of them on turmeric paper.',
         },
       },
-      Neutralisation: { student: '04', concept: 'Neutralisation', pct: 61 },
+      Neutralisation: { student: '04', concept: 'Neutralisation', pct: 52 },
       'Natural dyes': { student: '04', concept: 'Natural dyes', pct: 60 },
     },
     '05': {
-      Indicators: { student: '05', concept: 'Indicators', pct: 64 },
+      Indicators: { student: '05', concept: 'Indicators', pct: 52 },
       Acids: { student: '05', concept: 'Acids', pct: 80 },
       Bases: { student: '05', concept: 'Bases', pct: 72 },
       Neutralisation: { student: '05', concept: 'Neutralisation', pct: 68 },
@@ -146,10 +146,10 @@ export const TEACHER_SAMPLE: TeacherSample = {
       },
       Bases: { student: '07', concept: 'Bases', pct: 65 },
       Neutralisation: { student: '07', concept: 'Neutralisation', pct: 62 },
-      'Natural dyes': { student: '07', concept: 'Natural dyes', pct: 62 },
+      'Natural dyes': { student: '07', concept: 'Natural dyes', pct: 58 },
     },
     '08': {
-      Indicators: { student: '08', concept: 'Indicators', pct: 63 },
+      Indicators: { student: '08', concept: 'Indicators', pct: 58 },
       Acids: { student: '08', concept: 'Acids', pct: 66 },
       Bases: { student: '08', concept: 'Bases', pct: 74 },
       Neutralisation: { student: '08', concept: 'Neutralisation', pct: 60 },
@@ -207,7 +207,7 @@ export function derivePrincipalSample(): PrincipalSample {
     chapters.reduce((acc, ch) => acc + ch.pct, 0) / chapters.length
   );
 
-  const studentsAtRisk = TEACHER_SAMPLE.students.filter((student) => {
+  const studentsNeedingHelp = TEACHER_SAMPLE.students.filter((student) => {
     const row = TEACHER_SAMPLE.grid[student];
     return Object.values(row).some((cell) => cell.pct < TEACHER_CRITICAL_BELOW);
   }).length;
@@ -220,7 +220,7 @@ export function derivePrincipalSample(): PrincipalSample {
     stats: [
       { label: 'Avg mastery', value: `${avgMastery}%` },
       { label: 'Active this week', value: `${activeThisWeekPct}%` },
-      { label: 'Students at risk', value: String(studentsAtRisk) },
+      { label: 'Students needing help', value: String(studentsNeedingHelp) },
       { label: 'Chapters needing help', value: String(chaptersNeedingHelp) },
     ],
     chapters,

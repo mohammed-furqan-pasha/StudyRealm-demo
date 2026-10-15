@@ -13,6 +13,9 @@ export const PARALLAX_TEXT = 26;
 export const PARALLAX_DURATION = 0.65;
 export const PARALLAX_EASE = [0.22, 1, 0.36, 1] as const;
 
+export const SCENE_BOTTOM_RESERVE_DESKTOP = 120;
+export const SCENE_BOTTOM_RESERVE_MOBILE = 88;
+
 export { CoverBox } from './CoverBox';
 import { CoverBox } from './CoverBox';
 
@@ -90,9 +93,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
   if (desktop && isStageMode(scene)) {
     return (
       <div
-        className="relative z-10 w-full h-full flex flex-col overflow-y-auto pageflow-scroll pb-[88px]"
+        className="relative z-10 w-full h-full flex flex-col overflow-y-auto pageflow-scroll pb-[88px] md:pb-[120px]"
         style={{
-          paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+          paddingBottom: `calc(${SCENE_BOTTOM_RESERVE_DESKTOP}px + env(safe-area-inset-bottom, 0px))`,
           transform: 'none',
         }}
       >
@@ -192,9 +195,11 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
 
       {/* Content / Text Layer */}
       <m.div
-        className="relative z-10 w-full h-full flex flex-col overflow-y-auto pageflow-scroll pb-[88px]"
+        className="relative z-10 w-full h-full flex flex-col overflow-y-auto pageflow-scroll pb-[88px] md:pb-[120px]"
         style={{
-          paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))',
+          paddingBottom: `calc(${
+            desktop ? SCENE_BOTTOM_RESERVE_DESKTOP : SCENE_BOTTOM_RESERVE_MOBILE
+          }px + env(safe-area-inset-bottom, 0px))`,
           ...(desktop ? { transform: 'none' } : {}),
         }}
         animate={desktop ? undefined : getLayerAnimate(PARALLAX_TEXT)}

@@ -115,8 +115,8 @@ html, body { overscroll-behavior: none; overscroll-behavior-x: none; }
 @keyframes stRevealIn { from { transform: translateY(calc(var(--text-dir, 1) * var(--rise, 10vh))); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes stWordOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(calc(var(--text-dir, 1) * -110%)); opacity: 0; } }
 @keyframes stRevealOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(calc(var(--text-dir, 1) * var(--rise, 10vh) * -1)); opacity: 0; } }
-[data-text-phase="enter"] .st-word { animation: stWordIn calc(750ms * var(--ts, 1)) cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--text-delay, 0ms) + var(--i, 0) * 90ms * var(--ts, 1)); }
-[data-text-phase="enter"] .st-reveal { animation: stRevealIn calc(700ms * var(--ts, 1)) cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--text-delay, 0ms) + (100ms + var(--o, 0) * 100ms) * var(--ts, 1)); }
+[data-text-phase="enter"] .st-word { animation: stWordIn calc(750ms * var(--ts, 1)) cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--text-delay, 300ms) + var(--i, 0) * 90ms * var(--ts, 1)); }
+[data-text-phase="enter"] .st-reveal { animation: stRevealIn calc(700ms * var(--ts, 1)) cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--text-delay, 300ms) + (100ms + var(--o, 0) * 100ms) * var(--ts, 1)); }
 [data-text-phase="leave"] .st-word { animation: stWordOut calc(220ms * var(--ts, 1)) cubic-bezier(0.55, 0, 1, 0.45) forwards; animation-delay: calc(min(var(--i, 0) * 20ms, 100ms) * var(--ts, 1)); }
 [data-text-phase="leave"] .st-reveal { animation: stRevealOut calc(220ms * var(--ts, 1)) cubic-bezier(0.55, 0, 1, 0.45) forwards; animation-delay: calc(min(var(--o, 0) * 30ms, 90ms) * var(--ts, 1)); }
 @media (prefers-reduced-motion: reduce) { [data-text-phase] .st-word, [data-text-phase] .st-reveal { animation: none; transform: none; } [data-text-phase="enter"] .st-word, [data-text-phase="enter"] .st-reveal { opacity: 1; } }

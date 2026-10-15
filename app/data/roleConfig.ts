@@ -50,7 +50,7 @@ export const ROLE_CONFIGS: Record<RoleKey, RoleConfig> = {
     aha: {
       tag: 'A class like yours',
       headlineLines: ['Tap a red cell', "to see who's stuck."],
-      hint: "A sample class. Tap any cell; the red ones show who's stuck.",
+      hint: 'Tap any cell to see who is struggling, what they are stuck on, and a suggested next step.',
     },
     features: {
       tag: 'What you get',
@@ -84,7 +84,7 @@ export const ROLE_CONFIGS: Record<RoleKey, RoleConfig> = {
     aha: {
       tag: 'A daily view',
       headlineLines: ["See your child's", 'progress every day.'],
-      hint: "A sample update. Try your child's first name.",
+      hint: "Type your child's first name to see the kind of daily update you would get.",
     },
     features: {
       tag: 'For your family',
@@ -147,7 +147,7 @@ export const ROLE_CONFIGS: Record<RoleKey, RoleConfig> = {
       headlineLines: ['Every student learns.', 'Every teacher sees it.'],
       sub: "Fun lessons kids love, simple progress updates for teachers and parents, and lessons that follow India's latest school guidelines. No app to download.",
       primaryCta: { label: 'See what each user sees →', action: { type: 'goTo', id: 'aha' } },
-      secondaryCta: { label: 'Try the chapter', action: { type: 'goTo', id: 'demo' } },
+      secondaryCta: { label: 'See each view', action: { type: 'goTo', id: 'demo' } },
       showStats: true,
     },
     aha: {

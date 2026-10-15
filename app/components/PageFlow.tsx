@@ -142,10 +142,34 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     delay: locked ? '0ms' : '300ms',
   });
 
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+
+  const mountTimeRef = useRef(typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const loggedPhasesRef = useRef<Record<string, TextPhase>>({});
+
+  // TEMP-DEBUG
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && isDesktop) {
+      pages.forEach((p, i) => {
+        const isActive = i === index;
+        const effective = (isActive && !locked && textPhase[p.id] === 'hidden') ? 'enter' : textPhase[p.id];
+        if (loggedPhasesRef.current[p.id] !== effective) {
+          loggedPhasesRef.current[p.id] = effective;
+          const msSinceMount = Math.round((typeof performance !== 'undefined' ? performance.now() : Date.now()) - mountTimeRef.current);
+          console.debug('[pageflow]', p.id, effective, textNavTiming?.delay ?? '300ms', msSinceMount); // TEMP-DEBUG
+        }
+      });
+    }
+  }, [isDesktop, index, locked, textPhase, pages, textNavTiming]);
+
   const prevLockedRef = useRef(locked);
   useEffect(() => {
     if (prevLockedRef.current && !locked) {
-      const currentId = pages[indexRef.current]?.id;
+      const currentPages = pagesRef.current;
+      const currentId = currentPages[indexRef.current]?.id;
       const isHeroArrival = isDesktop && ARRIVAL_ENABLED && !shouldReduceMotion && currentId === 'hero';
 
       if (isHeroArrival) {
@@ -156,7 +180,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setIsArriving(true);
 
         const nextPhases: Record<string, TextPhase> = {};
-        pages.forEach((p) => {
+        currentPages.forEach((p) => {
           nextPhases[p.id] = p.id === currentId ? 'enter' : 'hidden';
         });
         textPhaseRef.current = nextPhases;
@@ -190,7 +214,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           setEnteredAt((prev) => ({ ...prev, [currentId]: 0 }));
         }
         const nextPhases: Record<string, TextPhase> = {};
-        pages.forEach((p) => {
+        currentPages.forEach((p) => {
           nextPhases[p.id] = p.id === currentId ? 'enter' : 'hidden';
         });
         textPhaseRef.current = nextPhases;
@@ -202,8 +226,9 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setIsArriving(false);
       }
     } else if (!prevLockedRef.current && locked) {
+      const currentPages = pagesRef.current;
       const nextPhases: Record<string, TextPhase> = {};
-      pages.forEach((p) => {
+      currentPages.forEach((p) => {
         nextPhases[p.id] = 'hidden';
       });
       textPhaseRef.current = nextPhases;
@@ -212,7 +237,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       clearTransitionTimers();
     }
     prevLockedRef.current = locked;
-  }, [locked, pages, isDesktop, shouldReduceMotion]);
+  }, [locked, isDesktop, shouldReduceMotion]);
 
   // Transition object: { id, fromId, toId, dir }
   const transitionCounterRef = useRef(0);
@@ -755,6 +780,8 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                 }
               }
 
+              const effectivePhase = (isActive && !locked && textPhase[p.id] === 'hidden') ? 'enter' : textPhase[p.id];
+
               return (
                 <m.div
                   key={p.id}
@@ -764,8 +791,8 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                     zIndex: i + 1,
                     visibility: isDesktop ? (isDesktopWrapperVisible ? 'visible' : 'hidden') : undefined,
                     ...(isDesktop ? ({
-                      '--text-dir': textNavTiming.dir,
-                      '--text-delay': textNavTiming.delay,
+                      '--text-dir': textNavTiming?.dir ?? 1,
+                      '--text-delay': textNavTiming?.delay || '300ms',
                       '--ts': TIME_SCALE,
                     } as React.CSSProperties) : {}),
                   }}
@@ -780,7 +807,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   inert={!isActive}
                   aria-hidden={!isActive}
                   data-page-current={isActive && !locked ? 'true' : 'false'}
-                  data-text-phase={isDesktop ? textPhase[p.id] : undefined}
+                  data-text-phase={isDesktop ? effectivePhase : undefined}
                 >
                   <PageStateContext.Provider
                     value={{

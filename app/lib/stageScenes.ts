@@ -258,7 +258,7 @@ export const PHONE_TIMING = {
 export const ARRIVAL_ENABLED = true;
 export const ARRIVAL_TIMING = {
   objectsDelayMs: 150,
-  textDelayMs: 900,
+  textDelayMs: 450,
   totalMs: 1800,
 };
 

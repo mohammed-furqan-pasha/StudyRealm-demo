@@ -357,11 +357,11 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
       {/* 4 Stat Tiles: always grid-cols-2 */}
       <div className="grid grid-cols-2 gap-2 mb-3">
         {PRINCIPAL_SAMPLE.stats.map((st) => {
-          const isStudentsAtRisk = st.label === 'Students at risk' || st.label === 'Students needing help';
+          const isStudentsAtRisk = st.label === 'Students needing help';
           return (
             <div
               key={st.label}
-              title={isStudentsAtRisk ? 'Below 60% in any concept' : undefined}
+              title={isStudentsAtRisk ? `Below ${TEACHER_CRITICAL_BELOW}% in any concept` : undefined}
               className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col text-left"
             >
               <span className="text-base sm:text-lg font-semibold text-white leading-tight">
@@ -538,11 +538,6 @@ function TeacherHeatmap({
             animation: none !important;
           }
         }
-        @media (max-height: 800px) {
-          .teacher-matrix-footer {
-            display: none !important;
-          }
-        }
       `}</style>
 
       {/* Header row: title and subtitle on left, Sample data chip on right */}
@@ -561,19 +556,19 @@ function TeacherHeatmap({
         <SampleDataChip />
       </div>
 
-      {/* Legend row: On track, In progress, Needs attention */}
+      {/* Legend row: Strong 75+, Needs revision 50–74, Critical below 50 */}
       <div className="flex items-center gap-3.5 mb-2.5 text-[12px] text-slate-300 select-none">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#14B8A6] shrink-0" />
-          <span>On track</span>
+          <span>Strong {TEACHER_STRONG_FROM}+</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#F59E0B] shrink-0" />
-          <span>In progress</span>
+          <span>Needs revision {TEACHER_CRITICAL_BELOW}–{TEACHER_STRONG_FROM - 1}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#E26A7B] shrink-0" />
-          <span>Needs attention</span>
+          <span>Critical below {TEACHER_CRITICAL_BELOW}</span>
         </div>
       </div>
 
@@ -853,6 +848,33 @@ function ParentPhonePreview({
                 {'★'.repeat(PARENT_SAMPLE.stars)}{' '}
                 <span className="text-slate-400 font-normal">({PARENT_SAMPLE.stars})</span>
               </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Time on chapter:</span>
+              <span className="font-bold text-teal-300">{PARENT_SAMPLE.minutes} min</span>
+            </div>
+            <div
+              className="flex flex-col gap-1.5 pt-1 border-t border-white/10"
+              aria-label={`${activeDaysCount} of 7 days active this week`}
+            >
+              <div className="flex items-center justify-between text-[12px] text-slate-300">
+                <span>This week</span>
+                <span>{activeDaysCount} of 7 days</span>
+              </div>
+              <div className="flex items-center justify-between px-1">
+                {DAY_LETTERS.map((letter, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <span
+                      className={`h-3 w-3 rounded-full ${
+                        PARENT_SAMPLE.weekDays[i] ? 'bg-[#14B8A6]' : 'bg-white/15'
+                      }`}
+                    />
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {letter}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="flex items-start justify-between gap-3 pt-1 border-t border-white/10">
               <span className="text-slate-400 shrink-0">Needs revision</span>

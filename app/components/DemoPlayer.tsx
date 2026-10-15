@@ -414,6 +414,16 @@ function CelebrationBlock({ block, onContinue, onAutoRead }: { block: Extract<Co
 }
 
 // ─── MAIN DEMO PLAYER ──────────────────────────────────────────────────────
+const SLIDE_LABELS: Record<string, string> = {
+  story_panel: 'Story',
+  stain_hook: 'Haldi Stain',
+  kitchen_lab: 'Kitchen Lab',
+  tap_reveal: 'Tap to Reveal',
+  flip_card: 'Flip Card',
+  sequence: 'Sequence',
+  celebration: 'Complete',
+};
+
 interface DemoPlayerProps {
   onComplete: () => void;
   isActive?: boolean;
@@ -549,10 +559,44 @@ export default function DemoPlayer({
 
   return (
     <SceneShell scene="demo">
+      <style>{`
+        @media (min-width: 768px) {
+          .demo-card-frame {
+            height: min(640px, calc(100dvh - 192px));
+            max-height: min(640px, calc(100dvh - 192px));
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            display: flex;
+            flex-direction: column;
+          }
+          .demo-card-frame::-webkit-scrollbar {
+            display: none;
+          }
+          .demo-card-frame > * {
+            margin-block: auto;
+            width: 100%;
+          }
+        }
+        @media (min-width: 768px) and (max-height: 819px) {
+          .demo-card-frame {
+            padding: 1.75rem 2rem !important;
+          }
+          .demo-card-frame h2 {
+            font-size: 1.125rem !important;
+            line-height: 1.25 !important;
+          }
+          .demo-card-frame h3 {
+            font-size: 1.25rem !important;
+            line-height: 1.25 !important;
+          }
+        }
+      `}</style>
+
       {/* Static veil */}
       <div
         className="absolute inset-0 pointer-events-none z-0 select-none"
-        style={{ background: 'rgba(3,8,18,0.6)' }}
+        style={{ background: 'rgba(3,8,18,0.28)' }}
         aria-hidden="true"
       />
 
@@ -562,22 +606,35 @@ export default function DemoPlayer({
         className="relative w-full h-full flex flex-col z-10"
         style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
       >
-        {/* Top Progress Bar */}
-        <div className="relative z-20 w-full px-6 pt-5 pb-3 flex items-center gap-4 sm:gap-6 shrink-0">
-          <span className="text-white/80 text-xs font-bold tracking-widest whitespace-nowrap uppercase">
-            PART {current + 1} OF {total}
-          </span>
-          <div className="flex-1 bg-white/20 rounded-full h-1 overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: '100%',
-                transform: `scaleX(${progress / 100})`,
-                transformOrigin: 'left',
-                transition: 'transform 500ms ease-out',
-                background: '#FBBF24',
-              }}
-            />
+        {/* Top Progress Area */}
+        <div className="relative md:absolute md:top-0 md:inset-x-0 z-20 w-full px-4 md:px-8 pt-4 pb-2 md:py-0 md:h-[72px] flex items-center justify-between gap-3 md:gap-6 shrink-0">
+          <div className="text-white/80 text-xs font-bold tracking-widest whitespace-nowrap uppercase shrink-0">
+            PART {current + 1} OF {total} · <span className="text-white/70">{SLIDE_LABELS[block.type] || ''}</span>
+          </div>
+          <div className="flex-1 flex items-center gap-[6px] h-6 max-w-xl" role="tablist" aria-label="Demo parts">
+            {blocks.map((b, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to part ${i + 1}: ${SLIDE_LABELS[b.type] || ''}`}
+                onClick={() => {
+                  stopAudioFor('demo');
+                  setSpeaking(false);
+                  setTimeout(() => {
+                    setDirection(i > current ? 'right' : 'left');
+                    setCurrent(i);
+                    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                  }, 100);
+                }}
+                className="flex-1 h-6 flex items-center cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 rounded-sm"
+              >
+                <span
+                  className={`w-full h-1 rounded-full transition-colors duration-200 ${
+                    i <= current ? 'bg-[#FBBF24]' : 'bg-slate-600 group-hover:bg-slate-500'
+                  }`}
+                />
+              </button>
+            ))}
           </div>
         </div>
 
@@ -618,27 +675,27 @@ export default function DemoPlayer({
           {/* Scroll Wrapper */}
           <div
             ref={scrollRef}
-            className={`w-full h-full px-4 ${
+            className={`w-full h-full px-4 md:overflow-hidden ${
               canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'
-            } [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.28)_transparent]`}
+            } [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden`}
           >
-            {/* Inner centering div: Card, label, and progress dots as one group in the free area */}
+            {/* Inner centering div: Card centered in the free band */}
             <div
               ref={innerRef}
-              className="min-h-full w-full flex flex-col items-center justify-center pb-[124px] pt-2"
+              className="min-h-full w-full flex flex-col items-center pt-2 pb-2 md:pt-[72px] md:pb-0"
             >
-              {/* Centered group wrapper */}
+              {/* Centered group wrapper with margin-block auto for scroll-safe centering */}
               <div
                 key={current}
                 className={`w-full ${
                   block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'
-                } mx-auto z-20 flex flex-col items-center ${
+                } mx-auto z-20 flex flex-col items-center my-auto ${
                   direction === 'right' ? 'slide-up-next' : 'slide-up-prev'
                 }`}
               >
                 {/* Fake glass content panel */}
                 <div
-                  className={`relative w-full ${
+                  className={`demo-card-frame relative w-full ${
                     block.type === 'story_panel' ? '' : 'p-5 md:p-10'
                   }`}
                   style={
@@ -669,57 +726,6 @@ export default function DemoPlayer({
                   {block.type === 'celebration' && (
                     <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
                   )}
-                </div>
-
-                {/* Slide type label */}
-                <div className="text-center mt-4">
-                  <span className="text-white/70 text-xs font-bold uppercase tracking-widest drop-shadow-md">
-                    {
-                      (
-                        {
-                          story_panel: 'Story',
-                          stain_hook: 'Haldi Stain',
-                          kitchen_lab: 'Kitchen Lab',
-                          tap_reveal: 'Tap to Reveal',
-                          flip_card: 'Flip Card',
-                          sequence: 'Sequence',
-                          celebration: 'Complete',
-                        } as Record<string, string>
-                      )[block.type as string]
-                    }
-                  </span>
-                </div>
-
-                {/* Progress dots: grouped directly below label, no transition on width */}
-                <div
-                  className="mt-4 flex items-center gap-3 px-5 py-2.5 rounded-full select-none"
-                  style={{
-                    background: 'rgba(8, 24, 40, 0.85)',
-                    border: '1px solid rgba(94, 234, 212, 0.28)',
-                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
-                  }}
-                >
-                  {blocks.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      aria-label={`Go to part ${i + 1}`}
-                      onClick={() => {
-                        stopAudioFor('demo');
-                        setSpeaking(false);
-                        setTimeout(() => {
-                          setDirection(i > current ? 'right' : 'left');
-                          setCurrent(i);
-                          if (scrollRef.current) scrollRef.current.scrollTop = 0;
-                        }, 100);
-                      }}
-                      className={`rounded-full transition-colors duration-200 cursor-pointer ${
-                        i === current
-                          ? 'w-8 h-2 bg-amber-400'
-                          : 'w-2 h-2 bg-white/40 hover:bg-white/70'
-                      }`}
-                    />
-                  ))}
                 </div>
               </div>
             </div>

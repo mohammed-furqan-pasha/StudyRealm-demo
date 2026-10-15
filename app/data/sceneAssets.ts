@@ -24,11 +24,11 @@ export const SCENES: Record<SceneKey, SceneAsset> = {
     position: '50% 50%',
   },
   demo: {
-    bgColor: '#07101E',
-    gradient: 'radial-gradient(ellipse at 70% 0%, #0B3140 0%, #07182A 45%, #040A16 100%)',
-    lg: '/scenes/space-lg.webp',
-    sm: '/scenes/space-lg.webp',
-    position: '50% 60%',
+    bgColor: '#0C2A40',
+    gradient: 'linear-gradient(180deg, #0A2441 0%, #12506B 50%, #B9795F 100%)',
+    lg: '/scenes/hero-lg.webp',
+    sm: '/scenes/hero-lg.webp',
+    position: '50% 100%',
   },
   features: {
     bgColor: '#050B18',
@@ -38,11 +38,11 @@ export const SCENES: Record<SceneKey, SceneAsset> = {
     position: '50% 0%',
   },
   survey: {
-    bgColor: '#07121F',
-    gradient: 'radial-gradient(ellipse at 80% 0%, #0B3140 0%, #07182A 45%, #040A16 100%)',
-    lg: '/scenes/space-lg.webp',
-    sm: '/scenes/space-lg.webp',
-    position: '100% 30%',
+    bgColor: '#071A2E',
+    gradient: 'linear-gradient(180deg, #05142A 0%, #0A2441 55%, #0F3B55 100%)',
+    lg: '/scenes/hero-lg.webp',
+    sm: '/scenes/hero-lg.webp',
+    position: '50% 0%',
   },
   contact: {
     bgColor: '#0A1020',
