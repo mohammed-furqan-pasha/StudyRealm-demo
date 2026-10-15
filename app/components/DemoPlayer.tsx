@@ -640,13 +640,13 @@ export default function DemoPlayer({
 
         {/* Main Content Area */}
         <div className="relative z-20 flex-1 min-h-0 w-full h-full flex flex-col">
-          {/* Prev arrow */}
+          {/* Desktop Prev arrow (circular, floating at md:left-8) */}
           <button
             type="button"
             onClick={handlePrevClick}
             disabled={isPrevDisabled}
             aria-label={prevAriaLabel || 'Previous part'}
-            className="absolute bottom-[108px] md:bottom-auto md:top-1/2 md:-translate-y-1/2 right-1/2 md:right-auto mr-2 md:mr-0 md:left-8 w-12 h-12 rounded-full text-white flex items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            className="hidden md:flex absolute md:top-1/2 md:-translate-y-1/2 md:left-8 w-12 h-12 rounded-full text-white items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
             style={{
               background: 'rgba(8, 24, 40, 0.85)',
               border: '1px solid rgba(94, 234, 212, 0.28)',
@@ -656,13 +656,13 @@ export default function DemoPlayer({
             ‹
           </button>
 
-          {/* Next arrow */}
+          {/* Desktop Next arrow (circular, floating at md:right-8) */}
           <button
             type="button"
             onClick={handleNextClick}
             disabled={isNextDisabled}
             aria-label={nextAriaLabel || 'Next part'}
-            className="absolute bottom-[108px] md:bottom-auto md:top-1/2 md:-translate-y-1/2 left-1/2 md:left-auto ml-2 md:ml-0 md:right-8 w-12 h-12 rounded-full text-white flex items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            className="hidden md:flex absolute md:top-1/2 md:-translate-y-1/2 md:right-8 w-12 h-12 rounded-full text-white items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
             style={{
               background: 'rgba(8, 24, 40, 0.85)',
               border: '1px solid rgba(94, 234, 212, 0.28)',
@@ -727,6 +727,33 @@ export default function DemoPlayer({
                     {block.type === 'celebration' && (
                       <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
                     )}
+                  </div>
+
+                  {/* Mobile inner navigation row (under card, in normal flow) */}
+                  <div className="w-full flex md:hidden justify-between items-center mt-3 z-20">
+                    <button
+                      type="button"
+                      onClick={handlePrevClick}
+                      disabled={isPrevDisabled}
+                      aria-label={prevAriaLabel || 'Previous part'}
+                      className={`min-h-[44px] px-4 rounded-full bg-white/10 border border-white/15 text-sm font-medium text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                        isPrevDisabled ? 'opacity-0 pointer-events-none' : 'hover:bg-white/15 active:scale-95'
+                      }`}
+                    >
+                      ‹ Back
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleNextClick}
+                      disabled={isNextDisabled}
+                      aria-label={nextAriaLabel || 'Next part'}
+                      className={`min-h-[44px] px-4 rounded-full bg-white/10 border border-white/15 text-sm font-medium text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                        isNextDisabled ? 'opacity-0 pointer-events-none' : 'hover:bg-white/15 active:scale-95'
+                      }`}
+                    >
+                      Next part ›
+                    </button>
                   </div>
                 </div>
               </div>

@@ -318,7 +318,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
         {/* Window at full width (16/10 ratio) */}
         <div
-          className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col w-full mb-4 shrink-0"
+          className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col w-full mb-3 shrink-0"
           style={{
             boxShadow: '0 20px 50px -20px rgba(45,212,191,0.35)',
           }}
@@ -379,7 +379,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
         {/* Chips in a 1-row grid matching card count */}
         <div
-          className="grid gap-2 w-full box-border min-w-0 mb-4"
+          className="grid gap-2 w-full box-border min-w-0 mb-4 shrink-0"
           style={{
             gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
           }}
@@ -403,11 +403,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
               >
                 <Icon className="w-5 h-5 shrink-0" />
                 <span
-                  className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                  style={{
-                    fontSize: 'clamp(10.5px, 0.78vw, 13px)',
-                    fontWeight: 500,
-                  }}
+                  className="text-[11px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full font-medium"
                 >
                   {card.shortTitle}
                 </span>
@@ -418,7 +414,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
         {/* Caption */}
         {activeCard && (
-          <div className="min-h-[72px] text-left mb-6" aria-live="polite">
+          <div className="min-h-[72px] text-left shrink-0" aria-live="polite">
             <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
               <span
                 className="text-white text-[17px] leading-snug"
@@ -446,7 +442,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
         <button
           type="button"
           onClick={() => goTo('survey')}
-          className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25"
+          className="h-[48px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25 mt-3 shrink-0"
         >
           <span>{cleanCtaLabel}</span>
           <ArrowRight className="w-5 h-5 ml-1 shrink-0" />

@@ -263,7 +263,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
         </div>
 
         {/* Mobile Scrollable Interactive Container */}
-        <div className="flex-1 min-h-0 overflow-y-auto pageflow-scroll overscroll-contain py-1 pr-0.5">
+        <div className="flex-1 min-h-0 overflow-y-auto pageflow-scroll overscroll-contain pt-1 pb-2 pr-0.5">
           <StageReveal order={3} rise={30} className="w-full">
             {role === 'Student' ? (
               <StarCatcher onContinue={() => goTo('demo')} />
@@ -700,7 +700,7 @@ function TeacherHeatmap({
 
       {/* Detail area below the grid */}
       <div
-        className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-0 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
+        className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-3 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
         style={{ background: 'var(--detail-bg, rgba(4, 14, 28, 0.72))' }}
       >
         {selectedCell.detail ? (

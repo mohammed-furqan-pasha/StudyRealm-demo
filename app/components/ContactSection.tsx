@@ -11,6 +11,7 @@ import {
   Share2,
   Star,
   MessageCircle,
+  ArrowRight,
 } from 'lucide-react';
 import SceneShell, { SplitHeadline, StageReveal } from './SceneShell';
 import TopBar from './TopBar';
@@ -325,11 +326,11 @@ export default function ContactSection({
 
       {/* Main Content Container: Vertically Centered in Free Area */}
       <div
-        className="relative z-10 w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-2 md:py-4 my-auto flex flex-col justify-center text-left"
+        className="relative z-10 w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 pt-2 pb-6 md:py-4 my-auto flex flex-col justify-center text-left"
         style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
       >
         {/* Top: Header */}
-        <div className="text-center shrink-0 mb-3 md:mb-5 flex flex-col items-center">
+        <div className="text-center shrink-0 mb-4 md:mb-5 flex flex-col items-center">
           <StageReveal order={0} className="w-full text-center">
             <p className="uppercase tracking-[0.2em] text-[12px] md:text-[length:calc(13*var(--u))] text-white/80 font-medium mb-1.5 md:mb-2 text-center select-none">
               {config.tag}
@@ -342,15 +343,15 @@ export default function ContactSection({
           />
 
           <StageReveal order={2} className="w-full text-center">
-            <p className="text-white/85 max-w-[640px] mx-auto text-[clamp(0.95rem,1.1vw,1.15rem)] leading-relaxed text-center">
+            <p className="text-white/85 max-w-[640px] mx-auto text-[14px] md:text-[clamp(0.95rem,1.1vw,1.15rem)] mb-4 md:mb-0 leading-relaxed text-center">
               {config.description}
             </p>
           </StageReveal>
         </div>
 
-        {/* Action Cards Area */}
+        {/* Action Cards Area (Desktop >= 768px) */}
         {isStudent ? (
-          <StageReveal order={3} rise="14vh" className="flex flex-col items-center w-full mb-3 md:mb-5 shrink-0">
+          <StageReveal order={3} rise="14vh" className="hidden md:flex flex-col items-center w-full mb-3 md:mb-5 shrink-0">
             {/* CSS-drawn badge above card */}
             <div className="inline-flex items-center gap-2.5 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl mb-4 shadow-lg select-none">
               <div className="w-6 h-6 rounded-full bg-teal-400 flex items-center justify-center text-slate-950 shrink-0">
@@ -367,7 +368,7 @@ export default function ContactSection({
             </div>
           </StageReveal>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-5 shrink-0 items-stretch">
+          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-5 shrink-0 items-stretch">
             {standardActionCards.map((card, i) => (
               <StageReveal key={i} order={3 + i} rise="14vh" className="h-full">
                 {card}
@@ -376,42 +377,223 @@ export default function ContactSection({
           </div>
         )}
 
+        {/* Action Cards Area (Phone < 768px) */}
+        <div className="flex md:hidden flex-col gap-4 w-full mb-4 shrink-0">
+          {/* Primary Action Button */}
+          {isStudent ? (
+            <div className="w-full flex flex-col items-center">
+              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                {share.label}
+              </p>
+              <button
+                type="button"
+                onClick={handleStudentShare}
+                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25"
+              >
+                <Share2 className="w-5 h-5 shrink-0" />
+                <span>Share</span>
+              </button>
+              {copied && (
+                <p
+                  aria-live="polite"
+                  className="text-teal-300 text-xs font-semibold mt-1.5 text-center"
+                >
+                  Copied! Paste it to your parent or teacher.
+                </p>
+              )}
+            </div>
+          ) : isSharePrimary ? (
+            <div className="w-full flex flex-col items-center">
+              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                {share.label}
+              </p>
+              <a
+                href={shareLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
+              >
+                <Share2 className="w-5 h-5 shrink-0" />
+                <span>Share on WhatsApp</span>
+                <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
+              </a>
+            </div>
+          ) : (
+            <div className="w-full flex flex-col items-center">
+              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                Book a Demo
+              </p>
+              <a
+                href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
+              >
+                <Calendar className="w-5 h-5 shrink-0" />
+                <span>Open Calendar</span>
+                <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
+              </a>
+            </div>
+          )}
+
+          {/* Secondary Actions List (Teacher, Parent, Principal, Other) */}
+          {!isStudent && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10 flex flex-col w-full overflow-hidden">
+              {isSharePrimary ? (
+                <>
+                  {/* Calendar Row */}
+                  <a
+                    href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <Calendar className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        Book a Demo
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        {calendlyDesc}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+
+                  {/* WhatsApp Row */}
+                  <a
+                    href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        WhatsApp
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        +91 90195 88700
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+
+                  {/* Email Row */}
+                  <a
+                    href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <Mail className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        Email Us
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        {emailDesc} · {EMAIL_ADDRESS}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+                </>
+              ) : (
+                <>
+                  {/* WhatsApp Row */}
+                  <a
+                    href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        WhatsApp
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        +91 90195 88700
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+
+                  {/* Email Row */}
+                  <a
+                    href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <Mail className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        Email Us
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        {emailDesc} · {EMAIL_ADDRESS}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+
+                  {/* Share on WhatsApp Row */}
+                  <a
+                    href={shareLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                  >
+                    <Share2 className="w-5 h-5 text-teal-300 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold text-white leading-snug">
+                        {share.label}
+                      </p>
+                      <p className="text-[12px] text-white/70 leading-snug">
+                        Forward via WhatsApp in 1 tap.
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                  </a>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Middle-Bottom: Value Proposition Columns (Shows ONLY for Principal and Other) */}
         {(role === 'Principal' || role === 'Other') && (
-          <StageReveal order={7} rise="14vh" className="shrink-0 mb-3 md:mb-5 text-center">
-            <p className="text-slate-400 font-semibold text-[11px] md:text-[12px] uppercase tracking-[0.2em] mb-2.5 md:mb-3 text-center select-none">
+          <StageReveal order={7} rise="14vh" className="shrink-0 mb-4 md:mb-5 text-center">
+            <p className="text-slate-400 font-semibold text-[11px] md:text-[12px] uppercase tracking-[0.2em] mb-2 md:mb-3 text-center select-none">
               Why Schools Say Yes
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 w-full max-w-5xl mx-auto">
+            <div className="flex flex-wrap md:grid md:grid-cols-3 gap-2 md:gap-5 w-full max-w-5xl mx-auto justify-center">
               {[
                 {
-                  icon: <TrendingUp className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  icon: <TrendingUp className="w-4 h-4 md:w-[18px] md:h-[18px] text-teal-400 shrink-0" />,
                   title: 'Built for board results',
                   desc: 'Mastery-first learning builds retention.',
                 },
                 {
-                  icon: <Building2 className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  icon: <Building2 className="w-4 h-4 md:w-[18px] md:h-[18px] text-teal-400 shrink-0" />,
                   title: 'Built for admissions',
                   desc: 'A premium tech-stack attracts parents.',
                 },
                 {
-                  icon: <Phone className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  icon: <Phone className="w-4 h-4 md:w-[18px] md:h-[18px] text-teal-400 shrink-0" />,
                   title: 'Built for fewer complaints',
                   desc: 'Daily visibility removes guesswork.',
                 },
               ].map((r) => (
                 <div
                   key={r.title}
-                  className="flex items-center gap-3 bg-white/[0.04] md:bg-white/[0.03] border border-white/10 md:border-white/5 rounded-xl px-3.5 py-2.5 text-left"
+                  className="flex items-center gap-2 md:gap-3 bg-white/[0.04] md:bg-white/[0.03] border border-white/10 md:border-white/5 rounded-xl px-2.5 py-1.5 md:px-3.5 md:py-2.5 text-left flex-1 min-w-[95px] md:min-w-0"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-400/25 flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-teal-500/15 border border-teal-400/25 flex items-center justify-center shrink-0">
                     {r.icon}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-white font-bold text-[14px] leading-tight truncate">
+                    <p className="text-white font-bold text-[12px] md:text-[14px] leading-tight line-clamp-2 md:truncate">
                       {r.title}
                     </p>
-                    <p className="text-slate-300 text-[13px] leading-tight truncate">
+                    <p className="hidden md:block text-slate-300 text-[13px] leading-tight truncate">
                       {r.desc}
                     </p>
                   </div>
@@ -422,24 +604,24 @@ export default function ContactSection({
         )}
 
         {/* Bottom: Slim Footer */}
-        <StageReveal order={8} className="w-full shrink-0">
-          <div className="w-full border-t border-white/10 pt-3 md:pt-3.5 flex flex-col md:flex-row items-center justify-between gap-2.5 md:gap-4 text-[13px] text-slate-400 shrink-0 select-none">
+        <StageReveal order={8} className="w-full shrink-0 mt-4 md:mt-0">
+          <div className="w-full border-t border-white/10 pt-3 md:pt-3.5 flex flex-col md:flex-row items-center justify-between gap-2.5 md:gap-4 text-[12px] md:text-[13px] text-slate-400 shrink-0 select-none">
             {/* Left: Company & Registration */}
-            <div className="flex items-center gap-2 text-center md:text-left">
+            <div className="flex items-center gap-2 text-center md:text-left text-[12px] md:text-[13px]">
               <Image
                 src="/logo.png"
                 alt="StudyRealm Logo"
                 width={16}
                 height={16}
-                className="h-4 w-auto object-contain shrink-0"
+                className="h-3.5 w-auto md:h-4 object-contain shrink-0"
               />
-              <span className="text-slate-300">
+              <span className="text-slate-300 text-[12px] md:text-[13px]">
                 StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka
               </span>
             </div>
 
             {/* Right: Existing Links in One Row */}
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-slate-300">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-5 gap-y-1 text-slate-300 text-[12px] md:text-[13px]">
               <a
                 href="https://studyrealm.app"
                 target="_blank"
