@@ -9,6 +9,7 @@ import KitchenLab from './KitchenLab';
 import { playAudio, visibleRatio, watchSectionVisibility, stopAudioFor } from '../lib/tts';
 
 import GuideBot from './GuideBot';
+import SceneShell from './SceneShell';
 
 // ─── TAP REVEAL BLOCK ──────────────────────────────────────────────────────
 function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentBlock, {type:'tap_reveal'}>, onAutoRead:(t:string)=>void, shouldStart: () => boolean }) {
@@ -109,10 +110,9 @@ function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentB
                 style={{
                   ...vStyle,
                   ...hStyle,
-                  background: 'rgba(17, 24, 39, 0.85)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  background: 'linear-gradient(180deg, rgba(10,40,58,0.92), rgba(6,22,38,0.96))',
+                  border: '1px solid rgba(94, 234, 212, 0.28)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 24px rgba(0, 0, 0, 0.4)',
                   width: 'max-content',
                   maxWidth: '220px',
                   whiteSpace: 'normal',
@@ -136,7 +136,14 @@ function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentB
         <>
           <div className="min-h-[48px] flex items-center justify-center">
             {activeLabel ? (
-              <div className="text-white px-5 py-2 rounded-full font-bold text-sm animate-[slideUp_0.3s_ease-out]" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.18)' }}>
+              <div
+                className="text-white px-5 py-2 rounded-full font-bold text-sm animate-[slideUp_0.3s_ease-out]"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(10,40,58,0.85), rgba(6,22,38,0.90))',
+                  border: '1px solid rgba(94, 234, 212, 0.28)',
+                  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+                }}
+              >
                 {activeLabel}
               </div>
             ) : (
@@ -180,14 +187,31 @@ function FlipCard({ block, onAutoRead, shouldStart }: { block: Extract<ContentBl
       <div className="flip-container w-full max-w-[380px] h-[180px] md:h-[200px]">
         <div className={`flip-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
           {/* Front */}
-          <div className="flip-face w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer" style={{ background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }} onClick={handleFlip}>
+          <div
+            className="flip-face w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer"
+            style={{
+              background: 'linear-gradient(180deg, rgba(10,40,58,0.82), rgba(6,22,38,0.88))',
+              border: '1px solid rgba(94, 234, 212, 0.28)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+              borderRadius: '16px',
+            }}
+            onClick={handleFlip}
+          >
             <div className="text-3xl md:text-4xl mb-3">🤔</div>
             <p className="text-white text-center text-xs md:text-base font-medium leading-relaxed">{block.front}</p>
             <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.50)' }}>Tap to flip ↓</p>
           </div>
           {/* Back */}
-          <div className="flip-face flip-back w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer" onClick={handleFlip}
-            style={{ background: 'linear-gradient(135deg, rgba(45,212,191,0.6), rgba(59,130,246,0.6))', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }}>
+          <div
+            className="flip-face flip-back w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer"
+            onClick={handleFlip}
+            style={{
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.75), rgba(14,116,144,0.75))',
+              border: '1px solid rgba(94, 234, 212, 0.35)',
+              boxShadow: '0 4px 24px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+              borderRadius: '16px',
+            }}
+          >
             <div className="text-3xl md:text-4xl mb-3">✨</div>
             <p className="text-white text-center text-lg md:text-2xl font-bold">{block.back}</p>
             <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.50)' }}>Tap to flip back ↑</p>
@@ -390,7 +414,23 @@ function CelebrationBlock({ block, onContinue, onAutoRead }: { block: Extract<Co
 }
 
 // ─── MAIN DEMO PLAYER ──────────────────────────────────────────────────────
-export default function DemoPlayer({ onComplete, isActive = true }: { onComplete: () => void, isActive?: boolean }) {
+interface DemoPlayerProps {
+  onComplete: () => void;
+  isActive?: boolean;
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
+  prevPageLabel?: string;
+  nextPageLabel?: string;
+}
+
+export default function DemoPlayer({
+  onComplete,
+  isActive = true,
+  onPrevPage,
+  onNextPage,
+  prevPageLabel,
+  nextPageLabel,
+}: DemoPlayerProps) {
   const [current, setCurrent] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [direction, setDirection] = useState<'right'|'left'>('right');
@@ -485,107 +525,225 @@ export default function DemoPlayer({ onComplete, isActive = true }: { onComplete
 
   const progress = ((current + 1) / total) * 100;
 
+  const isFirstPart = current === 0;
+  const isPrevDisabled = isFirstPart && !onPrevPage;
+  const handlePrevClick = () => {
+    if (isFirstPart) {
+      if (onPrevPage) onPrevPage();
+    } else {
+      go(-1);
+    }
+  };
+  const prevAriaLabel = isFirstPart && prevPageLabel ? `Previous: ${prevPageLabel}` : undefined;
+
+  const isLastPart = current === total - 1;
+  const isNextDisabled = isLastPart && !onNextPage;
+  const handleNextClick = () => {
+    if (isLastPart) {
+      if (onNextPage) onNextPage();
+    } else {
+      go(1);
+    }
+  };
+  const nextAriaLabel = isLastPart && nextPageLabel ? `Next: ${nextPageLabel}` : undefined;
+
   return (
-    <section id="demo" ref={containerRef} className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-[#0F172A]">
-      {/* Ambient premium science background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-teal-500/5 rounded-full blur-[120px] animate-[pulse_8s_ease-in-out_infinite]" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[150px] animate-[pulse_10s_ease-in-out_infinite_alternate]" />
-      </div>
+    <SceneShell scene="demo">
+      {/* Static veil */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 select-none"
+        style={{ background: 'rgba(3,8,18,0.6)' }}
+        aria-hidden="true"
+      />
 
-      {/* Top Progress Bar */}
-      <div className="relative z-20 w-full px-6 pt-6 pb-6 flex items-center gap-6">
-        <span className="text-white/80 text-xs font-bold tracking-widest whitespace-nowrap uppercase">
-          PART {current + 1} OF {total}
-        </span>
-        <div className="flex-1 bg-white/20 rounded-full h-1 overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{ width: '100%', transform: `scaleX(${progress / 100})`, transformOrigin: 'left', transition: 'transform 500ms ease-out', background: '#FBBF24' }}
-          />
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="relative z-20 flex-1 min-h-0 px-4 w-full h-full">
-        {/* Prev arrow */}
-        <button
-          onClick={() => go(-1)}
-          disabled={current === 0}
-          className="absolute bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 right-1/2 md:right-auto mr-2 md:mr-0 md:left-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
-        >
-          ‹
-        </button>
-
-        {/* Scroll Wrapper */}
-        <div ref={scrollRef} className={`w-full h-full ${canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'} [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.28)_transparent]`}>
-          {/* Inner centering div */}
-          <div ref={innerRef} className="min-h-full w-full flex flex-col items-center justify-center pb-24 md:pb-0">
-            {/* Glass content panel */}
+      <section
+        id="demo"
+        ref={containerRef}
+        className="relative w-full h-full flex flex-col z-10"
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
+        {/* Top Progress Bar */}
+        <div className="relative z-20 w-full px-6 pt-5 pb-3 flex items-center gap-4 sm:gap-6 shrink-0">
+          <span className="text-white/80 text-xs font-bold tracking-widest whitespace-nowrap uppercase">
+            PART {current + 1} OF {total}
+          </span>
+          <div className="flex-1 bg-white/20 rounded-full h-1 overflow-hidden">
             <div
-              key={current}
-              className={`w-full ${block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'} mx-auto z-20 ${direction === 'right' ? 'slide-up-next' : 'slide-up-prev'}`}
+              className="h-full rounded-full"
+              style={{
+                width: '100%',
+                transform: `scaleX(${progress / 100})`,
+                transformOrigin: 'left',
+                transition: 'transform 500ms ease-out',
+                background: '#FBBF24',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="relative z-20 flex-1 min-h-0 w-full h-full flex flex-col">
+          {/* Prev arrow */}
+          <button
+            type="button"
+            onClick={handlePrevClick}
+            disabled={isPrevDisabled}
+            aria-label={prevAriaLabel || 'Previous part'}
+            className="absolute bottom-[108px] md:bottom-auto md:top-1/2 md:-translate-y-1/2 right-1/2 md:right-auto mr-2 md:mr-0 md:left-8 w-12 h-12 rounded-full text-white flex items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            style={{
+              background: 'rgba(8, 24, 40, 0.85)',
+              border: '1px solid rgba(94, 234, 212, 0.28)',
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+            }}
+          >
+            ‹
+          </button>
+
+          {/* Next arrow */}
+          <button
+            type="button"
+            onClick={handleNextClick}
+            disabled={isNextDisabled}
+            aria-label={nextAriaLabel || 'Next part'}
+            className="absolute bottom-[108px] md:bottom-auto md:top-1/2 md:-translate-y-1/2 left-1/2 md:left-auto ml-2 md:ml-0 md:right-8 w-12 h-12 rounded-full text-white flex items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            style={{
+              background: 'rgba(8, 24, 40, 0.85)',
+              border: '1px solid rgba(94, 234, 212, 0.28)',
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+            }}
+          >
+            ›
+          </button>
+
+          {/* Scroll Wrapper */}
+          <div
+            ref={scrollRef}
+            className={`w-full h-full px-4 ${
+              canScroll ? 'overflow-y-auto touch-pan-y' : 'overflow-y-visible'
+            } [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.28)_transparent]`}
+          >
+            {/* Inner centering div: Card, label, and progress dots as one group in the free area */}
+            <div
+              ref={innerRef}
+              className="min-h-full w-full flex flex-col items-center justify-center pb-[124px] pt-2"
             >
-              <div 
-                className={`relative ${block.type === 'story_panel' ? '' : 'p-5 md:p-10'}`} 
-                style={block.type === 'story_panel' ? {} : { background: 'rgba(255, 255, 255, 0.10)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.18)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.20)', borderRadius: '16px' }}
+              {/* Centered group wrapper */}
+              <div
+                key={current}
+                className={`w-full ${
+                  block.type === 'story_panel' ? 'max-w-6xl' : 'max-w-2xl'
+                } mx-auto z-20 flex flex-col items-center ${
+                  direction === 'right' ? 'slide-up-next' : 'slide-up-prev'
+                }`}
               >
-                {block.type === 'stain_hook' && <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />}
-                {block.type === 'kitchen_lab' && <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />}
-                {block.type === 'tap_reveal' && <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />}
-                {block.type === 'flip_card' && <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />}
-                {block.type === 'celebration' && <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />}
-              </div>
-              
-              {/* Slide type label */}
-              <div className="text-center mt-6">
-                <span className="text-white/60 text-xs font-bold uppercase tracking-widest drop-shadow-md">
-                  {({story_panel:'Story',stain_hook:'Haldi Stain',kitchen_lab:'Kitchen Lab',tap_reveal:'Tap to Reveal',flip_card:'Flip Card',sequence:'Sequence',celebration:'Complete'} as Record<string, string>)[block.type as string]}
-                </span>
+                {/* Fake glass content panel */}
+                <div
+                  className={`relative w-full ${
+                    block.type === 'story_panel' ? '' : 'p-5 md:p-10'
+                  }`}
+                  style={
+                    block.type === 'story_panel'
+                      ? {}
+                      : {
+                          background:
+                            'linear-gradient(180deg, rgba(10,40,58,0.82), rgba(6,22,38,0.88))',
+                          border: '1px solid rgba(94,234,212,0.28)',
+                          boxShadow:
+                            '0 4px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+                          borderRadius: '20px',
+                        }
+                  }
+                >
+                  {block.type === 'stain_hook' && (
+                    <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                  )}
+                  {block.type === 'kitchen_lab' && (
+                    <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                  )}
+                  {block.type === 'tap_reveal' && (
+                    <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                  )}
+                  {block.type === 'flip_card' && (
+                    <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                  )}
+                  {block.type === 'celebration' && (
+                    <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
+                  )}
+                </div>
+
+                {/* Slide type label */}
+                <div className="text-center mt-4">
+                  <span className="text-white/70 text-xs font-bold uppercase tracking-widest drop-shadow-md">
+                    {
+                      (
+                        {
+                          story_panel: 'Story',
+                          stain_hook: 'Haldi Stain',
+                          kitchen_lab: 'Kitchen Lab',
+                          tap_reveal: 'Tap to Reveal',
+                          flip_card: 'Flip Card',
+                          sequence: 'Sequence',
+                          celebration: 'Complete',
+                        } as Record<string, string>
+                      )[block.type as string]
+                    }
+                  </span>
+                </div>
+
+                {/* Progress dots: grouped directly below label, no transition on width */}
+                <div
+                  className="mt-4 flex items-center gap-3 px-5 py-2.5 rounded-full select-none"
+                  style={{
+                    background: 'rgba(8, 24, 40, 0.85)',
+                    border: '1px solid rgba(94, 234, 212, 0.28)',
+                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
+                  }}
+                >
+                  {blocks.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      aria-label={`Go to part ${i + 1}`}
+                      onClick={() => {
+                        stopAudioFor('demo');
+                        setSpeaking(false);
+                        setTimeout(() => {
+                          setDirection(i > current ? 'right' : 'left');
+                          setCurrent(i);
+                          if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                        }, 100);
+                      }}
+                      className={`rounded-full transition-colors duration-200 cursor-pointer ${
+                        i === current
+                          ? 'w-8 h-2 bg-amber-400'
+                          : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Next arrow */}
-        <button
-          onClick={() => go(1)}
-          disabled={current === total - 1}
-          className="absolute bottom-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 left-1/2 md:left-auto ml-2 md:ml-0 md:right-8 w-12 h-12 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 flex items-center justify-center hover:bg-black/60 transition disabled:opacity-0 z-30"
-        >
-          ›
-        </button>
-      </div>
-
-      {/* Bottom Area: Dots and TTS Bot */}
-      <div className="relative z-20 w-full pb-8 px-6 flex justify-center items-end pointer-events-none shrink-0">
-        {/* Slide dots */}
-        <div className="pointer-events-auto flex items-center gap-3 bg-black/30 backdrop-blur-md px-5 py-3 rounded-full border border-white/10">
-          {blocks.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                stopAudioFor('demo');
-                setSpeaking(false);
-                setTimeout(() => {
-                  setDirection(i > current ? 'right' : 'left');
-                  setCurrent(i);
-                  if (scrollRef.current) scrollRef.current.scrollTop = 0;
-                }, 100);
-              }}
-              className={`rounded-full transition-all duration-300 ${i === current ? 'w-10 h-2 bg-yellow-400' : 'w-2 h-2 bg-white/40 hover:bg-white/70'}`}
-            />
-          ))}
-        </div>
-
-        {/* TTS Bot */}
+        {/* TTS Bot: fixed bottom-right via GuideBot component */}
         {isIntersecting && (
-          <GuideBot isReading={speaking} onTap={() => playAudio(lastAudioRef.current, true, 'en-IN', () => setSpeaking(true), () => setSpeaking(false), canSpeakNow, 'demo')} />
+          <GuideBot
+            isReading={speaking}
+            onTap={() =>
+              playAudio(
+                lastAudioRef.current,
+                true,
+                'en-IN',
+                () => setSpeaking(true),
+                () => setSpeaking(false),
+                canSpeakNow,
+                'demo'
+              )
+            }
+          />
         )}
-      </div>
-      <style>{`
-        @keyframes shake {
-      `}</style>
-    </section>
+      </section>
+    </SceneShell>
   );
 }

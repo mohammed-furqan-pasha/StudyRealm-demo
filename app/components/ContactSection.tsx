@@ -1,156 +1,482 @@
 'use client';
 
-import { Calendar, Mail, TrendingUp, Building2, Phone } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { useRef } from 'react';
-import { useReveal } from '../lib/useReveal';
+import {
+  Calendar,
+  Mail,
+  TrendingUp,
+  Building2,
+  Phone,
+  Share2,
+  Star,
+  MessageCircle,
+} from 'lucide-react';
+import SceneShell, { SplitHeadline, StageReveal } from './SceneShell';
+import TopBar from './TopBar';
+import { ROLE_CONFIGS } from '../data/roleConfig';
+import { RoleConfig, RoleKey } from '../types';
 
-const CALENDLY_LINK = "https://calendly.com/studyrealmtechnologies";
-const WHATSAPP_NUMBER = "919019588700";
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi, I'd like to know more about StudyRealm")}`;
-const EMAIL_ADDRESS = "hello@studyrealm.app";
+const CALENDLY_LINK = 'https://calendly.com/studyrealmtechnologies';
+const WHATSAPP_NUMBER = '919019588700';
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Hi, I'd like to know more about StudyRealm"
+)}`;
+const EMAIL_ADDRESS = 'hello@studyrealm.app';
 
-const isPlaceholder = (val: string) => val.includes("XXXXXXXXXX") || val.includes("your-calendly-link") || val.includes("your@email.com");
+const isPlaceholder = (val: string) =>
+  val.includes('XXXXXXXXXX') || val.includes('your-calendly-link') || val.includes('your@email.com');
 
-const WhatsAppIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-  </svg>
-);
+const CARD_BASE_STYLE: React.CSSProperties = {
+  borderRadius: '20px',
+  background: 'linear-gradient(180deg, rgba(10,40,58,0.85), rgba(6,22,38,0.90))',
+  border: '1px solid rgba(94,234,212,0.30)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 20px rgba(0,0,0,0.35)',
+  padding: '18px',
+};
 
-export default function ContactSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  useReveal(sectionRef);
+const CARD_HIGHLIGHTED_STYLE: React.CSSProperties = {
+  borderRadius: '20px',
+  background:
+    'linear-gradient(180deg, rgba(20,184,166,0.16), rgba(20,184,166,0.16)), linear-gradient(180deg, rgba(10,40,58,0.85), rgba(6,22,38,0.90))',
+  border: '1px solid rgba(94,234,212,0.60)',
+  boxShadow:
+    'inset 0 1px 0 rgba(255,255,255,0.22), 0 -6px 24px -8px rgba(45,212,191,0.35), 0 4px 20px rgba(0,0,0,0.35)',
+  padding: '18px',
+};
+
+export interface ContactSectionProps {
+  config?: RoleConfig['contact'];
+  role?: RoleKey;
+  share?: RoleConfig['share'];
+}
+
+export default function ContactSection({
+  config: propConfig,
+  role: propRole,
+  share: propShare,
+}: ContactSectionProps) {
+  const role = propRole || 'Other';
+  const config = propConfig || ROLE_CONFIGS[role]?.contact || ROLE_CONFIGS.Other.contact;
+  const share = propShare || ROLE_CONFIGS[role]?.share || ROLE_CONFIGS.Other.share;
+
+  const isStudent = role === 'Student';
+  const isSharePrimary = config.primary === 'share';
+
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
+  const handleStudentShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: 'StudyRealm', text: share.message });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === 'AbortError') return;
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(share.message);
+        setCopied(true);
+        if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = setTimeout(() => {
+          setCopied(false);
+        }, 4000);
+      } catch {
+        // clipboard fallback error
+      }
+    }
+  };
+
+  const shareLink = `https://wa.me/?text=${encodeURIComponent(share.message)}`;
+
+  const calendlyDesc =
+    role === 'Teacher'
+      ? 'A 30-minute session you can bring your principal to.'
+      : role === 'Parent'
+      ? "A 30-minute session your child's school can book."
+      : "A 30-minute session for your school's team.";
+
+  const emailDesc =
+    role === 'Teacher' || role === 'Parent'
+      ? 'Questions about StudyRealm?'
+      : 'For proposals and partnerships.';
+
+  const calendlyCard = (isHighlighted: boolean) => (
+    <a
+      key="calendly"
+      href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={isHighlighted ? CARD_HIGHLIGHTED_STYLE : CARD_BASE_STYLE}
+      className="group flex flex-col justify-between h-full text-center transition-all duration-200 select-none hover:translate-y-[-2px]"
+    >
+      <div className="flex flex-col items-center">
+        <div className="w-7 h-7 mb-2 flex items-center justify-center">
+          <Calendar
+            className={`w-7 h-7 transition-colors ${
+              isHighlighted ? 'text-teal-300' : 'text-slate-300 group-hover:text-white'
+            }`}
+          />
+        </div>
+        <h3 className="font-bold text-white text-[15px] sm:text-[16px] leading-snug mb-1 text-balance">
+          Book a Demo
+        </h3>
+        <p className="text-slate-300 text-[12px] leading-relaxed mb-3">
+          {calendlyDesc}
+        </p>
+      </div>
+      <span
+        className={`h-[44px] w-full rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center transition shrink-0 ${
+          isHighlighted
+            ? 'bg-teal-500 hover:bg-teal-400 text-white shadow-md shadow-teal-500/25'
+            : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+        }`}
+      >
+        Open Calendar →
+      </span>
+    </a>
+  );
+
+  const shareCard = (isHighlighted: boolean) => (
+    <a
+      key="share"
+      href={shareLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={isHighlighted ? CARD_HIGHLIGHTED_STYLE : CARD_BASE_STYLE}
+      className="group flex flex-col justify-between h-full text-center transition-all duration-200 select-none hover:translate-y-[-2px]"
+    >
+      <div className="flex flex-col items-center">
+        <div className="w-7 h-7 mb-2 flex items-center justify-center">
+          <Share2
+            className={`w-7 h-7 transition-colors ${
+              isHighlighted ? 'text-teal-300' : 'text-slate-300 group-hover:text-white'
+            }`}
+          />
+        </div>
+        <h3 className="font-bold text-white text-[15px] sm:text-[16px] leading-snug mb-1 text-balance">
+          {share.label}
+        </h3>
+        <p className="text-slate-300 text-[12px] leading-relaxed mb-3">
+          Forward via WhatsApp in 1 tap.
+        </p>
+      </div>
+      <span
+        className={`h-[44px] w-full rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center transition shrink-0 ${
+          isHighlighted
+            ? 'bg-teal-500 hover:bg-teal-400 text-white shadow-md shadow-teal-500/25'
+            : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+        }`}
+      >
+        Share on WhatsApp →
+      </span>
+    </a>
+  );
+
+  const whatsappCard = (isHighlighted = false) => (
+    <a
+      key="whatsapp"
+      href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={isHighlighted ? CARD_HIGHLIGHTED_STYLE : CARD_BASE_STYLE}
+      className="group flex flex-col justify-between h-full text-center transition-all duration-200 select-none hover:translate-y-[-2px]"
+    >
+      <div className="flex flex-col items-center">
+        <div className="w-7 h-7 mb-2 flex items-center justify-center">
+          <MessageCircle
+            className={`w-7 h-7 transition-colors ${
+              isHighlighted ? 'text-teal-300' : 'text-slate-300 group-hover:text-white'
+            }`}
+          />
+        </div>
+        <h3 className="font-bold text-white text-[15px] sm:text-[16px] leading-snug mb-1 text-balance">
+          WhatsApp
+        </h3>
+        <p className="text-slate-300 text-[12px] leading-relaxed mb-3">
+          Quick questions? We reply in 1 hr.
+          <br />
+          <span className="text-teal-300 font-semibold">+91 90195 88700</span>
+        </p>
+      </div>
+      <span
+        className={`h-[44px] w-full rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center transition shrink-0 ${
+          isHighlighted
+            ? 'bg-teal-500 hover:bg-teal-400 text-white shadow-md shadow-teal-500/25'
+            : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+        }`}
+      >
+        Chat Now →
+      </span>
+    </a>
+  );
+
+  const emailCard = (isHighlighted = false) => (
+    <a
+      key="email"
+      href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+      style={isHighlighted ? CARD_HIGHLIGHTED_STYLE : CARD_BASE_STYLE}
+      className="group flex flex-col justify-between h-full text-center transition-all duration-200 select-none hover:translate-y-[-2px]"
+    >
+      <div className="flex flex-col items-center">
+        <div className="w-7 h-7 mb-2 flex items-center justify-center">
+          <Mail
+            className={`w-7 h-7 transition-colors ${
+              isHighlighted ? 'text-teal-300' : 'text-slate-300 group-hover:text-white'
+            }`}
+          />
+        </div>
+        <h3 className="font-bold text-white text-[15px] sm:text-[16px] leading-snug mb-1 text-balance">
+          Email Us
+        </h3>
+        <p className="text-slate-300 text-[12px] leading-relaxed mb-3">
+          {emailDesc}
+          <br />
+          <span className="text-slate-300 font-semibold">{EMAIL_ADDRESS}</span>
+        </p>
+      </div>
+      <span
+        className={`h-[44px] w-full rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center transition shrink-0 ${
+          isHighlighted
+            ? 'bg-teal-500 hover:bg-teal-400 text-white shadow-md shadow-teal-500/25'
+            : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+        }`}
+      >
+        Email →
+      </span>
+    </a>
+  );
+
+  const studentShareCard = () => (
+    <div
+      key="student-share"
+      style={CARD_HIGHLIGHTED_STYLE}
+      className="flex flex-col justify-between h-full text-center transition-all duration-200 select-none"
+    >
+      <div className="flex flex-col items-center">
+        <div className="w-7 h-7 mb-2 flex items-center justify-center">
+          <Share2 className="w-7 h-7 text-teal-300" />
+        </div>
+        <h3 className="font-bold text-white text-[15px] sm:text-[16px] leading-snug mb-1 text-balance">
+          {share.label}
+        </h3>
+        <p className="text-slate-300 text-[12px] leading-relaxed mb-3">
+          Share your progress with parents or teachers.
+        </p>
+      </div>
+      <div className="flex flex-col items-center gap-1.5 w-full">
+        <button
+          type="button"
+          onClick={handleStudentShare}
+          className="h-[44px] w-full rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center gap-2 transition shrink-0 bg-teal-500 hover:bg-teal-400 text-white shadow-md shadow-teal-500/25 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+        >
+          <Share2 className="w-4 h-4 shrink-0" />
+          <span>Share</span>
+        </button>
+        {copied && (
+          <p
+            aria-live="polite"
+            className="text-teal-300 text-xs font-semibold mt-1"
+          >
+            Copied! Paste it to your parent or teacher.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  // Standard 4-card ordering based on primary action
+  const standardActionCards = isSharePrimary
+    ? [shareCard(true), calendlyCard(false), whatsappCard(), emailCard()]
+    : [calendlyCard(true), whatsappCard(), emailCard(), shareCard(false)];
 
   return (
-    <section ref={sectionRef} id="contact" className="min-h-[100dvh] overflow-y-auto md:overflow-visible flex flex-col justify-between pt-8 pb-0 md:py-6 px-5 md:px-6 bg-slate-900 text-white snap-start">
-      <div className="max-w-5xl mx-auto w-full flex flex-col h-full justify-between">
-        
+    <SceneShell scene="contact">
+      {/* Static Dawn Glow Overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none z-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 90% 45% at 50% 108%, rgba(255,150,70,0.50) 0%, rgba(214,86,66,0.22) 42%, transparent 72%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Static Top Veil Overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none select-none z-0"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(3,8,18,0.55) 0%, rgba(3,8,18,0.15) 55%, transparent 100%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Nav / Top Bar */}
+      <TopBar />
+
+      {/* Main Content Container: Vertically Centered in Free Area */}
+      <div
+        className="relative z-10 w-full flex-1 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-2 md:py-4 my-auto flex flex-col justify-center text-left"
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
         {/* Top: Header */}
-        <div className="text-center shrink-0">
-          <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 text-teal-400 text-[10px] font-bold px-3 py-1.5 rounded-full mb-3 uppercase tracking-widest shadow-[0_0_15px_rgba(20,184,166,0.1)]">
-            ✦ Innovation Partnership Program
-          </div>
-          <h2 className="reveal text-2xl md:text-4xl font-bold mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif', '--reveal-delay': '0ms' } as React.CSSProperties}>
-            Join our Term-1 Pilot
-          </h2>
-          <p className="text-slate-400 max-w-xl mx-auto text-xs leading-relaxed hidden sm:block">
-            An exclusive Term-1 Pilot for forward-thinking Karnataka schools.
-            No commitment required — start with a free demo.
-          </p>
+        <div className="text-center shrink-0 mb-3 md:mb-5 flex flex-col items-center">
+          <StageReveal order={0} className="w-full text-center">
+            <p className="uppercase tracking-[0.2em] text-[12px] md:text-[13px] text-white/80 font-medium mb-1.5 md:mb-2 text-center select-none">
+              {config.tag}
+            </p>
+          </StageReveal>
+
+          <SplitHeadline
+            lines={[config.headline]}
+            className="font-semibold text-white tracking-tight leading-[1.12] mb-2 md:mb-2.5 text-center text-[clamp(2.2rem,3.8vw,4.2rem)]"
+          />
+
+          <StageReveal order={2} className="w-full text-center">
+            <p className="text-white/85 max-w-[640px] mx-auto text-[clamp(0.95rem,1.1vw,1.15rem)] leading-relaxed text-center">
+              {config.description}
+            </p>
+          </StageReveal>
         </div>
 
-        {/* Middle-Top: 3 Action Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 shrink-0 md:shrink md:min-h-0 md:overflow-y-auto mt-5 md:mt-0">
-          {/* Calendly - PRIMARY CTA */}
-          <a
-            href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`col-span-2 md:col-span-1 group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/80 backdrop-blur-md border border-white/10 p-4 md:p-5 text-center transition-all shadow-2xl shadow-black/40 relative overflow-hidden shrink-0 ${isPlaceholder(CALENDLY_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:shadow-teal-900/30 hover:border-teal-500/50'}`}
-          >
-            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '70ms' } as React.CSSProperties}>
-              {/* Subtle highlight gradient */}
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-400/30 to-transparent"></div>
-              
-              <div>
-                <Calendar className="w-8 h-8 text-teal-400 mb-2 mx-auto opacity-90 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="font-bold text-white text-base md:text-lg mb-1">Book a Demo</h3>
-                <p className="text-slate-400 text-[11px] mb-4">A 30-minute session for your class.</p>
+        {/* Action Cards Area */}
+        {isStudent ? (
+          <StageReveal order={3} rise="14vh" className="flex flex-col items-center w-full mb-3 md:mb-5 shrink-0">
+            {/* CSS-drawn badge above card */}
+            <div className="inline-flex items-center gap-2.5 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl mb-4 shadow-lg select-none">
+              <div className="w-6 h-6 rounded-full bg-teal-400 flex items-center justify-center text-slate-950 shrink-0">
+                <Star className="w-3.5 h-3.5 fill-current" />
               </div>
-              <span className={`inline-block text-white text-[11px] md:text-xs font-bold px-4 py-2.5 rounded-full transition w-full shadow-lg ${isPlaceholder(CALENDLY_LINK) ? 'bg-slate-700' : 'bg-teal-600 hover:bg-teal-500'}`}>
-                {isPlaceholder(CALENDLY_LINK) ? 'Coming soon' : 'Open Calendar →'}
+              <span className="font-bold text-white text-xs sm:text-sm">
+                I learned Acids & Bases
               </span>
             </div>
-          </a>
 
-          {/* WhatsApp - SECONDARY CTA */}
-          <a
-            href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-3 md:p-5 text-center transition-all shadow-xl shadow-black/30 shrink-0 ${isPlaceholder(WHATSAPP_LINK) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:bg-[#1e293b]/80 hover:border-white/20'}`}
-          >
-            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
-              <div>
-                <WhatsAppIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
-                <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">WhatsApp</h3>
-                <p className="hidden md:block text-slate-400 text-[11px] mb-4">Quick questions? We reply in 1 hour.<br/><span className="text-slate-300 font-semibold">{isPlaceholder(WHATSAPP_NUMBER) ? '+91 XXXXX XXXXX' : '+91 90195 88700'}</span></p>
-              </div>
-              <div>
-                <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 ${isPlaceholder(WHATSAPP_LINK) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
-                  {isPlaceholder(WHATSAPP_LINK) ? 'Coming soon' : 'Chat Now →'}
-                </span>
-              </div>
+            {/* Single share card */}
+            <div className="w-full max-w-sm mx-auto">
+              {studentShareCard()}
             </div>
-          </a>
-
-          {/* Email - SECONDARY CTA */}
-          <a
-            href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
-            className={`group flex flex-col justify-between h-full rounded-2xl bg-[#1e293b]/60 backdrop-blur-md border border-white/5 p-3 md:p-5 text-center transition-all shadow-xl shadow-black/30 shrink-0 ${isPlaceholder(EMAIL_ADDRESS) ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-1 hover:bg-[#1e293b]/80 hover:border-white/20'}`}
-          >
-            <div className="reveal flex flex-col justify-between h-full w-full" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
-              <div>
-                <Mail className="w-6 h-6 md:w-8 md:h-8 text-slate-300 mb-1.5 md:mb-2 mx-auto opacity-80 group-hover:text-white transition-colors" />
-                <h3 className="font-bold text-slate-100 text-[13px] md:text-lg mb-1.5 md:mb-1">Email Us</h3>
-                <p className="hidden md:block text-slate-400 text-[11px] mb-4">For proposals and partnerships.</p>
-              </div>
-              <span className={`inline-flex items-center justify-center text-slate-200 text-xs font-bold px-2 py-2 md:px-4 md:py-2.5 rounded-full transition w-full border border-white/10 truncate ${isPlaceholder(EMAIL_ADDRESS) ? 'bg-slate-800' : 'bg-white/5 hover:bg-white/10'}`}>
-                {isPlaceholder(EMAIL_ADDRESS) ? 'Coming soon' : 'Email →'}
-              </span>
-            </div>
-          </a>
-        </div>
-
-        {/* Middle-Bottom: 3 Value Proposition Columns */}
-        <div className="reveal shrink-0 mt-6 md:mt-0" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
-          <div className="text-center mb-4 md:mb-6">
-            <h3 className="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-[0.2em]">Why Schools Say Yes</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-2 md:gap-10">
-            {[
-              { icon: <TrendingUp className="w-5 h-5 md:w-8 md:h-8 text-teal-400/80 mb-1.5 md:mb-3 shrink-0" />, title: "Boost Board Results", desc: "Mastery-first learning builds retention." },
-              { icon: <Building2 className="w-5 h-5 md:w-8 md:h-8 text-teal-400/80 mb-1.5 md:mb-3 shrink-0" />, title: "Drive Admissions", desc: "A premium tech-stack attracts parents." },
-              { icon: <Phone className="w-5 h-5 md:w-8 md:h-8 text-teal-400/80 mb-1.5 md:mb-3 shrink-0" />, title: "Fewer Complaints", desc: "Daily visibility removes guesswork." },
-            ].map(r => (
-              <div key={r.title} className="flex flex-col items-center md:items-start text-center md:text-left py-1.5 md:py-0 gap-0">
-                {r.icon}
-                <div className="flex flex-col items-center md:items-start">
-                  <span className="text-slate-200 font-bold text-xs md:text-base md:mb-1.5 leading-tight">{r.title}</span>
-                  <span className="hidden md:block text-slate-400 text-sm leading-relaxed">{r.desc}</span>
-                </div>
-              </div>
+          </StageReveal>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-5 shrink-0 items-stretch">
+            {standardActionCards.map((card, i) => (
+              <StageReveal key={i} order={3 + i} rise="14vh" className="h-full">
+                {card}
+              </StageReveal>
             ))}
           </div>
-        </div>
+        )}
 
-        {/* Bottom: Footer */}
-        <div className="pt-6 md:pt-4 mt-6 md:mt-0 pb-28 md:pb-0 flex flex-col md:grid md:grid-cols-3 gap-3 md:gap-4 text-[9px] md:text-[11px] text-slate-500 shrink-0 border-t border-white/10">
-          {/* Column 1: Company Info */}
-          <div className="order-3 md:order-1 flex flex-col gap-1 md:items-start items-center">
-            <div className="flex items-center gap-1.5 opacity-80">
-              <Image src="/logo.png" alt="StudyRealm Logo" width={16} height={16} className="h-4 w-auto object-contain" />
-              <span className="font-semibold text-slate-500">StudyRealm Technologies</span>
+        {/* Middle-Bottom: Value Proposition Columns (Shows ONLY for Principal and Other) */}
+        {(role === 'Principal' || role === 'Other') && (
+          <StageReveal order={7} rise="14vh" className="shrink-0 mb-3 md:mb-5 text-center">
+            <p className="text-slate-400 font-semibold text-[11px] md:text-[12px] uppercase tracking-[0.2em] mb-2.5 md:mb-3 text-center select-none">
+              Why Schools Say Yes
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 w-full max-w-5xl mx-auto">
+              {[
+                {
+                  icon: <TrendingUp className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  title: 'Built for board results',
+                  desc: 'Mastery-first learning builds retention.',
+                },
+                {
+                  icon: <Building2 className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  title: 'Built for admissions',
+                  desc: 'A premium tech-stack attracts parents.',
+                },
+                {
+                  icon: <Phone className="w-[18px] h-[18px] text-teal-400 shrink-0" />,
+                  title: 'Built for fewer complaints',
+                  desc: 'Daily visibility removes guesswork.',
+                },
+              ].map((r) => (
+                <div
+                  key={r.title}
+                  className="flex items-center gap-3 bg-white/[0.04] md:bg-white/[0.03] border border-white/10 md:border-white/5 rounded-xl px-3.5 py-2.5 text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-400/25 flex items-center justify-center shrink-0">
+                    {r.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white font-bold text-[14px] leading-tight truncate">
+                      {r.title}
+                    </p>
+                    <p className="text-slate-300 text-[13px] leading-tight truncate">
+                      {r.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <span className="text-center md:text-left opacity-70">MSME Udyam Registered • Bangalore, Karnataka</span>
-          </div>
+          </StageReveal>
+        )}
 
-          {/* Column 2: Platform Links */}
-          <div className="order-1 md:order-2 flex flex-row md:flex-col gap-4 md:gap-1.5 justify-center md:justify-start items-center md:items-start opacity-70 text-slate-400 md:text-slate-500 text-sm md:text-[11px]">
-            <h4 className="hidden md:block font-bold text-[9px] uppercase tracking-wider mb-0.5">Platform</h4>
-            <a href="https://studyrealm.app" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Main Website</a>
-            <a href="https://studyrealm.app/support" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Support & Help</a>
-          </div>
+        {/* Bottom: Slim Footer */}
+        <StageReveal order={8} className="w-full shrink-0">
+          <div className="w-full border-t border-white/10 pt-3 md:pt-3.5 flex flex-col md:flex-row items-center justify-between gap-2.5 md:gap-4 text-[13px] text-slate-400 shrink-0 select-none">
+            {/* Left: Company & Registration */}
+            <div className="flex items-center gap-2 text-center md:text-left">
+              <Image
+                src="/logo.png"
+                alt="StudyRealm Logo"
+                width={16}
+                height={16}
+                className="h-4 w-auto object-contain shrink-0"
+              />
+              <span className="text-slate-300">
+                StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka
+              </span>
+            </div>
 
-          {/* Column 3: Legal & Trust */}
-          <div className="order-2 md:order-3 flex flex-row md:flex-col gap-4 md:gap-1.5 justify-center md:justify-start items-center md:items-start opacity-70 text-slate-400 md:text-slate-500 text-sm md:text-[11px]">
-            <h4 className="hidden md:block font-bold text-[9px] uppercase tracking-wider mb-0.5">Legal & Trust</h4>
-            <a href="https://studyrealm.app/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Privacy Policy</a>
-            <a href="https://studyrealm.app/terms" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">Terms & Conditions</a>
+            {/* Right: Existing Links in One Row */}
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-slate-300">
+              <a
+                href="https://studyrealm.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-teal-300 transition-colors"
+              >
+                Main Website
+              </a>
+              <a
+                href="https://studyrealm.app/support"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-teal-300 transition-colors"
+              >
+                Support & Help
+              </a>
+              <a
+                href="https://studyrealm.app/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-teal-300 transition-colors"
+              >
+                Privacy Policy
+              </a>
+              <a
+                href="https://studyrealm.app/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-teal-300 transition-colors"
+              >
+                Terms & Conditions
+              </a>
+            </div>
           </div>
-        </div>
+        </StageReveal>
       </div>
-    </section>
+    </SceneShell>
   );
 }
+

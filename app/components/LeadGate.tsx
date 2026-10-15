@@ -89,7 +89,7 @@ export default function LeadGate({ onSubmit }: Props) {
           <div className="space-y-4 text-slate-700 text-lg">
             <div className="flex items-center gap-3"><span className="text-teal-500 font-bold text-xl">✓</span> Interactive 3D models</div>
             <div className="flex items-center gap-3"><span className="text-teal-500 font-bold text-xl">✓</span> Auto-graded quizzes</div>
-            <div className="flex items-center gap-3"><span className="text-teal-500 font-bold text-xl">✓</span> NCF 2023 Compliant</div>
+            <div className="flex items-center gap-3"><span className="text-teal-500 font-bold text-xl">✓</span> Mapped to NCF 2023</div>
           </div>
         </div>
 
@@ -145,7 +145,7 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* School */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">School / Organization <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">{form.role === 'Parent' || form.role === 'Student' ? "Child's school" : "School / Organization"} <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   value={form.schoolName}
@@ -160,7 +160,9 @@ export default function LeadGate({ onSubmit }: Props) {
 
               {/* Mobile */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Mobile Number <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {form.role === 'Student' ? "Parent's Mobile Number" : "Mobile Number"} <span className="text-red-400">*</span>
+                </label>
                 <div className="flex">
                   <span className="inline-flex items-center px-4 border border-r-0 border-slate-200 rounded-l-xl bg-slate-50 text-slate-500 text-sm font-medium">+91</span>
                   <input
@@ -173,6 +175,9 @@ export default function LeadGate({ onSubmit }: Props) {
                     autoComplete="tel"
                   />
                 </div>
+                {form.role === 'Student' && (
+                  <p className="text-slate-500 text-xs mt-1.5">Please enter a parent or guardian&apos;s number, not your own.</p>
+                )}
                 {errors.mobile && <p className="text-red-500 text-xs mt-1.5">{errors.mobile}</p>}
               </div>
 

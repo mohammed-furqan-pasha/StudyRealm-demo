@@ -2,28 +2,98 @@
 import { useState, useEffect, useRef } from 'react';
 import { preloadVoices } from './lib/tts';
 import LeadGate from './components/LeadGate';
-import HeroSection from './components/HeroSection';
+import { HeroSlide } from './components/HeroSection';
+import AhaScene from './components/AhaScene';
 import DemoPlayer from './components/DemoPlayer';
 import LockedFeatures from './components/LockedFeatures';
 import ContactSection from './components/ContactSection';
 import SurveySection from './components/SurveySection';
-import { LeadFormData } from './types';
-import { scrollToSection } from './lib/scrollTo';
+import { LeadFormData, PageId } from './types';
+import PageFlow, { PageFlowHandle } from './components/PageFlow';
+import { getRoleConfig } from './data/roleConfig';
 
 export default function Home() {
   const [gateOpen, setGateOpen] = useState(true);
   const [leadData, setLeadData] = useState<LeadFormData | null>(null);
+  const flowRef = useRef<PageFlowHandle>(null);
 
   useEffect(() => {
     preloadVoices();
   }, []);
-  const featuresRef = useRef<HTMLDivElement>(null);
 
   const handleDemoComplete = () => {
     setTimeout(() => {
-      scrollToSection(featuresRef.current);
+      flowRef.current?.goTo('features');
     }, 400);
   };
+
+  const config = getRoleConfig(leadData?.role);
+
+  const pageLabels: Record<PageId, string> = {
+    hero: 'Home',
+    aha: 'Your view',
+    demo: 'Try the demo',
+    features: 'What you get',
+    survey: 'Survey',
+    contact: 'Contact',
+  };
+
+  const demoIdx = config.pageOrder.indexOf('demo');
+  const prevPageId = demoIdx > 0 ? config.pageOrder[demoIdx - 1] : null;
+  const nextPageId =
+    demoIdx !== -1 && demoIdx < config.pageOrder.length - 1
+      ? config.pageOrder[demoIdx + 1]
+      : null;
+
+  const pageDefinitions: Record<PageId, { id: string; label: string; node: React.ReactNode; hideNext?: boolean; gestures?: boolean }> = {
+    hero: { id: 'hero', label: 'Home', node: <HeroSlide config={{ ...config.hero, key: config.key }} /> },
+    aha: {
+      id: 'aha',
+      label: 'Your view',
+      node: (
+        <AhaScene
+          role={config.key}
+          schoolName={leadData?.schoolName ?? ''}
+          config={config.aha}
+        />
+      ),
+    },
+    demo: {
+      id: 'demo',
+      label: 'Try the demo',
+      node: (
+        <DemoPlayer
+          onComplete={handleDemoComplete}
+          isActive={!gateOpen}
+          onPrevPage={() => {
+            if (prevPageId) flowRef.current?.goTo(prevPageId);
+          }}
+          onNextPage={() => {
+            if (nextPageId) flowRef.current?.goTo(nextPageId);
+          }}
+          prevPageLabel={prevPageId ? pageLabels[prevPageId] : 'Home'}
+          nextPageLabel={nextPageId ? pageLabels[nextPageId] : 'What you get'}
+        />
+      ),
+      hideNext: true,
+      gestures: false
+    },
+    features: { id: 'features', label: 'What you get', node: <LockedFeatures config={config.features} /> },
+    survey: { id: 'survey', label: 'Survey', node: <SurveySection role={leadData?.role || 'Other'} name={leadData?.name || ''} mobile={leadData?.mobile || ''} onContinue={() => flowRef.current?.goTo('contact')} />, hideNext: true, gestures: false },
+    contact: {
+      id: 'contact',
+      label: 'Contact',
+      node: (
+        <ContactSection
+          config={config.contact}
+          role={config.key}
+          share={config.share}
+        />
+      ),
+    }
+  };
+
+  const pages = config.pageOrder.map(pageId => pageDefinitions[pageId]);
 
   return (
     <>
@@ -31,23 +101,9 @@ export default function Home() {
         setLeadData(data);
         setGateOpen(false);
       }} />}
-      <main className={`h-[100dvh] overflow-y-auto overflow-x-hidden page-scroller ${gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}`}>
-        <HeroSection ready={!gateOpen} />
-        <div className="snap-start shrink-0">
-          <DemoPlayer onComplete={handleDemoComplete} isActive={!gateOpen} />
-        </div>
-        <div ref={featuresRef} className="snap-start shrink-0 min-h-[100dvh]">
-          <LockedFeatures />
-        </div>
-        {leadData && (
-          <div className="snap-start shrink-0 min-h-[100dvh]">
-            <SurveySection role={leadData.role} name={leadData.name} mobile={leadData.mobile} />
-          </div>
-        )}
-        <div className="snap-start shrink-0 min-h-[100dvh]">
-          <ContactSection />
-        </div>
-      </main>
+      <div className={gateOpen ? 'pointer-events-none select-none blur-sm overflow-hidden' : ''}>
+        <PageFlow ref={flowRef} locked={gateOpen} pages={pages} />
+      </div>
     </>
   );
 }

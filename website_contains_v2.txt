@@ -1,0 +1,727 @@
+================================================================================
+                       STUDYREALM DEMO - COMPLETE CONTENT MAP
+================================================================================
+
+This document contains all written text, labels, questions, options, metrics, and
+page flows for every user role in the StudyRealm application.
+(Visual animations, 3D objects, and backgrounds are excluded as requested).
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. GLOBAL GATEWAY / LEAD CAPTURE MODAL
+2. GLOBAL NAVIGATION & CONTROLS
+3. ROLE 1: TEACHER (Full Page-by-Page Content)
+4. ROLE 2: PRINCIPAL / MANAGEMENT (Full Page-by-Page Content)
+5. ROLE 3: PARENT (Full Page-by-Page Content)
+6. ROLE 4: STUDENT (Full Page-by-Page Content)
+7. ROLE 5: OTHER (Full Page-by-Page Content)
+8. COMMON CHAPTER DEMO CONTENT ("Why does haldi turn red with soap?")
+--------------------------------------------------------------------------------
+
+
+================================================================================
+1. GLOBAL GATEWAY / LEAD CAPTURE MODAL (LeadGate)
+================================================================================
+Displayed as an overlay before entering the main flow:
+
+Left Column (Desktop only):
+- Logo: STUDYREALM
+- Headline: "See how StudyRealm transforms classrooms"
+- Bullet points:
+  ✓ Interactive 3D models
+  ✓ Auto-graded quizzes
+  ✓ Mapped to NCF 2023
+
+Right Column / Form Card:
+- Header: "Welcome to the Demo"
+- Subheader: "Tell us a bit about yourself to unlock a fully interactive demo chapter."
+- Fields:
+  1. Full Name * (placeholder: "e.g. Priya Sharma")
+  2. I am a * (Dropdown options: Teacher | Principal / Management | Parent | Student | Other)
+  3. School Label:
+     - For Parent / Student: "Child's school *"
+     - For all other roles: "School / Organization *"
+     (placeholder: "e.g. Delhi Public School, Bengaluru")
+  4. Mobile Number * (+91, placeholder: "9876543210")
+     (Note for Student role: "Parent's Mobile Number" with note: "Please enter a parent or guardian's number, not your own.")
+- Button: "Experience the Demo →" (Loading: "Saving..." | Success: "✓ Welcome! Loading demo...")
+- Privacy disclaimer: "We respect your privacy. No spam, ever."
+- Footer note: "demo.studyrealm.app · MSME Registered · Bangalore, Karnataka"
+
+
+================================================================================
+2. GLOBAL NAVIGATION & CONTROLS
+================================================================================
+Top Bar (Hero & Aha Scenes):
+- Brand: STUDYREALM (with Logo)
+- Navigation Links (Desktop):
+  - "Features" (jumps to Features slide)
+  - "Main Website" (links to https://studyrealm.app)
+  - "Contact" (jumps to Contact slide)
+
+Page Controls (Bottom):
+- Scene Progress Line at the very top (Teal indicator)
+- Scene Counter:
+  - Desktop: "01 / 06" format (left 5%, bottom 36px / lifted to 100px on contact)
+  - Mobile: "1/6" badge (bottom-left)
+- Navigation Chevrons:
+  - Desktop: Vertical up/down stack centered at bottom (28px from bottom)
+  - Mobile: Pill container with prev/next buttons (bottom-center)
+
+
+================================================================================
+3. ROLE 1: TEACHER
+================================================================================
+Page Order: Hero -> Aha -> Demo -> Features -> Survey -> Contact (6 scenes)
+
+--- PAGE 1: HERO SECTION ---
+- Tag: "FOR TEACHERS"
+- Headline:
+  "Know who's stuck
+  before the exam does."
+- Subtitle:
+  "Auto-graded practice, a live class heatmap, and no extra paperwork."
+- Primary CTA Button: "See a sample class →" (jumps to Aha)
+- Secondary CTA Button: "Try the chapter" (jumps to Demo)
+
+--- PAGE 2: SPACE SLIDE / AHA SCENE (Class Heatmap View) ---
+[Left Column - Content]:
+- Tag: "A CLASS LIKE YOURS"
+- Headline:
+  "Tap a red cell
+  to see who's stuck."
+- Hint:
+  "A sample class. Tap any cell; the red ones show who's stuck."
+- CTA Button: "Now try the chapter →" (jumps to Demo)
+
+[Right Column - Interactive Glass Card: Class Mastery Matrix]:
+- Card Title: "Class Mastery Matrix"
+- Badge: "Sample data"
+- Legend:
+  ● Strong (Teal)  ● Needs revision (Amber)  ● Critical (Coral)
+- Concepts Covered (Columns with full name on hover/title & aria-label):
+  1. Indic. (Indicators)
+  2. Acids (Acids)
+  3. Bases (Bases)
+  4. Neutr. (Neutralisation)
+  5. Dyes (Natural dyes)
+- Student Scores Grid (8 Roll Numbers "01" to "08"):
+  - Roll 01: Indicators 88% | Acids 82% | Bases 76% | Neutralisation 68% | Natural dyes 80%
+  - Roll 02: Indicators 72% | Acids 65% | Bases 70% | Neutralisation 42% | Natural dyes 64%
+  - Roll 03: Indicators 90% | Acids 85% | Bases 88% | Neutralisation 78% | Natural dyes 82%
+  - Roll 04: Indicators 38% [SELECTED DEFAULT] | Acids 62% | Bases 58% | Neutralisation 66% | Natural dyes 60%
+  - Roll 05: Indicators 75% | Acids 80% | Bases 72% | Neutralisation 68% | Natural dyes 45%
+  - Roll 06: Indicators 84% | Acids 78% | Bases 82% | Neutralisation 74% | Natural dyes 70%
+  - Roll 07: Indicators 68% | Acids 35% | Bases 65% | Neutralisation 62% | Natural dyes 58%
+  - Roll 08: Indicators 70% | Acids 66% | Bases 48% | Neutralisation 60% | Natural dyes 65%
+- Selected Cell Detail Area (Roll 04 · Indicators · 38%):
+  - Title: "Roll 04 · Indicators (38%)"
+  - Competency Badge: "Conceptual Understanding"
+  - Stuck on: "Thinks turmeric turns red with acids, but it turns red with bases such as soap."
+  - Action: "Show the haldi and soap test, then ask the class to predict what lemon juice will do."
+
+--- PAGE 3: INTERACTIVE DEMO CHAPTER ---
+(Full chapter details listed in Section 8: "Why does haldi turn red with soap?")
+
+--- PAGE 4: FEATURES SECTION (What You Get) ---
+- Tag: "WHAT YOU GET"
+- Headline: "Less checking. More teaching."
+- Description: "See who needs help, grade automatically, and skip the extra paperwork. A free demo shows it with your class."
+- Interactive Feature Tabs:
+  1. Auto-graded quizzes (Kicker: "NO EXTRA PAPERWORK")
+     Description: "Every question is tagged to NCF 2023 competencies automatically, so compliance data builds itself."
+  2. Teacher Dashboard (Kicker: "CLASS OVERVIEW")
+     Description: "See every student's progress at a glance — green, yellow, or red — updated live after every quiz."
+  3. Progress Over Time (Kicker: "WEEKLY TRENDS")
+     Description: "See how your class is improving week by week, and catch problems early — before the exam."
+  4. Friendly Competition (Kicker: "CLASS LEADERBOARD")
+     Description: "Students can see how they're doing compared to classmates — a fun way to stay motivated to practice."
+- Bottom CTA Button: "Take the Quick Survey →"
+
+--- PAGE 5: SURVEY SECTION ---
+- Intro Speech / Text:
+  "Thanks for trying the demo! You know your classroom better than anyone, so we'd like to hear about your day-to-day, not just what you think of our app. A few short questions."
+- Questions:
+  Q1 (MCQ): "Think about the last chapter you finished teaching. How did you find out which students hadn't understood it?"
+     Options:
+     - I gave a class test or quiz
+     - I asked questions in class
+     - I checked notebooks or homework
+     - A parent or another teacher told me
+     - I only found out at exam time
+  Q2 (MCQ): "In a typical week, how many hours do you spend checking and grading work outside class time?"
+     Options:
+     - Less than 2 hours
+     - 2 to 5 hours
+     - 5 to 10 hours
+     - More than 10 hours
+  Q3 (MCQ): "What do you mainly use today to keep track of how each student is doing?"
+     Options:
+     - Notebooks and registers
+     - Excel or Google Sheets
+     - The school's ERP or app
+     - An app I picked myself
+     - Nothing formal
+  Q4 (MCQ): "How do you record which skills or competencies a lesson or test covers, for example under NCF 2023?"
+     Options:
+     - I don't, nobody has asked for it
+     - I fill in a format the school gives me, by hand
+     - Our school software does it
+     - I'm not familiar with NCF 2023
+  Q5 (Text, optional): "What is the most frustrating part of finding out which students are struggling?"
+     Placeholder: "Type a few words, or skip"
+- Completion Screen:
+  - "All done!"
+  - "Ready to submit your answers?"
+  - Button: "Submit Answers" -> routes to Contact page
+
+--- PAGE 6: CONTACT SECTION ---
+- Tag: "✦ INNOVATION PARTNERSHIP PROGRAM"
+- Headline: "Take it to your principal"
+- Description: "Schools join through their management. Share this with your principal, or book a free 30-minute session."
+- Action Cards (Grid of 4):
+  1. Share Card [PRIMARY - Highlighted Teal Glass]:
+     - Icon: Share2
+     - Title: "Show this to my principal"
+     - Description: "Forward via WhatsApp in 1 tap."
+     - Button: "Share on WhatsApp →"
+     - WhatsApp Message: "I tried StudyRealm and I think our school should see it. It shows which students are stuck and maps to NCF 2023 automatically: https://studyrealm.app?utm_source=share&utm_medium=whatsapp&utm_campaign=teacher"
+  2. Calendly Card:
+     - Icon: Calendar
+     - Title: "Book a Demo"
+     - Description: "A 30-minute session you can bring your principal to."
+     - Button: "Open Calendar →" (Link: https://calendly.com/studyrealmtechnologies)
+  3. WhatsApp Card:
+     - Icon: MessageCircle
+     - Title: "WhatsApp"
+     - Description: "Quick questions? We reply in 1 hr. +91 90195 88700"
+     - Button: "Chat Now →" (Link: https://wa.me/919019588700)
+  4. Email Card:
+     - Icon: Mail
+     - Title: "Email Us"
+     - Description: "Questions about StudyRealm? hello@studyrealm.app"
+     - Button: "Email →" (mailto:hello@studyrealm.app)
+- Why Schools Say Yes: *HIDDEN / SKIPPED* for Teacher (shows ONLY for Principal and Other)
+- Footer Bar:
+  - Left: "StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka"
+  - Right: Main Website | Support & Help | Privacy Policy | Terms & Conditions
+
+
+================================================================================
+4. ROLE 2: PRINCIPAL / MANAGEMENT
+================================================================================
+Page Order: Hero -> Aha -> Demo -> Features -> Survey -> Contact (6 scenes)
+
+--- PAGE 1: HERO SECTION ---
+- Tag: "BUILT FOR SCHOOL LEADERS"
+- Headline:
+  "Built for more admissions,
+  better results,
+  fewer complaints."
+- Subtitle:
+  "See what your school sees, then try one real chapter."
+- Primary CTA Button: "Book a 30-min demo →" (opens Calendly)
+- Secondary CTA Button: "See your school" (jumps to Aha)
+
+--- PAGE 2: SPACE SLIDE / AHA SCENE (Principal Dashboard View) ---
+[Left Column - Content]:
+- Tag: "A SCHOOL LIKE YOURS"
+- Headline:
+  "See your school
+  at a glance."
+- Hint:
+  "A sample view built with your school's name. Numbers are illustrative."
+- CTA Button: "Now try the chapter →" (jumps to Demo)
+
+[Right Column - Interactive Glass Card: School Dashboard]:
+- Card Title: "[School Name / Your School]: Class 7 Science"
+- Persistent Disclaimer Line under Title: "Sample numbers, not [School Name / Your School]'s real data."
+- Badge: "Sample data"
+- 4 Stat Tiles (Derived dynamically from heatmap cell scores):
+  1. Avg mastery: 64%
+  2. Questions attempted: 491
+  3. Students at risk: 5
+  4. Chapters needing help: 1
+- Chapter Mastery Progress Bars:
+  1. Acids, Bases and Salts: 68% · In progress (Amber) [Derived from average of all 40 heatmap cells]
+  2. Heat: 67% · In progress (Amber)
+  3. Motion and Time: 65% · In progress (Amber)
+  4. Light: 57% · Needs attention (Coral)
+
+--- PAGE 3: INTERACTIVE DEMO CHAPTER ---
+(Full chapter details listed in Section 8)
+
+--- PAGE 4: FEATURES SECTION (What You Get) ---
+- Tag: "WHAT YOUR SCHOOL SEES"
+- Headline: "Clear visibility, without extra work"
+- Description: "These dashboards fill with live classroom data. Tell us about your school and we'll show them in a free demo."
+- Interactive Feature Tabs:
+  1. Teacher Dashboard (Kicker: "CLASS OVERVIEW")
+     Description: "See every student's progress at a glance — green, yellow, or red — updated live after every quiz."
+  2. Progress Over Time (Kicker: "WEEKLY TRENDS")
+     Description: "See how your class is improving week by week, and catch problems early — before the exam."
+  3. Parent Dashboard (Kicker: "DAILY UPDATES")
+     Description: "Parents see stars earned, chapters completed, and how their child is doing — every day, in plain language."
+  4. School Pilot (Kicker: "INNOVATION PARTNERSHIP PROGRAM")
+     Description: "An exclusive pilot for forward-thinking Karnataka schools. No commitment required. Start with a free demo."
+- Bottom CTA Button: "Take the Quick Survey →"
+
+--- PAGE 5: SURVEY SECTION ---
+- Intro Speech / Text:
+  "Thanks for exploring the demo! We'd love a school leader's view, mostly about how things work at your school today. A few short questions."
+- Questions:
+  Q1 (MCQ): "How did you find out how well students were learning during the last term?"
+     Options:
+     - Exam results and report cards
+     - Meetings with teachers
+     - Reports from our school software
+     - Feedback or complaints from parents
+     - Mostly I didn't, until exam time
+  Q2 (MCQ): "How is your school getting ready for NCF 2023 and its competency-based approach?"
+     Options:
+     - Training our teachers
+     - Changing how we set tests
+     - Using software to track competencies
+     - We haven't started yet
+     - I'm not sure what is required
+  Q3 (MCQ): "When your school last adopted a new learning tool, who made the final decision?"
+     Options:
+     - I did
+     - Management or trustees
+     - A committee that included teachers
+     - Department heads recommended and I approved
+     - We haven't adopted one recently
+  Q4 (MCQ): "What was the biggest hurdle the last time you introduced a new tool or software?"
+     Options:
+     - Teachers needed training or resisted
+     - Cost and budget
+     - Students got distracted
+     - It didn't fit our existing systems
+     - Parents had concerns
+     - We haven't introduced one
+  Q5 (Text, optional): "What would you need to see before trying this with even one class?"
+     Placeholder: "Type a few words, or skip"
+- Completion Screen:
+  - "All done!"
+  - "Ready to submit your answers?"
+  - Button: "Submit Answers" -> routes to Contact page
+
+--- PAGE 6: CONTACT SECTION ---
+- Tag: "✦ INNOVATION PARTNERSHIP PROGRAM"
+- Headline: "Join our School Pilot"
+- Description: "An exclusive pilot for forward-thinking Karnataka schools. No commitment required. Start with a free demo."
+- Action Cards (Grid of 4):
+  1. Calendly Card [PRIMARY - Highlighted Teal Glass]:
+     - Title: "Book a Demo"
+     - Description: "A 30-minute session for your school's team."
+     - Button: "Open Calendar →" (Link: https://calendly.com/studyrealmtechnologies)
+  2. WhatsApp Card:
+     - Title: "WhatsApp"
+     - Description: "Quick questions? We reply in 1 hr. +91 90195 88700"
+     - Button: "Chat Now →"
+  3. Email Card:
+     - Title: "Email Us"
+     - Description: "For proposals and partnerships. hello@studyrealm.app"
+     - Button: "Email →"
+  4. Share Card:
+     - Title: "Forward to my management team"
+     - Description: "Forward via WhatsApp in 1 tap."
+     - Button: "Share on WhatsApp →"
+     - WhatsApp Message: "I came across StudyRealm, an interactive learning platform with class dashboards for schools. Worth a 30-minute look: https://studyrealm.app?utm_source=share&utm_medium=whatsapp&utm_campaign=principal"
+- Why Schools Say Yes (3 Compact Items):
+  1. Built for board results: "Mastery-first learning builds retention."
+  2. Built for admissions: "A premium tech-stack attracts parents."
+  3. Built for fewer complaints: "Daily visibility removes guesswork."
+- Footer Bar:
+  - Left: "StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka"
+  - Right: Main Website | Support & Help | Privacy Policy | Terms & Conditions
+
+
+================================================================================
+5. ROLE 3: PARENT
+================================================================================
+Page Order: Hero -> Aha -> Demo -> Features -> Survey -> Contact (6 scenes)
+
+--- PAGE 1: HERO SECTION ---
+- Tag: "FOR PARENTS"
+- Headline:
+  "See what your child
+  learned today."
+- Subtitle:
+  "Simple daily updates in plain language. It reads aloud, so even Class 1 can use it."
+- Primary CTA Button: "See tonight's update →" (jumps to Aha)
+- Secondary CTA Button: "Try the chapter" (jumps to Demo)
+
+--- PAGE 2: SPACE SLIDE / AHA SCENE (Parent WhatsApp Preview) ---
+[Left Column - Content]:
+- Tag: "TONIGHT'S UPDATE"
+- Headline:
+  "What you'd see on
+  your phone tonight."
+- Hint:
+  "A sample update. Try your child's first name."
+- CTA Button: "Now try the chapter →" (jumps to Demo)
+
+[Right Column - Interactive Phone Preview]:
+- Child's First Name Input:
+  - Label: "Child's first name:"
+  - Placeholder: "Aarav" (defaults to Aarav if blank)
+  - Privacy note: "Sample update. Your child's name stays on this device and is never saved or sent."
+- CSS Phone Frame:
+  - Header: "DAILY UPDATE · 7:30 PM" (with "Sample data" chip)
+  - Message Bubble:
+    - Title: "[Child Name] learned Acids & Bases today."
+    - Score: "80%"
+    - Stars earned: "★★★ (3/3)"
+    - Needs revision: "how indicators change colour."
+
+--- PAGE 3: INTERACTIVE DEMO CHAPTER ---
+(Full chapter details listed in Section 8)
+
+--- PAGE 4: FEATURES SECTION (What You Get) ---
+- Tag: "FOR YOUR FAMILY"
+- Headline: "Learning without the pressure"
+- Description: "Daily updates in plain language, and a child can retry as often as they like."
+- Interactive Feature Tabs:
+  1. Parent Dashboard (Kicker: "DAILY UPDATES")
+     Description: "Parents see stars earned, chapters completed, and how their child is doing — every day, in plain language."
+  2. Zero to Hero (Kicker: "NO PRESSURE")
+     Description: "Reset any chapter and try again from scratch. No penalty, unlimited attempts."
+  3. Reads aloud (Kicker: "EVEN CLASS 1 CAN USE IT")
+     Description: "Every lesson is read aloud, so younger students can finish a chapter without reading a word."
+  4. Stars and themes (Kicker: "FUN TO COME BACK TO")
+     Description: "Earn stars for correct answers, then spend them on workspace themes like Neon City and Space."
+- Bottom CTA Button: "Take the Quick Survey →"
+
+--- PAGE 5: SURVEY SECTION ---
+- Intro Speech / Text:
+  "Thanks for trying the demo! We want to make studying easier for children and parents. A few short questions about how things work at your home today."
+- Questions:
+  Q1 (MCQ): "Think about the last time you wondered if your child really understood a lesson. How did you find out?"
+     Options:
+     - I asked them to explain it
+     - I checked their notebook or homework
+     - I asked the teacher or tutor
+     - I waited for exam results
+     - I didn't find out
+  Q2 (MCQ): "Roughly how much do you spend each month, in rupees, on tuition, learning apps or study material for your child?"
+     Options:
+     - Nothing
+     - Under ₹1,000
+     - ₹1,000 to ₹3,000
+     - ₹3,000 to ₹6,000
+     - More than ₹6,000
+  Q3 (MCQ): "Outside exams and parent-teacher meetings, how often do you hear how your child is doing?"
+     Options:
+     - Almost never
+     - Once a month
+     - Every week
+     - Every day
+  Q4 (MCQ): "When you chose your child's current school, how much did its use of technology for learning matter?"
+     Options:
+     - It was a deciding factor
+     - It was nice to have
+     - I didn't think about it
+     - I'd rather have less screen time
+  Q5 (Text, optional): "What frustrates you most about how your child studies at the moment?"
+     Placeholder: "Type a few words, or skip"
+- Completion Screen:
+  - "All done!"
+  - "Ready to submit your answers?"
+  - Button: "Submit Answers" -> routes to Contact page
+
+--- PAGE 6: CONTACT SECTION ---
+- Tag: "✦ INNOVATION PARTNERSHIP PROGRAM"
+- Headline: "Bring it to your child's school"
+- Description: "StudyRealm works through schools. Send this to your child's school, or ask them to book a free demo."
+- Action Cards (Grid of 4):
+  1. Share Card [PRIMARY - Highlighted Teal Glass]:
+     - Title: "Ask my child's school"
+     - Description: "Forward via WhatsApp in 1 tap."
+     - Button: "Share on WhatsApp →"
+     - WhatsApp Message: "I tried StudyRealm and I'd love our school to bring it in. Children learn through interactive lessons and parents get daily updates: https://studyrealm.app?utm_source=share&utm_medium=whatsapp&utm_campaign=parent"
+  2. Calendly Card:
+     - Title: "Book a Demo"
+     - Description: "A 30-minute session your child's school can book."
+     - Button: "Open Calendar →"
+  3. WhatsApp Card:
+     - Title: "WhatsApp"
+     - Description: "Quick questions? We reply in 1 hr. +91 90195 88700"
+     - Button: "Chat Now →"
+  4. Email Card:
+     - Title: "Email Us"
+     - Description: "Questions about StudyRealm? hello@studyrealm.app"
+     - Button: "Email →"
+- Why Schools Say Yes: *HIDDEN / SKIPPED* for Parent (shows ONLY for Principal and Other)
+- Footer Bar:
+  - Left: "StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka"
+  - Right: Main Website | Support & Help | Privacy Policy | Terms & Conditions
+
+
+================================================================================
+6. ROLE 4: STUDENT
+================================================================================
+Page Order: Hero -> Demo -> Features -> Survey -> Contact (5 scenes)
+* SKIPPED: The second space slide (Aha scene) is NOT THERE / SKIPPED for Student.
+
+--- PAGE 1: HERO SECTION ---
+- Tag: "LET'S PLAY"
+- Headline:
+  "Play. Learn.
+  Collect stars."
+- Subtitle: "" (None)
+- Primary CTA Button: "Start playing →" (jumps directly to Demo)
+- Secondary CTA Button: None (null)
+
+--- PAGE 2: SPACE SLIDE / AHA SCENE ---
+* SKIPPED / NOT THERE *
+(The student flow routes directly from the Hero scene into the Demo chapter).
+
+--- PAGE 3: INTERACTIVE DEMO CHAPTER ---
+(Full chapter details listed in Section 8)
+
+--- PAGE 4: FEATURES SECTION (What You Get) ---
+- Tag: "YOUR REWARDS"
+- Headline: "Stars, themes and bragging rights"
+- Description: "Play more to earn more."
+- Interactive Feature Tabs:
+  1. Stars and themes (Kicker: "FUN TO COME BACK TO")
+     Description: "Earn stars for correct answers, then spend them on workspace themes like Neon City and Space."
+  2. Friendly Competition (Kicker: "CLASS LEADERBOARD")
+     Description: "Students can see how they're doing compared to classmates — a fun way to stay motivated to practice."
+  3. Zero to Hero (Kicker: "NO PRESSURE")
+     Description: "Reset any chapter and try again from scratch. No penalty, unlimited attempts."
+- Bottom CTA Button: "Quick tap survey →"
+
+--- PAGE 5: SURVEY SECTION ---
+- Intro Speech / Text:
+  "Awesome job finishing the demo! A few quick taps. Be honest, there are no wrong answers."
+- Questions (5 Quick Taps):
+  Q1 (MCQ): "Think about your last big test. When did you really start studying?"
+     Options:
+     - A week or more before
+     - 2 or 3 days before
+     - The day before
+     - The night before
+     - I barely studied
+  Q2 (MCQ): "It's 9 PM and you're stuck on a hard problem. What's your first move?"
+     Options:
+     - Skip it
+     - Ask a parent or sibling
+     - Google or an AI app
+     - Message a friend
+     - Wait and ask my teacher
+  Q3 (MCQ): "If you had to learn a new science chapter tomorrow, how would you rather do it?"
+     Options:
+     - Read the textbook
+     - Watch a YouTube video
+     - Try something interactive, like the Kitchen Lab
+     - Have someone explain it to me
+  Q4 (MCQ): "What would actually make you open a study app on a Saturday?"
+     Options:
+     - Beating friends on a leaderboard
+     - Keeping my daily streak
+     - Unlocking rewards and themes
+     - My parents asking me to
+     - Nothing would
+  Q5 (MCQ): "If you could skip one part of the demo, which would it be?"
+     Options:
+     - The turmeric stain at the start
+     - The Kitchen Lab, testing liquids
+     - The tap-to-reveal, finding acids and bases
+     - The flashcard question
+     - None, I'd keep it all
+- Completion Screen:
+  - "All done!"
+  - "Ready to submit your answers?"
+  - Button: "Submit Answers" -> routes to Contact page
+
+--- PAGE 6: CONTACT SECTION ---
+- Tag: "YOU DID IT!"
+- Headline: "Show your parent or teacher"
+- Description: "Tell them you learned Acids & Bases. They can see the full version with a free demo."
+- Student Badge:
+  ★ "I learned Acids & Bases"
+- Single Highlighted Share Card (Only Card Displayed):
+  - Icon: Share2
+  - Title: "Show your parent or teacher"
+  - Description: "Forward via WhatsApp in 1 tap."
+  - Button: "Share on WhatsApp →"
+  - WhatsApp Message: "I just learned Acids & Bases on StudyRealm. Try it: https://studyrealm.app?utm_source=share&utm_medium=whatsapp&utm_campaign=student"
+(Note: Secondary contact cards and "Parents and teachers:" row are removed entirely; WhatsApp direct chat and Email are hidden).
+- "Why Schools Say Yes": *SKIPPED / HIDDEN* for Student
+- Footer Bar:
+  - Left: "StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka"
+  - Right: Main Website | Support & Help | Privacy Policy | Terms & Conditions
+
+
+================================================================================
+7. ROLE 5: OTHER
+================================================================================
+Page Order: Hero -> Demo -> Features -> Survey -> Contact (5 scenes)
+* SKIPPED: The second space slide (Aha scene) is NOT THERE / SKIPPED for Other.
+
+--- PAGE 1: HERO SECTION ---
+- Tag: "KARNATAKA'S PREMIER LKG-10 PLATFORM"
+- Headline:
+  "Every student learns.
+  Every teacher sees it."
+- Subtitle:
+  "Fun lessons kids love, simple progress updates for teachers and parents, and lessons that follow India's latest school guidelines. No app to download."
+- Primary CTA Button: "Experience One Chapter →" (jumps directly to Demo)
+- Secondary CTA Button: "Book a 30-Min Demo" (opens Calendly)
+
+--- PAGE 2: SPACE SLIDE / AHA SCENE ---
+* SKIPPED / NOT THERE *
+(The Other flow routes directly from the Hero scene into the Demo chapter).
+
+--- PAGE 3: INTERACTIVE DEMO CHAPTER ---
+(Full chapter details listed in Section 8)
+
+--- PAGE 4: FEATURES SECTION (What You Get) ---
+- Tag: "FULL PLATFORM"
+- Headline: "Powerful Tools for Teachers and Management"
+- Description: "A quick look at what students, teachers and parents each see. Book a free demo to see it with your school's data."
+- Interactive Feature Tabs:
+  1. The student app (Kicker: "LEARN BY DOING")
+     Description: "Students learn through interactive stories, hear everything read aloud, and practice without penalties."
+  2. Teacher Dashboard (Kicker: "CLASS OVERVIEW")
+     Description: "See every student's progress at a glance — green, yellow, or red — updated live after every quiz."
+  3. Parent Dashboard (Kicker: "DAILY UPDATES")
+     Description: "Parents see stars earned, chapters completed, and how their child is doing — every day, in plain language."
+  4. Friendly Competition (Kicker: "CLASS LEADERBOARD")
+     Description: "Students can see how they're doing compared to classmates — a fun way to stay motivated to practice."
+- Bottom CTA Button: "Take the Quick Survey →"
+
+--- PAGE 5: SURVEY SECTION ---
+- Intro Speech / Text:
+  "Thanks for stopping by! We're curious who's visiting. A few quick questions."
+- Questions:
+  Q1 (MCQ): "What best describes you?"
+     Options:
+     - Investor or advisor
+     - Friend or relative of the team
+     - Education consultant or EdTech professional
+     - Just curious
+     - Something else
+  Q2 (MCQ): "Which part of the demo stood out most to you?"
+     Options:
+     - The turmeric stain at the start
+     - The Kitchen Lab, testing liquids
+     - The voice guide
+     - The tap-to-reveal, finding acids and bases
+     - The flashcard question
+     - Nothing really stood out
+  Q3 (MCQ): "Is there a school, teacher or parent you know who should see this?"
+     Options:
+     - Yes, and I'm happy to introduce you
+     - Maybe, ask me again later
+     - Not that I can think of
+  Q4 (Text, optional): "What is one thing we should change or explain better?"
+     Placeholder: "Type a few words, or skip"
+- Completion Screen:
+  - "All done!"
+  - "Ready to submit your answers?"
+  - Button: "Submit Answers" -> routes to Contact page
+
+--- PAGE 6: CONTACT SECTION ---
+- Tag: "✦ INNOVATION PARTNERSHIP PROGRAM"
+- Headline: "Join our School Pilot"
+- Description: "An exclusive pilot for forward-thinking Karnataka schools. No commitment required. Start with a free demo."
+- Action Cards (Grid of 4):
+  1. Calendly Card [PRIMARY - Highlighted Teal Glass]:
+     - Title: "Book a Demo"
+     - Description: "A 30-minute session for your school's team."
+     - Button: "Open Calendar →"
+  2. WhatsApp Card:
+     - Title: "WhatsApp"
+     - Description: "Quick questions? We reply in 1 hr. +91 90195 88700"
+     - Button: "Chat Now →"
+  3. Email Card:
+     - Title: "Email Us"
+     - Description: "For proposals and partnerships. hello@studyrealm.app"
+     - Button: "Email →"
+  4. Share Card:
+     - Title: "Share with a school"
+     - Description: "Forward via WhatsApp in 1 tap."
+     - Button: "Share on WhatsApp →"
+     - WhatsApp Message: "Take a look at StudyRealm: https://studyrealm.app?utm_source=share&utm_medium=whatsapp&utm_campaign=other"
+- Why Schools Say Yes (3 Compact Items):
+  1. Built for board results: "Mastery-first learning builds retention."
+  2. Built for admissions: "A premium tech-stack attracts parents."
+  3. Built for fewer complaints: "Daily visibility removes guesswork."
+- Footer Bar:
+  - Left: "StudyRealm Technologies · MSME Udyam Registered · Bangalore, Karnataka"
+  - Right: Main Website | Support & Help | Privacy Policy | Terms & Conditions
+
+
+================================================================================
+8. COMMON CHAPTER DEMO CONTENT ("Why does haldi turn red with soap?")
+================================================================================
+Chapter Title: "Why does haldi turn red with soap?"
+Subject: Science
+Class Level: Class 7
+Total Interactive Parts: 5
+
+Part 1: The Stain Hook
+- Instruction: "Oh no! A haldi stain on a clean shirt. Tap the soap to wash it"
+- Audio: "Oh no! A yellow haldi stain on a clean white shirt. Tap the soap to wash it."
+- Button: "🧼 Add soap"
+- Result: "It turned RED! 😮 Why?"
+- Audio Result: "Wait... it did not wash away. It turned bright red! Why does yellow haldi turn red with soap? Let's find out!"
+- Button: "Let's find out ▸"
+
+Part 2: The Kitchen Lab
+- Indicator: Turmeric Paper (Yellow)
+- Guided Step 1 Prompt: "Tap the lemon 🍋 to test it on its strip"
+  - Lemon juice result: "Still yellow" (Audio: "Lemon juice. The strip stays yellow.")
+- Guided Step 2 Prompt: "Now tap the soap 🧼"
+  - Soap water result: "Turned deep red!" (Audio: "Soap water. The strip turns deep red!")
+- Guided Step 3 Prompt: "Try the other three bottles"
+  - Vinegar result: "Still yellow" (Audio: "Vinegar. Still yellow.")
+  - Plain water result: "Still yellow" (Audio: "Plain water. Still yellow.")
+  - Baking soda water result: "Turned orange-red" (Audio: "Baking soda water. The strip turns orange.")
+- Reveal & Rules:
+  - 🧼 Soap and baking soda are BASES. Turmeric turns red with bases.
+  - 🍋 Lemon and vinegar are ACIDS. Turmeric stays yellow with acids.
+  - 💧 Plain water is NEUTRAL. Turmeric stays yellow here too.
+  - Takeaway: "Turmeric is a base detector!"
+  - Teaser: "To tell acids from plain water, chemists use other indicators. You'll meet them in the full chapter."
+  - Scale Bar: Acid (Left) | Neutral (Mid) | Base (Right)
+  - Marker text: "Turmeric turns red from here"
+- Button: "Try a mystery bottle ▸"
+- Mystery Test:
+  - Item: Mystery bottle ❓
+  - Result: "Turned deep red!"
+  - Question: "Is the mystery bottle a base?"
+  - Choices: [Yes, a base] | [No, not a base]
+  - Answer Correct: "Yes! Red means base. It was washing-powder water, the same kind of thing that turned your shirt stain red."
+- Closing Takeaway:
+  - "Your stomach makes acid. Antacid medicine is a base that calms it down. Your kitchen is a chemistry lab!"
+  - Button: "Keep going ▸"
+
+Part 3: Tap to Reveal (Diagram)
+- Instruction: "Tap the glowing dots to find acids and bases in your kitchen"
+- Interactive Hotspots:
+  1. 🍋 Lemon: an acid
+     "Sour things like lemon are acids. Turmeric stays yellow with them."
+  2. 🥛 Curd: an acid
+     "Curd tastes a little sour because it has a mild acid. Turmeric stays yellow with it."
+  3. 🧼 Soap: a base
+     "Soap feels slippery and is a base. It turns turmeric red, just like on your shirt."
+  4. 💊 Antacid: a base
+     "Antacid medicine is a base. It calms the acid in your stomach when you have acidity."
+
+Part 4: Flip Card
+- Front Question: "A turmeric stain stays yellow when you add lemon juice. Is lemon juice a base?"
+- Back Answer: "No, it is an acid 🍋"
+- Explanation: "No. Lemon juice is an acid. Turmeric only turns red with bases, so it stays yellow with acids, and with plain water."
+
+Part 5: Celebration Block
+- Title: "🎉 You just learned Acids & Bases!"
+- Subtitle: "Sounds like a hard chapter. You just learned it in minutes."
+- Stars: ⭐⭐⭐
+- Recap Note: "This is one chapter. There are 400+ moments like this across every subject, Class 1–10 — Practice, Ranked quizzes, AI doubt-clearing, and full teacher & parent dashboards, all NCF 2023 mapped automatically."
+- Button: "See All Features →" (routes to Features page)
+================================================================================

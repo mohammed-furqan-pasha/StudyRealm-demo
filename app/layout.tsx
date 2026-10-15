@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -14,6 +14,12 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-outfit",
+});
+
 export const metadata: Metadata = {
   title: "StudyRealm — LKG-10 EdTech Platform for Indian Schools",
   description: "Interactive learning moments, real-time mastery tracking, and NCF 2023 auto-compliance for CBSE, ICSE, and Karnataka State Board schools.",
@@ -26,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${outfit.variable}`}>
       <body className="overflow-x-hidden" style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
         {children}
       </body>

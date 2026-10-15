@@ -154,7 +154,7 @@ export const surveyQuestions: Record<string, SurveySet> = {
         id: 'student_q3',
         prompt: "If you had to learn a new science chapter tomorrow, how would you rather do it?",
         audio: "If you had to learn a new science chapter tomorrow, how would you rather do it?",
-        options: ["Read the textbook", "Watch a YouTube video", "Try something interactive, like the Light Lab", "Have someone explain it to me"],
+        options: ["Read the textbook", "Watch a YouTube video", "Try something interactive, like the Kitchen Lab", "Have someone explain it to me"],
       },
       {
         type: 'mcq',
@@ -168,7 +168,7 @@ export const surveyQuestions: Record<string, SurveySet> = {
         id: 'student_q5',
         prompt: "If you could skip one part of the demo, which would it be?",
         audio: "If you could skip one part of the demo, which would it be?",
-        options: ["The pencil story at the start", "The Light Lab, moving things around", "Naming the parts of the lens", "The flashcard question", "None, I'd keep it all"],
+        options: ["The turmeric stain at the start", "The Kitchen Lab, testing liquids", "The tap-to-reveal, finding acids and bases", "The flashcard question", "None, I'd keep it all"],
       }
     ]
   },
@@ -189,7 +189,7 @@ export const surveyQuestions: Record<string, SurveySet> = {
         id: 'other_q2',
         prompt: "Which part of the demo stood out most to you?",
         audio: "Which part of the demo stood out most to you?",
-        options: ["The story at the start", "The Light Lab, moving things around", "The voice guide", "Naming the parts of the lens", "The flashcard question", "Nothing really stood out"],
+        options: ["The turmeric stain at the start", "The Kitchen Lab, testing liquids", "The voice guide", "The tap-to-reveal, finding acids and bases", "The flashcard question", "Nothing really stood out"],
       },
       {
         type: 'mcq',

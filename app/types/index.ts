@@ -1,4 +1,75 @@
-export type SurveyRole = 'Teacher' | 'Principal' | 'Parent' | 'Student' | 'Other';
+export type RoleKey = 'Teacher' | 'Principal' | 'Parent' | 'Student' | 'Other';
+export type SurveyRole = RoleKey;
+
+export type PageId = 'hero' | 'aha' | 'demo' | 'features' | 'survey' | 'contact';
+
+export type FeatureCardId =
+  | 'teacherDashboard'
+  | 'progressTrends'
+  | 'parentDashboard'
+  | 'leaderboard'
+  | 'quizzesNcf'
+  | 'zeroToHero'
+  | 'readAloud'
+  | 'starsThemes'
+  | 'studentApp'
+  | 'pilot'
+  | 'models3d';
+
+export interface FeatureCard {
+  id: FeatureCardId;
+  title: string;
+  shortTitle: string;
+  kicker: string;
+  description: string;
+  image?: string;
+  icon: string;
+  badge?: string;
+}
+
+export type CtaAction = { type: 'goTo'; id: PageId } | { type: 'calendly' };
+
+export interface RoleConfig {
+  key: RoleKey;
+  hero: {
+    tag: string;
+    headlineLines: string[];
+    sub: string;
+    primaryCta: {
+      label: string;
+      action: CtaAction;
+    };
+    secondaryCta: {
+      label: string;
+      action: CtaAction;
+    } | null;
+    showStats: boolean;
+  };
+  aha: {
+    tag: string;
+    headlineLines: string[];
+    hint: string;
+    ctaLabel?: string;
+  } | null;
+  features: {
+    tag: string;
+    headlineLines: string[];
+    description: string;
+    ctaLabel: string;
+    cardIds: FeatureCardId[];
+  };
+  contact: {
+    tag: string;
+    headline: string;
+    description: string;
+    primary: 'calendly' | 'share';
+  };
+  pageOrder: PageId[];
+  share: {
+    label: string;
+    message: string;
+  };
+}
 
 export interface LeadFormData {
   name: string;

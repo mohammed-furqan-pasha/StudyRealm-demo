@@ -1,208 +1,446 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import Image from 'next/image';
-import { scrollToSection } from '../lib/scrollTo';
-import { useReveal } from '../lib/useReveal';
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  Users, 
-  Trophy, 
-  Lock, 
-  type LucideIcon
+import { useState } from 'react';
+import { m, useReducedMotion } from 'motion/react';
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Users,
+  Trophy,
+  ClipboardCheck,
+  RotateCcw,
+  Volume2,
+  Star,
+  Brain,
+  Handshake,
+  Sparkles,
+  ArrowRight,
+  Box,
+  type LucideIcon,
 } from 'lucide-react';
+import { usePager, usePageState } from './PageFlow';
+import SceneShell, { SplitHeadline, SceneObject, CoverBox, StageReveal } from './SceneShell';
+import TopBar from './TopBar';
+import { OBJECTS } from '../data/sceneAssets';
+import { FEATURE_CARDS } from '../data/featureCards';
+import { ROLE_CONFIGS } from '../data/roleConfig';
+import { RoleConfig, FeatureCard } from '../types';
 
-interface Feature {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: LucideIcon;
-  desc: string;
-  imgSrc?: string;
+// Tunable offset to position planet horizon near 80% viewport height
+const FEATURES_HORIZON_CLASS = 'absolute left-0 bottom-[-22%] w-full h-auto';
+
+const FEATURES_OBJECT_HORIZON: SceneObject = {
+  src: OBJECTS.planetHorizon,
+  className: FEATURES_HORIZON_CLASS,
+  layer: 'behind',
+  depth: 'near',
+  cover: true,
+};
+
+const FEATURES_SCENE_OBJECTS: SceneObject[] = [FEATURES_OBJECT_HORIZON];
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  TrendingUp,
+  Users,
+  Trophy,
+  ClipboardCheck,
+  RotateCcw,
+  Volume2,
+  Star,
+  Brain,
+  Handshake,
+  Box,
+};
+
+function getCardIcon(iconName: string): LucideIcon {
+  return ICON_MAP[iconName] || Sparkles;
 }
 
-const features: Feature[] = [
-  {
-    id: 'teacher-dashboard',
-    title: 'Teacher Dashboard',
-    subtitle: 'Class Overview',
-    icon: LayoutDashboard,
-    desc: "See every student's progress at a glance — green, yellow, or red — updated live after every quiz.",
-    imgSrc: '/img/teacher-dashboard.png',
-  },
-  {
-    id: 'progress-time',
-    title: 'Progress Over Time',
-    subtitle: 'Weekly Trends',
-    icon: TrendingUp,
-    desc: 'See how your class is improving week by week, and catch problems early — before the exam.',
-    imgSrc: '/img/teacher-analytics.png',
-  },
+export interface LockedFeaturesProps {
+  config?: RoleConfig['features'];
+}
 
-  {
-    id: 'parent-dashboard',
-    title: 'Parent Dashboard',
-    subtitle: 'Daily Updates',
-    icon: Users,
-    desc: 'Parents see stars earned, chapters completed, and how their child is doing — every day, in plain language.',
-    imgSrc: '/img/parent-dashboard.png',
-  },
-  {
-    id: 'friendly-competition',
-    title: 'Friendly Competition',
-    subtitle: 'Class Leaderboard',
-    icon: Trophy,
-    desc: "Students can see how they're doing compared to classmates — a fun way to stay motivated to practice.",
-  },
+export default function LockedFeatures({ config: propConfig }: LockedFeaturesProps) {
+  const { goTo } = usePager();
+  const { isCurrent = true } = usePageState();
+  const shouldReduceMotion = useReducedMotion();
+  const config = propConfig || ROLE_CONFIGS.Other.features;
 
-];
+  const cardIds = config.cardIds || [];
+  const cards: FeatureCard[] = cardIds
+    .map((id) => FEATURE_CARDS[id])
+    .filter(Boolean);
 
-export default function LockedFeatures() {
-  const [activeFeature, setActiveFeature] = useState(0);
-  const sectionRef = useRef<HTMLElement>(null);
-  useReveal(sectionRef);
+  const [activeTab, setActiveTab] = useState(0);
+  const [hasUserSelected, setHasUserSelected] = useState(false);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  const handleImageError = (id: string) => {
+    setFailedImages((prev) => ({ ...prev, [id]: true }));
+  };
+
+  const activeCard = cards[activeTab] || cards[0];
+  const hasImage = Boolean(activeCard?.image && !failedImages[activeCard.id]);
+  const ActiveIcon = activeCard ? getCardIcon(activeCard.icon) : Sparkles;
+
+  const cleanCtaLabel = config.ctaLabel.replace(/[\s→▸►>]+$/, '').trim();
 
   return (
-    <section ref={sectionRef} className="min-h-svh lg:min-h-[100dvh] lg:h-auto overflow-visible lg:overflow-visible flex flex-col justify-center items-center px-4 md:px-6 bg-slate-50 border-t border-slate-100 w-full pt-20 pb-28 lg:pt-8 lg:pb-8">
-      <div className="max-w-6xl mx-auto w-full flex flex-col lg:h-auto justify-center lg:max-h-none">
-        {/* Header */}
-        <div className="text-center mb-4 lg:mb-5 shrink-0">
-          <p className="reveal text-teal-600 font-semibold text-xs md:text-sm uppercase tracking-widest mb-1 md:mb-2" style={{ '--reveal-delay': '0ms' } as React.CSSProperties}>
-            Full Platform
-          </p>
-          <h2 className="reveal text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 md:mb-3" style={{ fontFamily: 'Playfair Display, serif', '--reveal-delay': '70ms' } as React.CSSProperties}>
-            Powerful Tools for Teachers and Management
-          </h2>
-          <p className="reveal text-slate-600 text-sm md:text-base max-w-2xl mx-auto" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
-            These features need live classroom data. Tell us about your school and we&apos;ll show them to you in a free demo.
-          </p>
-        </div>
+    <SceneShell scene="features" objects={FEATURES_SCENE_OBJECTS}>
+      {/* Static Scrim for Text Legibility */}
+      <div
+        className="features-scrim absolute inset-0 pointer-events-none z-0"
+        aria-hidden="true"
+      />
+      <style>{`
+        .features-scrim {
+          background: linear-gradient(180deg, transparent 20%, rgba(3,8,18,0.55) 100%);
+        }
+        @media (min-width: 768px) {
+          .features-scrim {
+            background: linear-gradient(90deg, rgba(3,8,18,0.5), transparent 60%);
+          }
+        }
+      `}</style>
 
-        {/* Desktop: Interactive Feature Panel */}
-        <div className="hidden lg:grid lg:grid-cols-12 gap-8 lg:items-stretch items-start shrink min-h-0">
-          {/* Left: List of features */}
-          <div className="reveal col-span-5 flex flex-col gap-2 shrink overflow-hidden h-full" style={{ '--reveal-delay': '210ms' } as React.CSSProperties}>
-            {features.map((f, idx) => (
-              <button 
-                key={f.id}
-                onClick={() => setActiveFeature(idx)}
-                className={`text-left p-3 lg:py-2 lg:px-3 rounded-xl border transition-all duration-200 flex items-start gap-3 ${
-                  activeFeature === idx 
-                    ? 'bg-white border-teal-500 shadow-md ring-1 ring-teal-500' 
-                    : 'bg-white border-slate-200 hover:border-teal-300 hover:shadow-sm'
-                }`}
-              >
-                <div className={`p-2 rounded-lg shrink-0 ${activeFeature === idx ? 'bg-teal-50 text-teal-600' : 'bg-slate-50 text-slate-500'}`}>
-                  <f.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2 text-sm md:text-base">
-                    {f.title} <Lock className="w-3.5 h-3.5 text-slate-400" />
-                  </h3>
-                  <p className="text-xs font-medium text-slate-500">{f.subtitle}</p>
-                  {activeFeature === idx && (
-                    <p className="text-xs text-slate-600 leading-relaxed mt-1 animate-in fade-in slide-in-from-top-1 hidden xl:block">
-                      {f.desc}
-                    </p>
-                  )}
-                </div>
-              </button>
-            ))}
+      {/* Nav / Top Bar */}
+      <TopBar />
+
+      {/* DESKTOP VIEW (>= 768px) */}
+      {/* Left Text Column: identical in style and entrance animation to hero and AhaScene */}
+      <div
+        className="hidden md:flex md:flex-col md:items-start md:text-left md:absolute md:left-[7%] md:top-[45%] md:-translate-y-1/2 md:max-w-[44vw] md:w-full z-10"
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
+        {/* Tag */}
+        <StageReveal order={0} className="w-full">
+          <div className="uppercase text-[12px] sm:text-[13px] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
+            {config.tag}
           </div>
+        </StageReveal>
 
-          {/* Right: Large Mockup Panel */}
-          <div className="col-span-7 h-full flex flex-col justify-center lg:self-stretch">
-            <div key={activeFeature} className="w-full lg:h-full rounded-2xl overflow-hidden border border-slate-200 shadow-xl relative bg-slate-100 group flex flex-col justify-center items-center">
-              {features[activeFeature].imgSrc && (
-                <Image 
-                  src={features[activeFeature].imgSrc}
-                  alt={features[activeFeature].title}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                />
-              )}
+        {/* Headline: Word-by-word reveal */}
+        <SplitHeadline
+          lines={config.headlineLines}
+          className="text-white font-semibold text-[clamp(2.6rem,4.9vw,5.5rem)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+        />
 
-              {/* Frosted overlay */}
-              <div className="absolute inset-0 backdrop-blur-md bg-white/30 flex flex-col items-center justify-center transition-all duration-500 group-hover:backdrop-blur-sm group-hover:bg-white/10">
-                <div className="bg-white/95 shadow-lg shadow-slate-400/20 rounded-3xl p-6 flex flex-col items-center max-w-sm text-center transform transition-all group-hover:scale-105 mx-4">
-                  <div className="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center mb-4">
-                    <Lock className="w-6 h-6 text-teal-600" />
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900 mb-2">{features[activeFeature].title}</h4>
-                  <p className="text-sm text-slate-500">{features[activeFeature].desc}</p>
-                </div>
-              </div>
+        {/* Description: 24px below headline */}
+        <StageReveal order={2} className="w-full">
+          <p className="mt-[24px] text-white/90 text-[clamp(1rem,1.25vw,1.25rem)] max-w-[560px] font-normal leading-relaxed line-clamp-3 [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]">
+            {config.description}
+          </p>
+        </StageReveal>
+
+        {/* Primary Pill Button: 28px below */}
+        <StageReveal order={4} className="w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => goTo('survey')}
+            className="mt-[28px] h-[52px] px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
+            style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+          >
+            <span>{cleanCtaLabel}</span>
+            <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
+          </button>
+        </StageReveal>
+      </div>
+
+      {/* Right Orbit Window Column (Desktop: Rises 14vh like Page 2 right panel) */}
+      <StageReveal
+        order={3}
+        rise="14vh"
+        className="hidden md:flex flex-col gap-[10px] absolute right-[5%] top-[max(92px,12dvh)] w-[clamp(400px,26vw,500px)] z-20"
+      >
+        <div style={{ fontFamily: 'var(--font-outfit), sans-serif' }} className="flex flex-col gap-[10px] w-full">
+        {/* a. WINDOW */}
+        <div
+          className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col shrink-0"
+          style={{
+            boxShadow: '0 30px 80px -24px rgba(45,212,191,0.35)',
+          }}
+        >
+          {/* 36px Title Bar */}
+          <div className="h-[36px] bg-[rgba(8,20,34,0.96)] px-4 flex items-center justify-between border-b border-[rgba(94,234,212,0.15)] shrink-0 select-none">
+            {/* 3 slate-600 dots */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
             </div>
+
+            {/* Badge pill */}
+            {activeCard && (
+              <span className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 text-[12px] font-semibold tracking-wide">
+                {activeCard.badge ?? 'Sample data'}
+              </span>
+            )}
+          </div>
+
+          {/* Body: fixed aspect-ratio 16 / 10, background #0B1626 */}
+          <div className="relative w-full aspect-[16/10] bg-[#0B1626] overflow-hidden flex items-center justify-center">
+            {activeCard && (
+              <m.div
+                key={activeCard.id}
+                initial={hasUserSelected ? { opacity: 0, y: shouldReduceMotion ? 0 : 8 } : false}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                transformTemplate={(_, generated) => 'none'}
+                className="w-full h-full flex items-center justify-center"
+              >
+                {hasImage ? (
+                  <img
+                    src={activeCard.image}
+                    alt={activeCard.title}
+                    loading="lazy"
+                    onError={() => handleImageError(activeCard.id)}
+                    draggable={false}
+                    className="w-full h-full object-contain object-top pointer-events-none select-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 select-none">
+                    <div className="w-[72px] h-[72px] rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-3">
+                      <ActiveIcon className="w-9 h-9" />
+                    </div>
+                    <p className="text-teal-300 uppercase text-[12px] font-medium tracking-[0.18em] mb-1">
+                      {activeCard.kicker}
+                    </p>
+                    <h4 className="text-white font-semibold text-[22px] leading-tight max-w-sm">
+                      {activeCard.title}
+                    </h4>
+                  </div>
+                )}
+              </m.div>
+            )}
           </div>
         </div>
 
-        {/* Mobile: Static List Layout */}
-        <div className="lg:hidden flex flex-col gap-2 shrink overflow-visible w-full">
-          {features.map((f, idx) => {
-            return (
-              <div 
-                key={f.id} 
-                className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 ${idx >= 4 ? 'hidden lg:block' : ''}`}
-              >
-                <div className="w-full text-left px-4 py-3 lg:px-4 flex flex-col">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg shrink-0 bg-teal-50 text-teal-600">
-                      <f.icon className="w-4 h-4 md:w-5 md:h-5" />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h3 className="font-bold text-slate-900 text-sm md:text-base flex items-center gap-1.5">
-                        {f.title} <Lock className="w-3 h-3 text-slate-400" />
-                      </h3>
-                      <p className="hidden lg:block text-xs md:text-sm text-slate-600 mt-0.5 leading-snug">{f.desc}</p>
-                    </div>
-                  </div>
-                </div>
+        {/* b. CHIPS: one grid row whose columns equal the card count */}
+        <div
+          className="grid gap-2 w-full box-border min-w-0"
+          style={{
+            gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {cards.map((card, idx) => {
+            const isActive = idx === activeTab;
+            const Icon = getCardIcon(card.icon);
 
-                <div className="hidden">
-                  <div className="px-3 md:px-4 pb-3 md:pb-4 animate-in slide-in-from-top-2">
-                    <p className="text-xs md:text-sm text-slate-600 mb-3">{f.desc}</p>
-                    
-                    {/* Mobile Mockup */}
-                    <div className="w-full aspect-video rounded-lg overflow-hidden relative border border-slate-200 bg-white group">
-                      {f.imgSrc && (
-                        <Image 
-                          src={f.imgSrc}
-                          alt={f.title}
-                          fill
-                          sizes="(max-width: 768px) 90vw, 100vw"
-                          className="object-cover object-top"
-                        />
-                      )}
-                      
-                      {/* Frosted overlay mobile */}
-                      <div className="absolute inset-0 backdrop-blur-md bg-white/30 flex flex-col items-center justify-center">
-                        <div className="bg-white/95 shadow-lg rounded-xl p-3 md:p-4 text-center mx-4 flex flex-col items-center max-w-[250px]">
-                          <Lock className="w-4 h-4 md:w-5 md:h-5 text-teal-600 mb-1.5" />
-                          <span className="text-xs md:text-sm font-bold text-slate-800 mb-1">Locked Feature</span>
-                          <span className="text-[10px] md:text-xs text-slate-500">Live data required</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => {
+                  setHasUserSelected(true);
+                  setActiveTab(idx);
+                }}
+                aria-pressed={isActive}
+                className={`min-h-[60px] min-w-0 rounded-[16px] px-1 py-1.5 flex flex-col items-center justify-center gap-1.5 transition select-none cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                  isActive
+                    ? 'bg-[#14B8A6] text-white shadow-md shadow-teal-500/20'
+                    : 'bg-[rgba(10,40,58,0.78)] border border-[rgba(94,234,212,0.35)] text-white hover:bg-[rgba(14,54,78,0.85)]'
+                }`}
+                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span
+                  className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                  style={{
+                    fontSize: 'clamp(10.5px, 0.78vw, 13px)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {card.shortTitle}
+                </span>
+              </button>
             );
           })}
         </div>
 
-        {/* Unified CTA */}
-        <div className="reveal mt-5 lg:mt-8 flex justify-center shrink-0 static lg:relative lg:z-10" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
-          <button 
-            onClick={() => scrollToSection('survey')}
-            className="w-full lg:w-auto bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm md:text-base px-8 py-3 rounded-full shadow-lg hover:shadow-teal-600/20 transition-all transform hover:-translate-y-1"
-          >
-            Take the Quick Survey →
-          </button>
+        {/* c. CAPTION */}
+        {activeCard && (
+          <div className="min-h-[72px] text-left" aria-live="polite">
+            <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
+              <span
+                className="text-white text-[17px] leading-snug"
+                style={{ fontFamily: 'var(--font-outfit), sans-serif', fontWeight: 600 }}
+              >
+                {activeCard.title}
+              </span>
+              <span
+                className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.16em]"
+                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+              >
+                {activeCard.kicker}
+              </span>
+            </div>
+            <p
+              className="mt-1 text-white/85 text-[14.5px] leading-relaxed line-clamp-2"
+              style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+            >
+              {activeCard.description}
+            </p>
+          </div>
+        )}
         </div>
+      </StageReveal>
+
+      {/* MOBILE VIEW (< 768px): TopBar then scroll container */}
+      <div
+        className="flex md:hidden flex-col w-full px-5 py-4 overflow-y-auto pageflow-scroll pb-36 text-left"
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
+        {/* Tag */}
+        <div className="uppercase text-[12px] tracking-[0.2em] text-white/80 font-medium mb-2.5">
+          {config.tag}
+        </div>
+
+        {/* Headline */}
+        <SplitHeadline
+          lines={config.headlineLines}
+          className="text-white font-semibold text-[clamp(2.2rem,6.5vw,3.2rem)] leading-[1.1] tracking-[-0.02em] mb-3 text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+        />
+
+        {/* Description */}
+        <p className="text-white/90 text-sm sm:text-base leading-relaxed mb-5 line-clamp-3">
+          {config.description}
+        </p>
+
+        {/* Window at full width (16/10 ratio) */}
+        <div
+          className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col w-full mb-4 shrink-0"
+          style={{
+            boxShadow: '0 20px 50px -20px rgba(45,212,191,0.35)',
+          }}
+        >
+          {/* 36px Title Bar */}
+          <div className="h-[36px] bg-[rgba(8,20,34,0.96)] px-3.5 flex items-center justify-between border-b border-[rgba(94,234,212,0.15)] shrink-0 select-none">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
+              <div className="w-2 h-2 rounded-full bg-slate-600" />
+            </div>
+            {activeCard && (
+              <span className="px-2 py-0.5 rounded-full bg-white text-slate-900 text-[11px] font-semibold tracking-wide">
+                {activeCard.badge ?? 'Sample data'}
+              </span>
+            )}
+          </div>
+
+          {/* 16/10 Body */}
+          <div className="relative w-full aspect-[16/10] bg-[#0B1626] overflow-hidden flex items-center justify-center">
+            {activeCard && (
+              <m.div
+                key={`mob-${activeCard.id}`}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                transformTemplate={(_, generated) => 'none'}
+                className="w-full h-full flex items-center justify-center"
+              >
+                {hasImage ? (
+                  <img
+                    src={activeCard.image}
+                    alt={activeCard.title}
+                    loading="lazy"
+                    onError={() => handleImageError(activeCard.id)}
+                    draggable={false}
+                    className="w-full h-full object-contain object-top pointer-events-none select-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 select-none">
+                    <div className="w-14 h-14 rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-2.5">
+                      <ActiveIcon className="w-7 h-7" />
+                    </div>
+                    <p className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.18em] mb-1">
+                      {activeCard.kicker}
+                    </p>
+                    <h4 className="text-white font-semibold text-lg leading-tight max-w-xs">
+                      {activeCard.title}
+                    </h4>
+                  </div>
+                )}
+              </m.div>
+            )}
+          </div>
+        </div>
+
+        {/* Chips in a 1-row grid matching card count */}
+        <div
+          className="grid gap-2 w-full box-border min-w-0 mb-4"
+          style={{
+            gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {cards.map((card, idx) => {
+            const isActive = idx === activeTab;
+            const Icon = getCardIcon(card.icon);
+
+            return (
+              <button
+                key={`mob-chip-${card.id}`}
+                type="button"
+                onClick={() => setActiveTab(idx)}
+                aria-pressed={isActive}
+                className={`min-h-[60px] min-w-0 rounded-[16px] px-1 py-1.5 flex flex-col items-center justify-center gap-1.5 transition select-none cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                  isActive
+                    ? 'bg-[#14B8A6] text-white shadow-md shadow-teal-500/20'
+                    : 'bg-[rgba(10,40,58,0.78)] border border-[rgba(94,234,212,0.35)] text-white hover:bg-[rgba(14,54,78,0.85)]'
+                }`}
+                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span
+                  className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                  style={{
+                    fontSize: 'clamp(10.5px, 0.78vw, 13px)',
+                    fontWeight: 500,
+                  }}
+                >
+                  {card.shortTitle}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Caption */}
+        {activeCard && (
+          <div className="min-h-[72px] text-left mb-6" aria-live="polite">
+            <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
+              <span
+                className="text-white text-[17px] leading-snug"
+                style={{ fontFamily: 'var(--font-outfit), sans-serif', fontWeight: 600 }}
+              >
+                {activeCard.title}
+              </span>
+              <span
+                className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.16em]"
+                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+              >
+                {activeCard.kicker}
+              </span>
+            </div>
+            <p
+              className="mt-1 text-white/85 text-[14.5px] leading-relaxed line-clamp-2"
+              style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+            >
+              {activeCard.description}
+            </p>
+          </div>
+        )}
+
+        {/* Primary Button Last */}
+        <button
+          type="button"
+          onClick={() => goTo('survey')}
+          className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25"
+        >
+          <span>{cleanCtaLabel}</span>
+          <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
+        </button>
       </div>
-    </section>
+    </SceneShell>
   );
 }
-
