@@ -101,41 +101,189 @@ export function preloadVoices(): Promise<void> {
   return voicesPromise;
 }
 
+let isSpeechRaw: boolean | null = null;
+
+function checkSpeechRaw(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (isSpeechRaw !== null) return isSpeechRaw;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    isSpeechRaw = params.get('speech') === 'raw';
+  } catch {
+    isSpeechRaw = false;
+  }
+  return isSpeechRaw;
+}
+
+export const PRONOUNCE_ALWAYS: [RegExp, string][] = [
+  [/\bNCF\s+2023\b/g, 'N C F twenty twenty-three'],
+  [/\bNCF\b/g, 'N C F'],
+  [/\bCBSE\b/g, 'C B S E'],
+  [/\bICSE\b/g, 'I C S E'],
+  [/\bLKG\b/g, 'L K G'],
+  [/\bMSME\b/g, 'M S M E'],
+  [/\bAI\b/g, 'A I'],
+  [/\bStudyRealm\b/g, 'Study Realm'],
+  [/\bStudyLand\b/g, 'Study Land'],
+  [/\b400\+/g, '400 plus'],
+  [/\b1\s*[–—\-]\s*10\b/g, '1 to 10'],
+];
+
+export const PRONOUNCE_NON_INDIAN: [RegExp, string][] = [
+  [/\bhaldi\b/gi, 'hul-dee'],
+  [/\bdahi\b/gi, 'duh-hee'],
+];
+
+export function isNonIndianVoice(voice: SpeechSynthesisVoice | null): boolean {
+  if (!voice || !voice.lang) return true;
+  const lowerLang = voice.lang.toLowerCase();
+  return !lowerLang.startsWith('en-in') && !lowerLang.startsWith('en_in');
+}
+
+export function pronounce(text: string, voice: SpeechSynthesisVoice | null): string {
+  if (!text) return '';
+  if (checkSpeechRaw()) return text;
+
+  let result = text;
+  for (const [pattern, replacement] of PRONOUNCE_ALWAYS) {
+    result = result.replace(pattern, replacement);
+  }
+
+  if (isNonIndianVoice(voice)) {
+    for (const [pattern, replacement] of PRONOUNCE_NON_INDIAN) {
+      result = result.replace(pattern, replacement);
+    }
+  }
+
+  return result;
+}
+
 const isFemaleName = (name: string) => {
   const lower = name.toLowerCase();
   return lower.includes('female') ||
-    ['raveena','heera','priya','veena','samantha','karen','moira',
+    ['raveena','heera','priya','veena','neerja','samantha','karen','moira',
      'tessa','victoria','lekha','kavya'].some(n => lower.includes(n));
 };
+
+const EXPLICIT_INDIAN_NAMES = ['raveena', 'heera', 'priya', 'veena', 'neerja', 'prabhat'];
+
+const isExplicitIndian = (v: SpeechSynthesisVoice) => {
+  const lowerName = v.name.toLowerCase();
+  const lowerLang = v.lang.replace('_', '-').toLowerCase();
+  const matchesLang = lowerLang === 'en-in' || lowerLang === 'en-us' || lowerLang === 'en-gb';
+  return matchesLang && EXPLICIT_INDIAN_NAMES.some(n => lowerName.includes(n));
+};
+
+const isNaturalName = (name: string) => {
+  const lower = name.toLowerCase();
+  return lower.includes('natural') || lower.includes('neural') || lower.includes('online');
+};
+
+const isEnInLang = (lang: string) => {
+  const lower = lang.replace('_', '-').toLowerCase();
+  return lower === 'en-in';
+};
+
+function getVoiceScore(v: SpeechSynthesisVoice, langCode: string): number {
+  const lowerName = v.name.toLowerCase();
+  const lowerLang = v.lang.replace('_', '-').toLowerCase();
+  const naturalBonus = (isEnInLang(v.lang) && isNaturalName(v.name)) ? 5 : 0;
+
+  if (langCode === 'en-IN') {
+    // 1. Explicit Indian names (Neerja, Prabhat, Raveena, Heera, Priya, Veena)
+    if (isExplicitIndian(v)) {
+      return 100 + (isNaturalName(v.name) ? 5 : 0);
+    }
+    // 2. Indian female (lang en-IN + female name)
+    if (isEnInLang(v.lang) && isFemaleName(v.name)) {
+      return 80 + naturalBonus;
+    }
+    // 3. Any Indian (lang en-IN)
+    if (isEnInLang(v.lang)) {
+      return 60 + naturalBonus;
+    }
+  }
+
+  // 4. Google female
+  if (lowerName.includes('google') && isFemaleName(v.name)) {
+    return 50;
+  }
+  // 5. Mac female (Samantha, Karen, Moira, Tessa)
+  if (['samantha', 'karen', 'moira', 'tessa'].some(n => lowerName.includes(n))) {
+    return 40;
+  }
+  // 6. US female
+  if (lowerLang === 'en-us' && isFemaleName(v.name)) {
+    return 30;
+  }
+  // 7. Any English
+  if (lowerLang.startsWith('en')) {
+    return 20;
+  }
+  // 8. Default voice
+  return 10;
+}
+
+function findBestVoiceCandidate(voices: SpeechSynthesisVoice[], langCode: string): SpeechSynthesisVoice | null {
+  if (!voices || voices.length === 0) return null;
+  let bestVoice = voices[0];
+  let bestScore = getVoiceScore(bestVoice, langCode);
+
+  for (let i = 1; i < voices.length; i++) {
+    const score = getVoiceScore(voices[i], langCode);
+    if (score > bestScore) {
+      bestScore = score;
+      bestVoice = voices[i];
+    }
+  }
+  return bestVoice;
+}
+
+let sessionVoiceKey: string | null = null;
+let loggedVoiceSession = false;
+
+function logVoiceOnce(name: string, lang: string) {
+  if (loggedVoiceSession) return;
+  loggedVoiceSession = true;
+  // TEMP-DEBUG: development-only voice logging once per session
+  if (process.env.NODE_ENV !== 'production') {
+    console.info('[tts] voice', name, lang);
+  }
+}
 
 function getBestVoice(langCode: string): SpeechSynthesisVoice | null {
   const voices = cachedVoices;
   if (!voices || voices.length === 0) return null;
 
-  if (langCode === 'en-IN') {
-    const indianSpecific = voices.find(v => (v.lang === 'en-IN' || v.lang === 'en-US' || v.lang === 'en-GB') && ['raveena', 'heera', 'priya', 'veena'].some(n => v.name.toLowerCase().includes(n)));
-    if (indianSpecific) return indianSpecific;
+  const isBusy = typeof window !== 'undefined' && 'speechSynthesis' in window &&
+    (window.speechSynthesis.speaking || window.speechSynthesis.pending);
 
-    const indianFemale = voices.find(v => v.lang === 'en-IN' && isFemaleName(v.name));
-    if (indianFemale) return indianFemale;
+  if (sessionVoiceKey) {
+    const existing = voices.find(v => `${v.name}|${v.lang}` === sessionVoiceKey);
+    // Never switch voices while speech is active or pending
+    if (isBusy && existing) {
+      return existing;
+    }
 
-    const anyIndian = voices.find(v => v.lang === 'en-IN');
-    if (anyIndian) return anyIndian;
+    if (existing) {
+      // Check if a better voice has appeared later (e.g. via voiceschanged)
+      const candidate = findBestVoiceCandidate(voices, langCode);
+      if (candidate && getVoiceScore(candidate, langCode) > getVoiceScore(existing, langCode)) {
+        sessionVoiceKey = `${candidate.name}|${candidate.lang}`;
+        logVoiceOnce(candidate.name, candidate.lang);
+        return candidate;
+      }
+      return existing;
+    }
+    // Existing voice disappeared from the list; fall through to choose a new one
   }
 
-  const googleFemale = voices.find(v => v.name.toLowerCase().includes('google') && isFemaleName(v.name));
-  if (googleFemale) return googleFemale;
-
-  const macFemale = voices.find(v => ['samantha', 'karen', 'moira', 'tessa'].some(n => v.name.toLowerCase().includes(n)));
-  if (macFemale) return macFemale;
-
-  const usFemale = voices.find(v => v.lang === 'en-US' && isFemaleName(v.name));
-  if (usFemale) return usFemale;
-
-  const anyEnglish = voices.find(v => v.lang.startsWith('en'));
-  if (anyEnglish) return anyEnglish;
-
-  return voices[0] || null;
+  const chosen = findBestVoiceCandidate(voices, langCode);
+  if (chosen) {
+    sessionVoiceKey = `${chosen.name}|${chosen.lang}`;
+    logVoiceOnce(chosen.name, chosen.lang);
+  }
+  return chosen;
 }
 
 export async function playAudio(
@@ -189,14 +337,14 @@ export async function playAudio(
   }
   
   // 5. Build utterance
-  const utterance = new SpeechSynthesisUtterance(stripForSpeech(text));
   const voice = getBestVoice(langCode);
+  const utterance = new SpeechSynthesisUtterance(pronounce(stripForSpeech(text), voice));
   if (voice) utterance.voice = voice;
   
   utterance.rate = 0.92;
   utterance.pitch = 1.05;
   utterance.volume = 1.0;
-  utterance.lang = langCode;
+  utterance.lang = voice?.lang || 'en-IN';
   
   // 6. Wire callbacks — mark ended so no resume loop can restart it
   let ended = false;
