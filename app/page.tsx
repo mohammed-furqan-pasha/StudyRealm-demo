@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { preloadVoices } from './lib/tts';
+import { collectVoiceDiagnostics } from './lib/voiceDiagnostics';
 import LeadGate from './components/LeadGate';
 import { HeroSlide } from './components/HeroSection';
 import AhaScene from './components/AhaScene';
@@ -20,6 +21,15 @@ export default function Home() {
   useEffect(() => {
     preloadVoices();
   }, []);
+
+  useEffect(() => {
+    if (!gateOpen) {
+      const timer = setTimeout(() => {
+        collectVoiceDiagnostics(leadData?.role || 'Other');
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [gateOpen, leadData?.role]);
 
   const handleDemoComplete = () => {
     setTimeout(() => {

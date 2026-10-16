@@ -251,15 +251,16 @@ function logVoiceOnce(name: string, lang: string) {
   }
 }
 
-function getBestVoice(langCode: string): SpeechSynthesisVoice | null {
-  const voices = cachedVoices;
+function selectVoicePure(
+  voices: SpeechSynthesisVoice[],
+  langCode: string,
+  currentKey: string | null,
+  isBusy: boolean
+): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
 
-  const isBusy = typeof window !== 'undefined' && 'speechSynthesis' in window &&
-    (window.speechSynthesis.speaking || window.speechSynthesis.pending);
-
-  if (sessionVoiceKey) {
-    const existing = voices.find(v => `${v.name}|${v.lang}` === sessionVoiceKey);
+  if (currentKey) {
+    const existing = voices.find(v => `${v.name}|${v.lang}` === currentKey);
     // Never switch voices while speech is active or pending
     if (isBusy && existing) {
       return existing;
@@ -269,21 +270,67 @@ function getBestVoice(langCode: string): SpeechSynthesisVoice | null {
       // Check if a better voice has appeared later (e.g. via voiceschanged)
       const candidate = findBestVoiceCandidate(voices, langCode);
       if (candidate && getVoiceScore(candidate, langCode) > getVoiceScore(existing, langCode)) {
-        sessionVoiceKey = `${candidate.name}|${candidate.lang}`;
-        logVoiceOnce(candidate.name, candidate.lang);
         return candidate;
       }
       return existing;
     }
-    // Existing voice disappeared from the list; fall through to choose a new one
   }
 
-  const chosen = findBestVoiceCandidate(voices, langCode);
+  return findBestVoiceCandidate(voices, langCode);
+}
+
+function getBestVoice(langCode: string): SpeechSynthesisVoice | null {
+  const voices = cachedVoices;
+  if (!voices || voices.length === 0) return null;
+
+  const isBusy = typeof window !== 'undefined' && 'speechSynthesis' in window &&
+    (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+
+  const chosen = selectVoicePure(voices, langCode, sessionVoiceKey, isBusy);
   if (chosen) {
     sessionVoiceKey = `${chosen.name}|${chosen.lang}`;
     logVoiceOnce(chosen.name, chosen.lang);
   }
   return chosen;
+}
+
+export function describeVoiceChoice(): {
+  voices: { name: string; lang: string; localService: boolean }[];
+  chosen: { name: string; lang: string; localService: boolean } | null;
+  hasEnIN: boolean;
+} {
+  const voicesList = (typeof window !== 'undefined' && 'speechSynthesis' in window)
+    ? (window.speechSynthesis.getVoices().length > 0 ? window.speechSynthesis.getVoices() : cachedVoices)
+    : cachedVoices;
+
+  const voices = (voicesList || []).map(v => ({
+    name: v.name,
+    lang: v.lang,
+    localService: Boolean(v.localService),
+  }));
+
+  const isBusy = typeof window !== 'undefined' && 'speechSynthesis' in window &&
+    (window.speechSynthesis.speaking || window.speechSynthesis.pending);
+
+  // Pure read: use sessionVoiceKey if present, but do not mutate sessionVoiceKey or logs
+  const chosenVoice = selectVoicePure(voicesList || [], 'en-IN', sessionVoiceKey, isBusy);
+
+  const chosen = chosenVoice ? {
+    name: chosenVoice.name,
+    lang: chosenVoice.lang,
+    localService: Boolean(chosenVoice.localService),
+  } : null;
+
+  const hasEnIN = (voicesList || []).some(v => {
+    const l = v.lang.toLowerCase().replace('_', '-');
+    return l === 'en-in' || l.startsWith('en-in');
+  });
+
+  return {
+    voices,
+    chosen,
+    hasEnIN,
+  };
 }
 
 export async function playAudio(
