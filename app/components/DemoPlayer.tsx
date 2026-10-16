@@ -8,6 +8,7 @@ import KitchenLab from './KitchenLab';
 
 import { playAudio, visibleRatio, watchSectionVisibility, stopAudioFor } from '../lib/tts';
 
+import { ChevronDown } from 'lucide-react';
 import GuideBot from './GuideBot';
 import SceneShell from './SceneShell';
 
@@ -19,7 +20,7 @@ function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentB
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
-    onAutoRead(block.instruction || 'Tap the glowing dots to explore the Water Cycle diagram.');
+    onAutoRead(block.instruction || 'Tap the glowing dots to explore the acid and base diagram.');
   }, [block.instruction, onAutoRead]);
 
   const tap = (spot: TapRevealSpot) => {
@@ -228,157 +229,6 @@ function FlipCard({ block, onAutoRead, shouldStart }: { block: Extract<ContentBl
   );
 }
 
-// ─── SEQUENCE BLOCK (kept for now, unused by the current chapter) ─────────
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function SequenceBlock({ block, onAutoRead, shouldStart }: { block: Extract<ContentBlock, {type:'sequence'}>, onAutoRead: (text: string) => void, shouldStart: () => boolean }) {
-  const [pool, setPool] = useState<string[]>([...block.steps]);
-  const [placed, setPlaced] = useState<(string | null)[]>(Array(block.steps.length).fill(null));
-  const [status, setStatus] = useState<'idle' | 'correct' | 'wrong'>('idle');
-  const [shaking, setShaking] = useState(false);
-
-  useEffect(() => {
-    onAutoRead(block.instruction);
-    return () => {
-      setPool([...block.steps]);
-      setPlaced(Array(block.steps.length).fill(null));
-      setStatus('idle');
-      setShaking(false);
-    };
-  }, [block, onAutoRead]);
-
-  const handleTapPool = (step: string) => {
-    if (status !== 'idle') return;
-    const nextEmpty = placed.indexOf(null);
-    if (nextEmpty === -1) return;
-    setPlaced(p => { const n = [...p]; n[nextEmpty] = step; return n; });
-    setPool(p => p.filter(s => s !== step));
-  };
-
-  const handleTapSlot = (slotIndex: number) => {
-    if (status !== 'idle') return;
-    const step = placed[slotIndex];
-    if (!step) return;
-    setPlaced(p => { const n = [...p]; n[slotIndex] = null; return n; });
-    setPool(p => [...p, step]);
-  };
-
-  const handleCheck = () => {
-    const userOrder = placed.map(step => block.steps.indexOf(step!));
-    const isCorrect = userOrder.every((v, i) => v === block.correct_order[i]);
-
-    if (isCorrect) {
-      setStatus('correct');
-      playAudio("Amazing! You got the correct order. First, evaporation happens when the sun heats the water. Then condensation forms clouds. Next, precipitation brings rain. Finally, collection fills our rivers and oceans — and the cycle begins again!", true, 'en-IN', undefined, undefined, shouldStart, 'demo');
-    } else {
-      setStatus('wrong');
-      setShaking(true);
-      playAudio("Oops! That's not quite right. Think about what happens first when the sun shines on the water. Try again!", true, 'en-IN', undefined, undefined, shouldStart, 'demo');
-      setTimeout(() => {
-        setShaking(false);
-        setStatus('idle');
-        setPool([...block.steps]);
-        setPlaced(Array(block.steps.length).fill(null));
-      }, 800);
-    }
-  };
-
-  const isFull = placed.every(s => s !== null);
-
-  return (
-    <div className="flex flex-col items-center gap-4 w-full">
-      <p className="text-white text-sm text-center font-medium mb-3">{block.instruction}</p>
-      
-      <div className="w-full">
-        <p className="text-white/50 text-xs mb-2">Steps to arrange:</p>
-        <div className="flex flex-wrap gap-2">
-          {pool.map((step, i) => (
-            <button
-              key={i}
-              onClick={() => handleTapPool(step)}
-              className="rounded-full text-white cursor-pointer transition-all duration-200"
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(45,212,191,0.5)',
-                padding: '8px 14px',
-                fontSize: '0.85rem'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.20)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'none'; }}
-            >
-              {step}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="text-center my-2" style={{ color: 'rgba(255,255,255,0.3)' }}>↓</div>
-
-      <div className="w-full" style={{ animation: shaking ? 'shake 0.5s ease-in-out' : 'none' }}>
-        <p className="text-white/50 text-xs mb-2">Your order:</p>
-        <div className="flex flex-col gap-2">
-          {placed.map((step, i) => {
-            const isEmpty = !step;
-            let borderStyle = '1px dashed rgba(255,255,255,0.25)';
-            let boxShadow = 'none';
-            if (status === 'correct') {
-              borderStyle = '2px solid #4ade80';
-              boxShadow = '0 0 12px rgba(74, 222, 128, 0.4)';
-            } else if (status === 'wrong') {
-              borderStyle = '2px solid #f87171';
-              boxShadow = '0 0 12px rgba(248, 113, 113, 0.4)';
-            } else if (!isEmpty) {
-              borderStyle = '1px solid rgba(255,255,255,0.25)';
-            }
-            
-            return (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center text-white font-bold text-sm relative"
-                  style={{ background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.20)' }}>
-                  {i + 1}
-                  {status === 'correct' && <span className="absolute -top-1 -right-1 text-xs bg-green-500 rounded-full w-4 h-4 flex items-center justify-center">✓</span>}
-                </div>
-                <div
-                  onClick={() => handleTapSlot(i)}
-                  className={`flex-1 min-h-[40px] flex items-center justify-between rounded-xl px-3 py-2 transition-all duration-300 ${!isEmpty && status === 'idle' ? 'cursor-pointer' : ''}`}
-                  style={{ border: borderStyle, boxShadow }}
-                >
-                  {isEmpty ? (
-                    <span className="italic text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>Tap a step above to place here</span>
-                  ) : (
-                    <>
-                      <span className="text-white text-sm">{step}</span>
-                      {status === 'idle' && <span style={{ color: 'rgba(255,255,255,0.5)' }}>✕</span>}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {isFull && (
-          <button
-            onClick={status === 'idle' ? handleCheck : undefined}
-            className="w-full mt-3 rounded-full py-3 text-white font-bold text-sm transition-all duration-200"
-            style={{
-              background: status === 'correct' ? '#4ade80' : 'linear-gradient(135deg, #14B8A6, #3B82F6)',
-              cursor: status === 'correct' ? 'default' : 'pointer'
-            }}
-          >
-            {status === 'correct' ? '✓ Correct!' : 'Check Order ✓'}
-          </button>
-        )}
-      </div>
-
-      {status === 'correct' && (
-        <div className="w-full animate-[slideUp_0.3s_ease-out] text-center mt-4" style={{ background: 'rgba(74, 222, 128, 0.15)', border: '1px solid rgba(74, 222, 128, 0.3)', borderRadius: '12px', padding: '12px 16px' }}>
-          <p style={{ color: '#4ade80' }} className="text-sm font-medium">🎉 Perfect order! The Water Cycle flows correctly.</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── CELEBRATION BLOCK ─────────────────────────────────────────────────────
 function CelebrationBlock({ block, onContinue, onAutoRead }: { block: Extract<ContentBlock,{type:'celebration'}>, onContinue:()=>void, onAutoRead:(text:string)=>void }) {
   useEffect(() => {
@@ -449,6 +299,13 @@ export default function DemoPlayer({
   const containerRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
+  const cardScrollRef = useRef<HTMLDivElement>(null);
+  const cardContentRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  const [atTop, setAtTop] = useState(true);
   
   const blocks = demoChapter.blocks;
   const total = blocks.length;
@@ -479,6 +336,67 @@ export default function DemoPlayer({
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  const updateScrollState = useCallback(() => {
+    const el = cardScrollRef.current;
+    if (!el) return;
+    const st = el.scrollTop;
+    const ch = el.clientHeight;
+    const sh = el.scrollHeight;
+    const nextAtTop = st < 8;
+    const nextCanScrollUp = st > 1;
+    const nextCanScrollDown = sh > ch && st + ch < sh - 2;
+
+    setAtTop((prev) => (prev !== nextAtTop ? nextAtTop : prev));
+    setCanScrollUp((prev) => (prev !== nextCanScrollUp ? nextCanScrollUp : prev));
+    setCanScrollDown((prev) => (prev !== nextCanScrollDown ? nextCanScrollDown : prev));
+  }, []);
+
+  useEffect(() => {
+    const el = cardScrollRef.current;
+    if (!el) return;
+
+    const onScroll = () => {
+      if (scrollRafRef.current !== null) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        updateScrollState();
+        scrollRafRef.current = null;
+      });
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, [updateScrollState]);
+
+  useEffect(() => {
+    const el = cardScrollRef.current;
+    const contentEl = cardContentRef.current;
+    if (!el) return;
+
+    updateScrollState();
+
+    const ro = new ResizeObserver(() => {
+      updateScrollState();
+    });
+
+    ro.observe(el);
+    if (contentEl) ro.observe(contentEl);
+
+    return () => ro.disconnect();
+  }, [updateScrollState, current]);
+
+  useEffect(() => {
+    if (cardScrollRef.current) {
+      cardScrollRef.current.scrollTop = 0;
+      updateScrollState();
+    }
+  }, [current, updateScrollState]);
 
   useEffect(() => {
     const checkScroll = () => {
@@ -529,8 +447,20 @@ export default function DemoPlayer({
     setTimeout(() => {
       setDirection(dir === 1 ? 'right' : 'left');
       setCurrent(next);
+      if (cardScrollRef.current) cardScrollRef.current.scrollTop = 0;
       if (scrollRef.current) scrollRef.current.scrollTop = 0;
     }, 100);
+  };
+
+  const handleScrollDownHint = () => {
+    const el = cardScrollRef.current;
+    if (!el) return;
+    const scrollAmount = el.clientHeight * 0.6;
+    const isReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({
+      top: scrollAmount,
+      behavior: isReduced ? 'auto' : 'smooth',
+    });
   };
 
   const progress = ((current + 1) / total) * 100;
@@ -560,36 +490,55 @@ export default function DemoPlayer({
   return (
     <SceneShell scene="demo">
       <style>{`
+        .demo-card-frame {
+          height: auto;
+          max-height: calc(100dvh - 210px);
+          display: flex;
+          flex-direction: column;
+        }
         @media (min-width: 768px) {
           .demo-card-frame {
-            height: min(640px, calc(100dvh - 192px));
-            max-height: min(640px, calc(100dvh - 192px));
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            display: flex;
-            flex-direction: column;
-          }
-          .demo-card-frame::-webkit-scrollbar {
-            display: none;
-          }
-          .demo-card-frame > * {
-            margin-block: auto;
-            width: 100%;
+            height: min(720px, calc(100dvh - 192px));
+            max-height: min(720px, calc(100dvh - 192px));
           }
         }
-        @media (min-width: 768px) and (max-height: 819px) {
-          .demo-card-frame {
-            padding: 1.75rem 2rem !important;
+        @media (min-width: 768px) and (max-height: 959px) {
+          .demo-card-scroll {
+            padding: 1.5rem 2rem !important;
           }
-          .demo-card-frame h2 {
+          .demo-card-scroll h2 {
             font-size: 1.125rem !important;
             line-height: 1.25 !important;
           }
-          .demo-card-frame h3 {
+          .demo-card-scroll h3 {
             font-size: 1.25rem !important;
             line-height: 1.25 !important;
           }
+        }
+        .demo-card-scroll {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+          flex: 1 1 auto;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+        }
+        .demo-card-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .demo-card-scroll::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 3px;
+        }
+        .demo-card-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.4);
+          border-radius: 3px;
+        }
+        .demo-card-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.6);
         }
       `}</style>
 
@@ -623,6 +572,7 @@ export default function DemoPlayer({
                   setTimeout(() => {
                     setDirection(i > current ? 'right' : 'left');
                     setCurrent(i);
+                    if (cardScrollRef.current) cardScrollRef.current.scrollTop = 0;
                     if (scrollRef.current) scrollRef.current.scrollTop = 0;
                   }, 100);
                 }}
@@ -696,9 +646,7 @@ export default function DemoPlayer({
                 >
                   {/* Fake glass content panel */}
                   <div
-                    className={`demo-card-frame relative w-full ${
-                      block.type === 'story_panel' ? '' : 'p-5 md:p-10'
-                    }`}
+                    className="demo-card-frame relative w-full overflow-hidden"
                     style={
                       block.type === 'story_panel'
                         ? {}
@@ -712,21 +660,83 @@ export default function DemoPlayer({
                           }
                     }
                   >
-                    {block.type === 'stain_hook' && (
-                      <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />
-                    )}
-                    {block.type === 'kitchen_lab' && (
-                      <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
-                    )}
-                    {block.type === 'tap_reveal' && (
-                      <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
-                    )}
-                    {block.type === 'flip_card' && (
-                      <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
-                    )}
-                    {block.type === 'celebration' && (
-                      <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
-                    )}
+                    {/* Top Fade (pinned inside card, outside scrolling content) */}
+                    <div
+                      aria-hidden="true"
+                      className={`absolute top-0 inset-x-0 h-[56px] pointer-events-none z-10 transition-opacity duration-150 ${
+                        canScrollUp ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      style={{
+                        background:
+                          'linear-gradient(180deg, rgba(10,40,58,0.95) 0%, rgba(10,40,58,0) 100%)',
+                      }}
+                    />
+
+                    {/* Scroll Container */}
+                    <div
+                      ref={cardScrollRef}
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Lesson content, scrollable"
+                      className={`demo-card-scroll w-full h-full outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-inset ${
+                        block.type === 'story_panel' ? '' : 'p-5 md:p-10'
+                      }`}
+                    >
+                      <div
+                        ref={cardContentRef}
+                        className={`w-full flex flex-col items-center ${
+                          canScrollDown || canScrollUp ? 'my-0' : 'my-auto'
+                        }`}
+                      >
+                        {block.type === 'stain_hook' && (
+                          <StainHook block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                        )}
+                        {block.type === 'kitchen_lab' && (
+                          <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
+                        )}
+                        {block.type === 'tap_reveal' && (
+                          <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                        )}
+                        {block.type === 'flip_card' && (
+                          <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                        )}
+                        {block.type === 'celebration' && (
+                          <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Fade (pinned inside card, outside scrolling content) */}
+                    <div
+                      aria-hidden="true"
+                      className={`absolute bottom-0 inset-x-0 h-[56px] pointer-events-none z-10 transition-opacity duration-150 ${
+                        canScrollDown ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      style={{
+                        background:
+                          'linear-gradient(0deg, rgba(6,22,38,0.95) 0%, rgba(6,22,38,0) 100%)',
+                      }}
+                    />
+
+                    {/* Hint Pill */}
+                    <button
+                      type="button"
+                      onClick={handleScrollDownHint}
+                      aria-label="Scroll down for more"
+                      className={`absolute bottom-[10px] left-1/2 -translate-x-1/2 z-20 h-[28px] px-3 rounded-[14px] flex items-center gap-1.5 text-[12px] text-white/90 font-medium cursor-pointer transition-opacity duration-150 select-none shadow-md ${
+                        canScrollDown && atTop
+                          ? 'opacity-100 pointer-events-auto'
+                          : 'opacity-0 pointer-events-none'
+                      }`}
+                      style={{
+                        background: 'rgba(8, 24, 40, 0.85)',
+                        border: '1px solid rgba(94, 234, 212, 0.35)',
+                        fontFamily: 'var(--font-outfit), sans-serif',
+                      }}
+                    >
+                      <ChevronDown className="w-3.5 h-3.5 text-teal-300 shrink-0" />
+                      <span>Scroll for more</span>
+                    </button>
                   </div>
 
                   {/* Mobile inner navigation row (under card, in normal flow) */}

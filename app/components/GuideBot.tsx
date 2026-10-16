@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useReducedMotion } from 'motion/react';
 
 export default function GuideBot({ isReading, onTap }: { isReading: boolean; onTap: () => void }) {
+  const shouldReduceMotion = useReducedMotion();
   const [isAwake, setIsAwake] = useState(false);
   const [isBlinking, setIsBlinking] = useState(false);
 
@@ -68,6 +70,17 @@ export default function GuideBot({ isReading, onTap }: { isReading: boolean; onT
       }}
       title="Tap to replay audio"
     >
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-4px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .gb-float {
+            animation: none !important;
+          }
+        }
+      `}</style>
       {/* Realistic grounded shadow */}
       <div 
         style={{
@@ -80,11 +93,16 @@ export default function GuideBot({ isReading, onTap }: { isReading: boolean; onT
           background: 'rgba(0,0,0,0.5)',
           borderRadius: '50%',
           filter: 'blur(5px)',
-          animation: 'pulse 3s ease-in-out infinite alternate'
         }}
       />
       {/* Bot body that floats */}
-      <div style={{ animation: 'float 3s ease-in-out infinite', filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.2))' }}>
+      <div 
+        className="gb-float"
+        style={{ 
+          animation: shouldReduceMotion ? 'none' : 'float 3s ease-in-out infinite', 
+          filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.2))' 
+        }}
+      >
         <svg width="60" height="70" viewBox="0 0 60 70" fill="none">
           {/* Antenna */}
         <path d="M30 15L30 5" stroke="gold" strokeWidth="3" strokeLinecap="round"/>
@@ -106,8 +124,8 @@ export default function GuideBot({ isReading, onTap }: { isReading: boolean; onT
         
         {/* Base glow */}
         <circle cx="30" cy="62" r="6" fill="#FFD700" 
-          opacity={isAwake ? 1 : 0.4}
-          style={{ animation: isReading ? 'pulse 0.5s infinite alternate' : 'pulse 1.5s infinite alternate' }}/>
+          opacity={isReading ? 1 : (isAwake ? 0.6 : 0.4)}
+        />
         </svg>
       </div>
     </div>

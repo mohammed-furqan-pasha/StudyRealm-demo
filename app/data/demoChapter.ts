@@ -19,7 +19,7 @@ export const demoChapter: DemoChapter = {
     },
     {
       type: 'tap_reveal',
-      asset: '/demo/acid-base-tap-reveal.png',
+      asset: '/demo/acid-base-tap-reveal.webp',
       instruction: 'Tap the glowing dots to find acids and bases in your kitchen',
       spots: [
         { id: 'lemon', x: 24, y: 34, label: '🍋 Lemon: an acid', definition: 'Sour things like lemon are acids. Turmeric stays yellow with them.', audio: 'Lemon is an acid. Sour things are usually acids. Turmeric stays yellow with them.' },

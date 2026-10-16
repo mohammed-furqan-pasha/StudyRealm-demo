@@ -456,10 +456,7 @@ function TeacherHeatmap({
   selectedCell: TeacherCell;
   onSelectCell: (cell: TeacherCell) => void;
 }) {
-  const [hasUserSelected, setHasUserSelected] = useState(false);
-
   const handleSelect = (cell: TeacherCell) => {
-    setHasUserSelected(true);
     onSelectCell(cell);
   };
 
@@ -523,25 +520,6 @@ function TeacherHeatmap({
 
   return (
     <div className="w-full block" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
-      <style>{`
-        @keyframes critical-pulse {
-          0%, 100% {
-            opacity: 0.2;
-          }
-          50% {
-            opacity: 0.9;
-          }
-        }
-        .critical-pulse-ring {
-          animation: critical-pulse 1.8s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .critical-pulse-ring {
-            animation: none !important;
-          }
-        }
-      `}</style>
-
       {/* Header row: title and subtitle on left, Sample data chip on right */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="text-left">
@@ -628,6 +606,8 @@ function TeacherHeatmap({
 
                 const outlineClass = isSelected
                   ? 'outline outline-2 outline-white z-10'
+                  : isCritical
+                  ? 'outline outline-1 outline-[#FFA0AD]'
                   : '';
 
                 return (
@@ -647,14 +627,6 @@ function TeacherHeatmap({
                     }}
                     className={`relative h-10 md:h-[clamp(30px,3.6dvh,40px)] rounded-[10px] border font-medium flex items-center justify-center select-none cursor-pointer transition-none ${toneClass} ${outlineClass} focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none`}
                   >
-                    {/* Critical pulsing ring (until visitor selects any cell) */}
-                    {!hasUserSelected && isCritical && !isSelected && (
-                      <span
-                        className="critical-pulse-ring absolute -inset-[3px] rounded-[13px] border-2 border-[#E26A7B] pointer-events-none"
-                        aria-hidden="true"
-                      />
-                    )}
-
                     {/* Critical white corner dot */}
                     {isCritical && (
                       <span

@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Outfit } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-playfair",
-});
+import { SITE_URL, ALLOW_INDEXING } from "./lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,19 +15,44 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+const title = "StudyRealm — LKG-10 EdTech Platform for Indian Schools";
+const description = "Interactive learning moments, real-time mastery tracking, and NCF 2023 auto-compliance for CBSE, ICSE, and Karnataka State Board schools.";
+
 export const metadata: Metadata = {
-  title: "StudyRealm — LKG-10 EdTech Platform for Indian Schools",
-  description: "Interactive learning moments, real-time mastery tracking, and NCF 2023 auto-compliance for CBSE, ICSE, and Karnataka State Board schools.",
+  metadataBase: new URL(SITE_URL),
+  title,
+  description,
   openGraph: {
-    title: "StudyRealm — Where Every Student Learns",
-    description: "Experience a live interactive chapter. Book a 30-minute demo for your school.",
-    url: "https://studyrealm.app",
+    type: 'website',
+    siteName: 'StudyRealm',
+    locale: 'en_IN',
+    url: SITE_URL,
+    title,
+    description,
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'StudyRealm interactive demo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: ALLOW_INDEXING,
+    follow: ALLOW_INDEXING,
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body className="overflow-x-hidden" style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}>
         {children}
       </body>

@@ -530,12 +530,6 @@ export function Stage({
   neighbourIds = [],
   twoStepIds = [],
 }: StageProps) {
-  if (!STAGE_ENABLED) return null;
-
-  const activeTier: Tier = tier || 'full';
-  const effectiveTimeScale = desktop ? (TIME_SCALE * (TIER_SCALE[activeTier] ?? 1)) : TIME_SCALE;
-  const isMinimal = reducedMotion || (desktop && activeTier === 'minimal');
-
   // Preloading neighbouring scene assets from every page (including demo and survey)
   const neighbourKey = neighbourIds.join(',');
   const twoStepKey = twoStepIds.join(',');
@@ -574,6 +568,12 @@ export function Stage({
       }
     };
   }, [currentId, desktop, neighbourKey, twoStepKey]);
+
+  if (!STAGE_ENABLED) return null;
+
+  const activeTier: Tier = tier || 'full';
+  const effectiveTimeScale = desktop ? (TIME_SCALE * (TIER_SCALE[activeTier] ?? 1)) : TIME_SCALE;
+  const isMinimal = reducedMotion || (desktop && activeTier === 'minimal');
 
   const isCurrentStage = isStageMode(currentId);
   const isPrevStage = prevId !== null && isStageMode(prevId);

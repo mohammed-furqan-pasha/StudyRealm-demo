@@ -19,6 +19,7 @@ const EDGE_PX = 2;
 const SWIPE_MIN = 56;
 const SWIPE_RATIO = 1.2;
 const EDGE_ZONE = 24;
+const NAV_UNLOCK_CAP_MS = 900;
 
 interface Page {
   id: string;
@@ -283,6 +284,10 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       setTextPhase(nextPhases);
       setIsArriving(false);
       clearTransitionTimers();
+      setIsTransitioning(false);
+      setIsStagedNav(false);
+      transRef.current = false;
+      pendingNavRef.current = null;
     }
     prevLockedRef.current = locked;
   }, [locked, isDesktop, shouldReduceMotion]);
@@ -328,6 +333,8 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     return () => {
       clearTransitionTimers();
       clearSettleTimers();
+      transRef.current = false;
+      pendingNavRef.current = null;
       if (wheelQuietTimerRef.current) {
         clearTimeout(wheelQuietTimerRef.current);
         wheelQuietTimerRef.current = null;
@@ -339,23 +346,22 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   const containerRef = useRef<HTMLDivElement>(null);
 
   const indexRef = useRef(index);
-  const transRef = useRef(isTransitioning);
+  const transRef = useRef(false);
   const lockedRef = useRef(locked);
   const isDesktopRef = useRef(isDesktop);
   const pendingIsDesktopRef = useRef<boolean | null>(null);
+  const pendingNavRef = useRef<string | null>(null);
 
   const goToRef = useRef<(id: string) => void>(() => {});
   const nextRef = useRef<() => void>(() => {});
   const prevRef = useRef<() => void>(() => {});
 
   indexRef.current = index;
-  transRef.current = isTransitioning;
   lockedRef.current = locked;
   isDesktopRef.current = isDesktop;
   pagesRef.current = pages;
 
   useEffect(() => { indexRef.current = index; }, [index]);
-  useEffect(() => { transRef.current = isTransitioning; }, [isTransitioning]);
   useEffect(() => { lockedRef.current = locked; }, [locked]);
   useEffect(() => { isDesktopRef.current = isDesktop; }, [isDesktop]);
 
@@ -385,21 +391,33 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
 
   const goTo = (id: string) => {
-    if (lockedRef.current || transRef.current) return;
+    if (lockedRef.current) return;
     const currentPages = pagesRef.current;
     const targetIndex = currentPages.findIndex(p => p.id === id);
-    if (targetIndex !== -1 && targetIndex !== indexRef.current) {
-      const fromId = currentPages[indexRef.current]?.id;
-      const toId = currentPages[targetIndex]?.id;
-      const isDesktopNav = isDesktopRef.current;
-      // On desktop, all transitions between stage and fade modes run through the choreographed path
-      const isChoreographed = isDesktopNav
-        ? (isStageMode(fromId) || isFadeMode(fromId)) && (isStageMode(toId) || isFadeMode(toId))
-        : isStaged(fromId) && isStaged(toId);
-      const isFwd = targetIndex > indexRef.current;
+    if (targetIndex === -1 || targetIndex === indexRef.current) return;
 
-      clearTransitionTimers();
-      clearSettleTimers();
+    if (transRef.current) {
+      pendingNavRef.current = id;
+      return;
+    }
+
+    if (pendingIsDesktopRef.current !== null) {
+      setIsDesktop(pendingIsDesktopRef.current);
+      isDesktopRef.current = pendingIsDesktopRef.current;
+      pendingIsDesktopRef.current = null;
+    }
+
+    const fromId = currentPages[indexRef.current]?.id;
+    const toId = currentPages[targetIndex]?.id;
+    const isDesktopNav = isDesktopRef.current;
+    // On desktop, all transitions between stage and fade modes run through the choreographed path
+    const isChoreographed = isDesktopNav
+      ? (isStageMode(fromId) || isFadeMode(fromId)) && (isStageMode(toId) || isFadeMode(toId))
+      : isStaged(fromId) && isStaged(toId);
+    const isFwd = targetIndex > indexRef.current;
+
+    clearTransitionTimers();
+    clearSettleTimers();
 
       // goTo sets settled[toId] = false and settled[fromId] = false
       setSettled((prev) => {
@@ -468,8 +486,9 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           leaveDurationMs = 300;
         } else if (isDesktopNav) {
           const rawTextDelayMs = PAIR_TIMING[timingKey].textDelayMs;
-          unlockMs = Math.round((rawTextDelayMs + 700) * navEffectiveTimeScale);
-          totalMs = unlockMs + Math.round(1000 * navEffectiveTimeScale);
+          const computedUnlockMs = Math.round((rawTextDelayMs + 700) * navEffectiveTimeScale);
+          unlockMs = Math.min(computedUnlockMs, Math.round(NAV_UNLOCK_CAP_MS * navEffectiveTimeScale));
+          totalMs = computedUnlockMs + Math.round(1000 * navEffectiveTimeScale);
           if (isFadeMode(fromId)) {
             leaveDurationMs = Math.round(450 * navEffectiveTimeScale);
           } else {
@@ -545,7 +564,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         // 1. Outgoing wrapper stays visible for leaveDurationMs
         const t1 = setTimeout(() => {
           if (transitionRef.current.id !== thisTransId) return;
-          setLeavingId(null);
+          setLeavingId((cur) => (cur === fromId ? null : cur));
         }, leaveDurationMs);
 
         // 2. Input lock: unlockMs (85% of totalMs on desktop)
@@ -553,6 +572,16 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           if (transitionRef.current.id !== thisTransId) return;
           transRef.current = false;
           setStagePrevId(null);
+
+          const pendingId = pendingNavRef.current;
+          pendingNavRef.current = null;
+          if (pendingId) {
+            const curPages = pagesRef.current;
+            const pIdx = curPages.findIndex((p) => p.id === pendingId);
+            if (pIdx !== -1 && pIdx !== indexRef.current) {
+              goToRef.current(pendingId);
+            }
+          }
         }, unlockMs);
 
         // 3. Total duration / at rest: totalMs
@@ -565,9 +594,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           setIsTransitioning(false);
           setIsStagedNav(false);
           transRef.current = false;
-          if (toId) {
-            markSettled(toId);
-          }
           if (scrollRefs.current[targetIndex]) {
             scrollRefs.current[targetIndex]!.scrollTop = 0;
           }
@@ -599,6 +625,17 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           setIsTransitioning(false);
           transRef.current = false;
           setStagePrevId(null);
+
+          const pendingId = pendingNavRef.current;
+          pendingNavRef.current = null;
+          if (pendingId) {
+            const curPages = pagesRef.current;
+            const pIdx = curPages.findIndex((p) => p.id === pendingId);
+            if (pIdx !== -1 && pIdx !== indexRef.current) {
+              goToRef.current(pendingId);
+            }
+          }
+
           if (scrollRefs.current[targetIndex]) {
             scrollRefs.current[targetIndex]!.scrollTop = 0;
           }
@@ -613,7 +650,6 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
         timersRef.current = [tLegacy];
       }
-    }
   };
 
   const next = () => {
@@ -644,7 +680,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     settledRef.current[pageId] = true;
   }, []);
 
-  const runSettleCheck = useCallback(() => {
+  const runSettleCheck = useCallback((isRetry = false) => {
     if (!isDesktopRef.current || lockedRef.current) return;
     const currentPages = pagesRef.current;
     const activeIdx = indexRef.current;
@@ -666,7 +702,21 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       (a) => a.animationName && /^st(Word|Reveal)(In|Out)$/.test(a.animationName)
     );
 
+    const hasStElements = wrapper.querySelector('.st-word, .st-reveal') !== null;
+
     if (anims.length === 0) {
+      if (hasStElements && !isRetry) {
+        // Elements exist but animations are not yet registered at the first check:
+        // Recheck after the longest delay instead of settling early
+        const navEffectiveTimeScale = TIME_SCALE * (TIER_SCALE[tierRef.current] ?? 1);
+        const longestDelay = Math.round(2200 * navEffectiveTimeScale);
+        const retryTimer = setTimeout(() => {
+          if (transitionRef.current.id !== checkTransId) return;
+          runSettleCheck(true);
+        }, longestDelay);
+        settleTimersRef.current.push(retryTimer);
+        return;
+      }
       markSettled(activeId);
       return;
     }
@@ -686,10 +736,27 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         maxEndTime = remaining;
       }
     }
-    const safetyDelay = (maxEndTime || 1500) + 400;
+
+    const navEffectiveTimeScale = TIME_SCALE * (TIER_SCALE[tierRef.current] ?? 1);
+    const upperLimitMs = Math.round(3500 * navEffectiveTimeScale);
+    const safetyDelay = Math.max(upperLimitMs, maxEndTime + 400);
 
     const safetyTimer = setTimeout(() => {
       if (transitionRef.current.id !== checkTransId) return;
+      // It must never fire while any entrance animation of that page is still running
+      const currentRaw: any[] = typeof (wrapper as any).getAnimations === 'function'
+        ? (wrapper as any).getAnimations({ subtree: true })
+        : [];
+      const stillRunning = currentRaw.filter(
+        (a) => a.animationName && /^st(Word|Reveal)(In|Out)$/.test(a.animationName) && a.playState === 'running'
+      );
+      if (stillRunning.length > 0) {
+        Promise.allSettled(stillRunning.map((a) => a.finished)).then(() => {
+          if (transitionRef.current.id !== checkTransId) return;
+          markSettled(activeId);
+        });
+        return;
+      }
       markSettled(activeId);
     }, safetyDelay);
     settleTimersRef.current.push(safetyTimer);
@@ -706,9 +773,12 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
     clearSettleTimers();
 
+    const scheduledTransId = transition.id;
     let raf2Id: number;
     const raf1Id = requestAnimationFrame(() => {
+      if (transitionRef.current.id !== scheduledTransId) return;
       raf2Id = requestAnimationFrame(() => {
+        if (transitionRef.current.id !== scheduledTransId) return;
         runSettleCheck();
       });
       settleRafsRef.current.push(raf2Id);
@@ -1150,7 +1220,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                       aria-disabled={index === 0}
                       aria-label="Previous scene"
                       tabIndex={index === 0 ? -1 : 0}
-                      className={`w-[44px] h-[44px] flex items-center justify-center bg-transparent border-0 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-md group ${
+                      className={`w-[44px] h-[44px] flex items-center justify-center bg-transparent border-0 transition-[opacity,transform] active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-md group ${
                         index === 0 ? 'opacity-25 cursor-default pointer-events-none' : 'opacity-100 cursor-pointer'
                       }`}
                     >
@@ -1172,7 +1242,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                       aria-disabled={index >= pages.length - 1}
                       aria-label="Next scene"
                       tabIndex={index >= pages.length - 1 ? -1 : 0}
-                      className={`w-[44px] h-[44px] flex items-center justify-center bg-transparent border-0 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-md group ${
+                      className={`w-[44px] h-[44px] flex items-center justify-center bg-transparent border-0 transition-[opacity,transform] active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-md group ${
                         index >= pages.length - 1 ? 'opacity-25 cursor-default pointer-events-none' : 'opacity-100 cursor-pointer'
                       }`}
                     >

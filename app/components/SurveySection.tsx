@@ -318,7 +318,7 @@ export default function SurveySection({ role, name, mobile, onContinue }: Props)
         ref={containerRef}
         className="relative z-10 w-full h-full flex flex-col items-center flex-1 min-h-0 overflow-y-auto pageflow-scroll px-4 pt-6 md:pt-[72px] pb-6 md:pb-0 text-left"
       >
-        <div className="st-reveal w-full max-w-2xl my-auto shrink-0 flex flex-col items-center" style={{ '--o': 0, '--rise': '14vh' } as React.CSSProperties}>
+        <div className="w-full max-w-2xl my-auto shrink-0 flex flex-col items-center">
           <div
             style={SURVEY_GLASS_CARD_STYLE}
             className="survey-glass-card w-full max-w-2xl p-6 md:p-8 flex flex-col my-auto shrink-0 shadow-2xl md:max-h-[calc(100dvh-192px)]"

@@ -83,7 +83,7 @@ export default function LeadGate({ onSubmit }: Props) {
             <Image src="/logo.png" alt="StudyRealm Logo" width={32} height={32} className="w-8 h-8 object-contain rounded-lg" />
             <span className="font-bold text-xl tracking-wide text-slate-800">STUDY<span className="text-teal-500">REALM</span></span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-8 leading-tight" style={{ fontFamily: 'Playfair Display, serif' }}>
+          <h1 className="text-4xl font-bold text-slate-900 mb-8 leading-tight" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
             See how StudyRealm transforms classrooms
           </h1>
           <div className="space-y-4 text-slate-700 text-lg">
@@ -104,7 +104,7 @@ export default function LeadGate({ onSubmit }: Props) {
           </div>
 
           <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-slate-900 text-2xl font-bold mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <h2 className="text-slate-900 text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
               Welcome to the Demo
             </h2>
             <p className="text-slate-600 text-sm">Tell us a bit about yourself to unlock a fully interactive demo chapter.</p>

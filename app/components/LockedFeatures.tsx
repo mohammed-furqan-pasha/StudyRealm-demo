@@ -40,10 +40,10 @@ const FEATURES_OBJECT_HORIZON: SceneObject = {
 const FEATURES_SCENE_OBJECTS: SceneObject[] = [FEATURES_OBJECT_HORIZON];
 
 const IMAGE_DIMENSIONS: Record<string, { width: number; height: number }> = {
-  '/img/parent-dashboard.png': { width: 1920, height: 1080 },
-  '/img/teacher-analytics.png': { width: 1920, height: 1080 },
-  '/img/teacher-dashboard.png': { width: 1892, height: 1080 },
-  '/img/student-app-brain.png': { width: 895, height: 544 },
+  '/img/parent-dashboard.webp': { width: 1920, height: 1080 },
+  '/img/teacher-analytics.webp': { width: 1920, height: 1080 },
+  '/img/teacher-dashboard.webp': { width: 1892, height: 1080 },
+  '/img/student-app-brain.webp': { width: 895, height: 544 },
 };
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -62,6 +62,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 function getCardIcon(iconName: string): LucideIcon {
   return ICON_MAP[iconName] || Sparkles;
+}
+
+function CardIcon({ name, className }: { name?: string; className?: string }) {
+  const Icon = getCardIcon(name || '');
+  return <Icon className={className} />;
 }
 
 export interface LockedFeaturesProps {
@@ -89,7 +94,6 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
   const activeCard = cards[activeTab] || cards[0];
   const hasImage = Boolean(activeCard?.image && !failedImages[activeCard.id]);
-  const ActiveIcon = activeCard ? getCardIcon(activeCard.icon) : Sparkles;
 
   const cleanCtaLabel = config.ctaLabel.replace(/[\s→▸►>]+$/, '').trim();
 
@@ -210,7 +214,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 select-none">
                     <div className="w-[72px] h-[72px] rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-3">
-                      <ActiveIcon className="w-9 h-9" />
+                      <CardIcon name={activeCard.icon} className="w-9 h-9" />
                     </div>
                     <p className="text-teal-300 uppercase text-[12px] font-medium tracking-[0.18em] mb-1">
                       {activeCard.kicker}
@@ -362,7 +366,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 select-none">
                     <div className="w-14 h-14 rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-2.5">
-                      <ActiveIcon className="w-7 h-7" />
+                      <CardIcon name={activeCard.icon} className="w-7 h-7" />
                     </div>
                     <p className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.18em] mb-1">
                       {activeCard.kicker}
