@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef, forwardRef, useImperativeHandle, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useRef, forwardRef, useImperativeHandle, useCallback, ReactNode } from 'react';
 import { LazyMotion, domAnimation, m, MotionConfig, useReducedMotion } from 'motion/react';
 import Stage from './Stage';
 import { isStaged, isStageMode, isFadeMode, PAIR_TIMING, PHONE_TIMING, TIME_SCALE, ARRIVAL_ENABLED, ARRIVAL_TIMING } from '../lib/stageScenes';
@@ -73,6 +73,67 @@ export const PageStateContext = createContext<PageStateContextType>({
 });
 
 export const usePageState = () => useContext(PageStateContext);
+
+interface PageStateProviderProps {
+  isCurrent: boolean;
+  direction: 1 | -1;
+  axis: 'x' | 'y';
+  staged?: boolean;
+  desktop?: boolean;
+  textDelayMs?: number;
+  isLeaving?: boolean;
+  transitionId?: number;
+  transitionDir?: 1 | -1;
+  choreographed?: boolean;
+  children: ReactNode;
+}
+
+function PageStateProvider({
+  isCurrent,
+  direction,
+  axis,
+  staged,
+  desktop,
+  textDelayMs,
+  isLeaving,
+  transitionId,
+  transitionDir,
+  choreographed,
+  children,
+}: PageStateProviderProps) {
+  const value = useMemo(
+    () => ({
+      isCurrent,
+      direction,
+      axis,
+      staged,
+      desktop,
+      textDelayMs,
+      isLeaving,
+      transitionId,
+      transitionDir,
+      choreographed,
+    }),
+    [
+      isCurrent,
+      direction,
+      axis,
+      staged,
+      desktop,
+      textDelayMs,
+      isLeaving,
+      transitionId,
+      transitionDir,
+      choreographed,
+    ]
+  );
+
+  return (
+    <PageStateContext.Provider value={value}>
+      {children}
+    </PageStateContext.Provider>
+  );
+}
 
 export interface PageFlowHandle {
   goTo: (id: string) => void;
@@ -151,7 +212,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     tierRef.current = initialTier;
   }, []);
 
-  const effectiveTimeScale = TIME_SCALE * (TIER_SCALE[tier] ?? 1);
+  const effectiveTimeScale = isDesktop ? (TIME_SCALE * (TIER_SCALE[tier] ?? 1)) : TIME_SCALE;
 
   // Frame monitor for desktop: runs during the first two choreographed transitions of the session
   const monitoredTransitionsRef = useRef<number>(0);
@@ -507,7 +568,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         }
 
         // Frame monitor: first 2 choreographed transitions of session
-        const shouldMonitor = monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
+        const shouldMonitor = isDesktopNav && monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
         if (shouldMonitor) {
           if (activeMonitorCleanupRef.current) {
             activeMonitorCleanupRef.current();
@@ -564,12 +625,17 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         setLeavingId(fromId);
         transRef.current = true;
         wheelActiveDuringLockRef.current = true;
-        window.dispatchEvent(new Event('scroll'));
+        if (isDesktopNav) {
+          window.dispatchEvent(new Event('scroll'));
+        }
 
         // 1. Outgoing wrapper stays visible for leaveDurationMs
         const t1 = setTimeout(() => {
           if (transitionRef.current.id !== thisTransId) return;
           setLeavingId((cur) => (cur === fromId ? null : cur));
+          if (!isDesktopNav) {
+            window.dispatchEvent(new Event('scroll'));
+          }
         }, leaveDurationMs);
 
         // 2. Input lock: unlockMs (85% of totalMs on desktop)
@@ -1014,14 +1080,31 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   ].filter((id): id is string => Boolean(id));
 
 
-  return (
-    <PagerContext.Provider value={{
-      goTo: (id: string) => goToRef.current(id),
-      next: () => nextRef.current(),
-      prev: () => prevRef.current(),
+  const stableGoTo = useCallback((id: string) => {
+    goToRef.current(id);
+  }, []);
+
+  const stableNext = useCallback(() => {
+    nextRef.current();
+  }, []);
+
+  const stablePrev = useCallback(() => {
+    prevRef.current();
+  }, []);
+
+  const pagerContextValue = useMemo(
+    () => ({
+      goTo: stableGoTo,
+      next: stableNext,
+      prev: stablePrev,
       index,
-      id: activePage?.id
-    }}>
+      id: activePage?.id,
+    }),
+    [stableGoTo, stableNext, stablePrev, index, activePage?.id]
+  );
+
+  return (
+    <PagerContext.Provider value={pagerContextValue}>
       <QualityContext.Provider value={{ tier }}>
         <MotionConfig reducedMotion="user">
           <LazyMotion features={domAnimation}>
@@ -1208,24 +1291,28 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   data-page-current={isActive && !locked ? 'true' : 'false'}
                   data-text-phase={isDesktop ? effectivePhase : undefined}
                 >
-                  <PageStateContext.Provider
-                    value={{
-                      isCurrent: isActive,
-                      direction: transition.dir,
-                      axis: isDesktop ? 'y' : 'x',
-                      staged: isStaged(p.id),
-                      desktop: isDesktop,
-                      textDelayMs: (isDesktop ? isStagedNav : transition.choreographed)
-                        ? Math.round((isDesktop ? PAIR_TIMING : PHONE_TIMING)[transition.dir === -1 ? 'back' : 'fwd'].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE))
-                        : 250,
-                      isLeaving: isStagedNav && p.id === leavingId,
-                      transitionId: transition.id,
-                      transitionDir: transition.dir,
-                      choreographed: transition.choreographed,
-                    }}
+                  <PageStateProvider
+                    isCurrent={isActive}
+                    direction={transition.dir}
+                    axis={isDesktop ? 'y' : 'x'}
+                    staged={isStaged(p.id)}
+                    desktop={isDesktop}
+                    textDelayMs={
+                      (isDesktop ? isStagedNav : transition.choreographed)
+                        ? Math.round(
+                            (isDesktop ? PAIR_TIMING : PHONE_TIMING)[
+                              transition.dir === -1 ? 'back' : 'fwd'
+                            ].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE)
+                          )
+                        : 250
+                    }
+                    isLeaving={isStagedNav && p.id === leavingId}
+                    transitionId={transition.id}
+                    transitionDir={transition.dir}
+                    choreographed={transition.choreographed}
                   >
                     {p.node}
-                  </PageStateContext.Provider>
+                  </PageStateProvider>
                 </m.div>
               );
             })}

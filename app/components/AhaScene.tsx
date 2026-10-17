@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { m, useReducedMotion } from 'motion/react';
 import { usePager, usePageState } from './PageFlow';
-import SceneShell, { SplitHeadline, StageReveal, SceneObject } from './SceneShell';
+import SceneShell, { SplitHeadline, StageReveal, SceneObject, DesktopTreeScope } from './SceneShell';
 import TopBar from './TopBar';
 import { TIME_SCALE } from '../lib/stageScenes';
 
@@ -216,101 +216,105 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
       <TopBar />
 
       {/* Desktop Left Column (>= 768px): left edge 7%, vertically centered at ~45%, max-width 46vw */}
-      <div
-        className="hidden md:flex md:flex-col md:items-start md:text-left md:absolute md:left-[7%] md:top-[45%] md:-translate-y-1/2 md:max-w-[46vw] md:w-full z-10"
-        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-      >
-        {/* Tag: plain uppercase text, 12 to 13px, letter-spacing 0.2em, white at 80% */}
-        <StageReveal order={0} className="w-full">
-          <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
-            {config.tag}
-          </div>
-        </StageReveal>
-
-        {/* Headline: <SplitHeadline lines={config.headlineLines} /> in Outfit, weight 600, font-size clamp(2.6rem, 4.9vw, 5.5rem), line-height 1.08, letter-spacing -0.02em, white */}
-        <SplitHeadline
-          lines={config.headlineLines}
-          className="aha-headline text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
-        />
-
-        {/* Hint: white at 90%, font-size clamp(1rem, 1.25vw, 1.25rem), max-width 560px, 24px below headline */}
-        <StageReveal order={2} className="w-full">
-          <p
-            className="aha-hint mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[max(560px,29.2vw)] font-normal leading-relaxed [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
-            style={{ fontFamily: 'var(--font-outfit), sans-serif', textShadow: '0 2px 24px rgba(5,20,40,0.45)' }}
-          >
-            {config.hint}
-          </p>
-        </StageReveal>
-
-        {/* Button: 28px below hint, 52px tall, fully rounded, solid #14B8A6, white semibold 16px with ArrowRight */}
-        {role !== 'Student' && (
-          <StageReveal order={3} className="w-full md:w-auto">
-            <div className="mt-[28px] flex items-center">
-              <button
-                type="button"
-                onClick={() => goTo('demo')}
-                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-                className="h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
-              >
-                <span>{config.ctaLabel ?? 'Now try the chapter'}</span>
-                <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
-              </button>
+      <DesktopTreeScope>
+        <div
+          className="hidden md:flex md:flex-col md:items-start md:text-left md:absolute md:left-[7%] md:top-[45%] md:-translate-y-1/2 md:max-w-[46vw] md:w-full z-10"
+          style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+        >
+          {/* Tag: plain uppercase text, 12 to 13px, letter-spacing 0.2em, white at 80% */}
+          <StageReveal order={0} className="w-full">
+            <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
+              {config.tag}
             </div>
           </StageReveal>
-        )}
-      </div>
+
+          {/* Headline: <SplitHeadline lines={config.headlineLines} /> in Outfit, weight 600, font-size clamp(2.6rem, 4.9vw, 5.5rem), line-height 1.08, letter-spacing -0.02em, white */}
+          <SplitHeadline
+            lines={config.headlineLines}
+            className="aha-headline text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_28px_rgba(3,8,18,0.65)]"
+          />
+
+          {/* Hint: white at 90%, font-size clamp(1rem, 1.25vw, 1.25rem), max-width 560px, 24px below headline */}
+          <StageReveal order={2} className="w-full">
+            <p
+              className="aha-hint mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[max(560px,29.2vw)] font-normal leading-relaxed [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+              style={{ fontFamily: 'var(--font-outfit), sans-serif', textShadow: '0 2px 24px rgba(5,20,40,0.45)' }}
+            >
+              {config.hint}
+            </p>
+          </StageReveal>
+
+          {/* Button: 28px below hint, 52px tall, fully rounded, solid #14B8A6, white semibold 16px with ArrowRight */}
+          {role !== 'Student' && (
+            <StageReveal order={3} className="w-full md:w-auto">
+              <div className="mt-[28px] flex items-center">
+                <button
+                  type="button"
+                  onClick={() => goTo('demo')}
+                  style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+                  className="h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
+                >
+                  <span>{config.ctaLabel ?? 'Now try the chapter'}</span>
+                  <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
+                </button>
+              </div>
+            </StageReveal>
+          )}
+        </div>
+      </DesktopTreeScope>
 
       {/* Desktop Right Side Band (>= 768px): right 5%, top 96px, bottom 88px, display flex, align-items center */}
-      <div
-        className="hidden md:flex md:items-center md:absolute md:right-[5%] md:top-[96px] md:bottom-[88px] md:w-[max(clamp(400px,32vw,620px),32.3vw)] z-20 pointer-events-none"
-        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-      >
-        <StageReveal order={3} rise="14vh" className="w-full max-h-full pointer-events-auto">
-          {role === 'Student' ? (
-            <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
-              <StarCatcher onContinue={() => goTo('demo')} />
-            </div>
-          ) : role === 'Parent' ? (
-            <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
-              <ParentPhonePreview
-                childName={childName}
-                setChildName={setChildName}
-                effectiveName={effectiveChildName}
-                layout="d"
-              />
-            </div>
-          ) : role === 'Other' ? (
-            <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
-              <OtherViews
-                selectedCell={selectedCell}
-                onSelectCell={setSelectedCell}
-                childName={childName}
-                setChildName={setChildName}
-                effectiveChildName={effectiveChildName}
-              />
-            </div>
-          ) : (
-            <div
-              className="w-full text-left max-h-full overflow-y-auto pageflow-scroll block"
-              style={DESKTOP_GLASS_CARD_STYLE}
-            >
-              {role === 'Principal' && (
-                <PrincipalDashboard
-                  title={`${schoolDisplayName}: Class 7 Science`}
-                  schoolName={schoolDisplayName}
+      <DesktopTreeScope>
+        <div
+          className="hidden md:flex md:items-center md:absolute md:right-[5%] md:top-[96px] md:bottom-[88px] md:w-[max(clamp(400px,32vw,620px),32.3vw)] z-20 pointer-events-none"
+          style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+        >
+          <StageReveal order={3} rise="14vh" className="w-full max-h-full pointer-events-auto">
+            {role === 'Student' ? (
+              <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
+                <StarCatcher onContinue={() => goTo('demo')} />
+              </div>
+            ) : role === 'Parent' ? (
+              <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
+                <ParentPhonePreview
+                  childName={childName}
+                  setChildName={setChildName}
+                  effectiveName={effectiveChildName}
+                  layout="d"
                 />
-              )}
-              {role === 'Teacher' && (
-                <TeacherHeatmap
+              </div>
+            ) : role === 'Other' ? (
+              <div className="w-full max-h-full overflow-y-auto pageflow-scroll">
+                <OtherViews
                   selectedCell={selectedCell}
                   onSelectCell={setSelectedCell}
+                  childName={childName}
+                  setChildName={setChildName}
+                  effectiveChildName={effectiveChildName}
                 />
-              )}
-            </div>
-          )}
-        </StageReveal>
-      </div>
+              </div>
+            ) : (
+              <div
+                className="w-full text-left max-h-full overflow-y-auto pageflow-scroll block"
+                style={DESKTOP_GLASS_CARD_STYLE}
+              >
+                {role === 'Principal' && (
+                  <PrincipalDashboard
+                    title={`${schoolDisplayName}: Class 7 Science`}
+                    schoolName={schoolDisplayName}
+                  />
+                )}
+                {role === 'Teacher' && (
+                  <TeacherHeatmap
+                    selectedCell={selectedCell}
+                    onSelectCell={setSelectedCell}
+                  />
+                )}
+              </div>
+            )}
+          </StageReveal>
+        </div>
+      </DesktopTreeScope>
 
       {/* Mobile Layout (< 768px): Stacked (header, scrollable container, CTA pinned above bottom 88px) */}
       <div

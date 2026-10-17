@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, ReactNode, HTMLAttributes } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, ReactNode, HTMLAttributes } from 'react';
 import { m, useReducedMotion } from 'motion/react';
 import { SCENES, SceneKey } from '../data/sceneAssets';
 import { usePageState } from './PageFlow';
@@ -19,6 +19,17 @@ export const SCENE_BOTTOM_RESERVE_MOBILE = 88;
 export const MOBILE_ENTER_DURATION_REVEAL = 0.9;
 export const MOBILE_ENTER_DURATION_WORD = 0.95;
 export const MOBILE_ENTER_EASE = [0.33, 1, 0.68, 1] as const;
+
+export type RenderTreeScope = 'desktop' | undefined;
+export const RenderTreeContext = createContext<RenderTreeScope>(undefined);
+
+export function DesktopTreeScope({ children }: { children: ReactNode }) {
+  return (
+    <RenderTreeContext.Provider value="desktop">
+      {children}
+    </RenderTreeContext.Provider>
+  );
+}
 
 export { CoverBox } from './CoverBox';
 import { CoverBox } from './CoverBox';
@@ -276,6 +287,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     transitionDir,
     choreographed = false,
   } = usePageState();
+  const tree = useContext(RenderTreeContext);
   const shouldReduceMotion = useReducedMotion();
   const [settled, setSettled] = useState(true);
   const fullText = lines.join(' ');
@@ -313,6 +325,40 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
                       style={{ '--i': currentIdx } as React.CSSProperties}
                       aria-hidden="true"
                     >
+                      {word}
+                    </span>
+                  </span>
+                );
+              })}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (!desktop && tree === 'desktop') {
+    let wordIndex = 0;
+    return (
+      <div
+        role="heading"
+        aria-level={1}
+        aria-label={fullText}
+        className={className}
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
+        {lines.map((line, lIdx) => {
+          const words = line.trim().split(/\s+/).filter(Boolean);
+          return (
+            <span key={`line-${lIdx}`} className="block">
+              {words.map((word) => {
+                const currentIdx = wordIndex++;
+                return (
+                  <span
+                    key={`word-${currentIdx}-${word}`}
+                    className="inline-block overflow-hidden pb-1 align-bottom mr-[0.28em] last:mr-0"
+                  >
+                    <span className="inline-block" aria-hidden="true">
                       {word}
                     </span>
                   </span>
@@ -494,6 +540,7 @@ export function StageReveal({
     direction,
     choreographed = false,
   } = usePageState();
+  const tree = useContext(RenderTreeContext);
   const shouldReduceMotion = useReducedMotion();
   const [settled, setSettled] = useState(true);
 
@@ -520,6 +567,10 @@ export function StageReveal({
         {children}
       </div>
     );
+  }
+
+  if (!desktop && tree === 'desktop') {
+    return <div className={className}>{children}</div>;
   }
 
   const isDesktopStaged = desktop && staged;

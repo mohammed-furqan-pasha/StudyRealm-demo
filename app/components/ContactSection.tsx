@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { m, useReducedMotion } from 'motion/react';
-import SceneShell, { SplitHeadline, StageReveal } from './SceneShell';
+import SceneShell, { SplitHeadline, StageReveal, DesktopTreeScope } from './SceneShell';
 import TopBar from './TopBar';
 import { usePageState } from './PageFlow';
 import { TIME_SCALE } from '../lib/stageScenes';
@@ -380,32 +380,34 @@ export default function ContactSection({
         </div>
 
         {/* Action Cards Area (Desktop >= 768px) */}
-        {isStudent ? (
-          <StageReveal order={3} rise="14vh" className="hidden md:flex flex-col items-center w-full mb-3 md:mb-5 shrink-0">
-            {/* CSS-drawn badge above card */}
-            <div className="inline-flex items-center gap-2.5 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl mb-4 shadow-lg select-none">
-              <div className="w-6 h-6 rounded-full bg-teal-400 flex items-center justify-center text-slate-950 shrink-0">
-                <Star className="w-3.5 h-3.5 fill-current" />
+        <DesktopTreeScope>
+          {isStudent ? (
+            <StageReveal order={3} rise="14vh" className="hidden md:flex flex-col items-center w-full mb-3 md:mb-5 shrink-0">
+              {/* CSS-drawn badge above card */}
+              <div className="inline-flex items-center gap-2.5 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl mb-4 shadow-lg select-none">
+                <div className="w-6 h-6 rounded-full bg-teal-400 flex items-center justify-center text-slate-950 shrink-0">
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                </div>
+                <span className="font-bold text-white text-xs sm:text-sm">
+                  I learned Acids & Bases
+                </span>
               </div>
-              <span className="font-bold text-white text-xs sm:text-sm">
-                I learned Acids & Bases
-              </span>
-            </div>
 
-            {/* Single share card */}
-            <div className="w-full max-w-sm mx-auto">
-              {studentShareCard()}
+              {/* Single share card */}
+              <div className="w-full max-w-sm mx-auto">
+                {studentShareCard()}
+              </div>
+            </StageReveal>
+          ) : (
+            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-5 shrink-0 items-stretch">
+              {standardActionCards.map((card, i) => (
+                <StageReveal key={i} order={3 + i} rise="14vh" className="h-full">
+                  {card}
+                </StageReveal>
+              ))}
             </div>
-          </StageReveal>
-        ) : (
-          <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-5 shrink-0 items-stretch">
-            {standardActionCards.map((card, i) => (
-              <StageReveal key={i} order={3 + i} rise="14vh" className="h-full">
-                {card}
-              </StageReveal>
-            ))}
-          </div>
-        )}
+          )}
+        </DesktopTreeScope>
 
         {/* Action Cards Area (Phone < 768px) */}
         <div className="flex md:hidden flex-col gap-4 w-full mb-4 shrink-0">

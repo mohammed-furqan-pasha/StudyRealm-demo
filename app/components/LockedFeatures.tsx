@@ -19,7 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { usePager, usePageState } from './PageFlow';
-import SceneShell, { SplitHeadline, SceneObject, CoverBox, StageReveal } from './SceneShell';
+import SceneShell, { SplitHeadline, SceneObject, CoverBox, StageReveal, DesktopTreeScope } from './SceneShell';
 import TopBar from './TopBar';
 import { OBJECTS } from '../data/sceneAssets';
 import { FEATURE_CARDS } from '../data/featureCards';
@@ -132,184 +132,188 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
       {/* DESKTOP VIEW (>= 768px) */}
       {/* Left Text Column: identical in style and entrance animation to hero and AhaScene */}
-      <div
-        className="hidden md:flex md:flex-col md:items-start md:text-left md:absolute md:left-[7%] md:top-[45%] md:-translate-y-1/2 md:max-w-[44vw] md:w-full z-10"
-        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-      >
-        {/* Tag */}
-        <StageReveal order={0} className="w-full">
-          <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
-            {config.tag}
-          </div>
-        </StageReveal>
-
-        {/* Headline: Word-by-word reveal */}
-        <SplitHeadline
-          lines={config.headlineLines}
-          className="text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
-        />
-
-        {/* Description: 24px below headline */}
-        <StageReveal order={2} className="w-full">
-          <p className="mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[560px] font-normal leading-relaxed line-clamp-3 [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]">
-            {config.description}
-          </p>
-        </StageReveal>
-
-        {/* Primary Pill Button: 28px below */}
-        <StageReveal order={4} className="w-full md:w-auto">
-          <button
-            type="button"
-            onClick={() => goTo('survey')}
-            className="mt-[28px] h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
-            style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-          >
-            <span>{cleanCtaLabel}</span>
-            <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
-          </button>
-        </StageReveal>
-      </div>
-
-      {/* Right Orbit Window Column (Desktop: Rises 14vh like Page 2 right panel) */}
-      <StageReveal
-        order={3}
-        rise="14vh"
-        className="hidden md:flex flex-col gap-[10px] absolute right-[5%] top-[max(92px,12dvh)] w-[clamp(400px,26vw,500px)] z-20"
-      >
-        <div style={{ fontFamily: 'var(--font-outfit), sans-serif' }} className="flex flex-col gap-[10px] w-full">
-        {/* a. WINDOW */}
+      <DesktopTreeScope>
         <div
-          className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col shrink-0"
-          style={{
-            boxShadow: '0 30px 80px -24px rgba(45,212,191,0.35)',
-          }}
+          className="hidden md:flex md:flex-col md:items-start md:text-left md:absolute md:left-[7%] md:top-[45%] md:-translate-y-1/2 md:max-w-[44vw] md:w-full z-10"
+          style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
         >
-          {/* 36px Title Bar */}
-          <div className="h-[36px] bg-[rgba(8,20,34,0.96)] px-4 flex items-center justify-between border-b border-[rgba(94,234,212,0.15)] shrink-0 select-none">
-            {/* 3 slate-600 dots */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-slate-600" />
-              <div className="w-2 h-2 rounded-full bg-slate-600" />
-              <div className="w-2 h-2 rounded-full bg-slate-600" />
+          {/* Tag */}
+          <StageReveal order={0} className="w-full">
+            <div className="uppercase text-[12px] sm:text-[13px] md:text-[length:calc(13*var(--u))] tracking-[0.2em] text-white/80 font-medium mb-[20px]">
+              {config.tag}
             </div>
+          </StageReveal>
 
-            {/* Badge pill */}
-            {activeCard && (
-              <span className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 text-[12px] font-semibold tracking-wide">
-                {activeCard.badge ?? 'Sample data'}
-              </span>
-            )}
-          </div>
+          {/* Headline: Word-by-word reveal */}
+          <SplitHeadline
+            lines={config.headlineLines}
+            className="text-white font-semibold text-[max(clamp(2.6rem,4.9vw,5.5rem),4.583vw)] leading-[1.08] tracking-[-0.02em] max-w-full text-left [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+          />
 
-          {/* Body: fixed aspect-ratio 16 / 10, background #0B1626 */}
-          <div className="relative w-full aspect-[16/10] bg-[#0B1626] overflow-hidden flex items-center justify-center">
-            {activeCard && (
-              <m.div
-                key={activeCard.id}
-                initial={hasUserSelected ? { opacity: 0, y: shouldReduceMotion ? 0 : 8 } : false}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                transformTemplate={(_, generated) => 'none'}
-                className="w-full h-full flex items-center justify-center"
-              >
-                {hasImage ? (
-                  <img
-                    src={activeCard.image}
-                    alt={activeCard.title}
-                    width={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.width : undefined}
-                    height={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.height : undefined}
-                    loading="lazy"
-                    onError={() => handleImageError(activeCard.id)}
-                    draggable={false}
-                    className="w-full h-full object-contain object-top pointer-events-none select-none"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 select-none">
-                    <div className="w-[72px] h-[72px] rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-3">
-                      <CardIcon name={activeCard.icon} className="w-9 h-9" />
-                    </div>
-                    <p className="text-teal-300 uppercase text-[12px] font-medium tracking-[0.18em] mb-1">
-                      {activeCard.kicker}
-                    </p>
-                    <h4 className="text-white font-semibold text-[22px] leading-tight max-w-sm">
-                      {activeCard.title}
-                    </h4>
-                  </div>
-                )}
-              </m.div>
-            )}
-          </div>
-        </div>
+          {/* Description: 24px below headline */}
+          <StageReveal order={2} className="w-full">
+            <p className="mt-[24px] text-white/90 text-[max(clamp(1rem,1.25vw,1.25rem),1.0417vw)] max-w-[560px] font-normal leading-relaxed line-clamp-3 [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]">
+              {config.description}
+            </p>
+          </StageReveal>
 
-        {/* b. CHIPS: one grid row whose columns equal the card count */}
-        <div
-          className="grid gap-2 w-full box-border min-w-0"
-          style={{
-            gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
-          }}
-        >
-          {cards.map((card, idx) => {
-            const isActive = idx === activeTab;
-            const Icon = getCardIcon(card.icon);
-
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => {
-                  setHasUserSelected(true);
-                  setActiveTab(idx);
-                }}
-                aria-pressed={isActive}
-                className={`min-h-[60px] min-w-0 rounded-[16px] px-1 py-1.5 flex flex-col items-center justify-center gap-1.5 transition select-none cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
-                  isActive
-                    ? 'bg-[#14B8A6] text-white shadow-md shadow-teal-500/20'
-                    : 'bg-[rgba(10,40,58,0.78)] border border-[rgba(94,234,212,0.35)] text-white hover:bg-[rgba(14,54,78,0.85)]'
-                }`}
-                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span
-                  className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                  style={{
-                    fontSize: 'clamp(10.5px, 0.78vw, 13px)',
-                    fontWeight: 500,
-                  }}
-                >
-                  {card.shortTitle}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* c. CAPTION */}
-        {activeCard && (
-          <div className="min-h-[72px] text-left" aria-live="polite">
-            <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
-              <span
-                className="text-white text-[17px] leading-snug"
-                style={{ fontFamily: 'var(--font-outfit), sans-serif', fontWeight: 600 }}
-              >
-                {activeCard.title}
-              </span>
-              <span
-                className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.16em]"
-                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
-              >
-                {activeCard.kicker}
-              </span>
-            </div>
-            <p
-              className="mt-1 text-white/85 text-[14.5px] leading-relaxed line-clamp-2"
+          {/* Primary Pill Button: 28px below */}
+          <StageReveal order={4} className="w-full md:w-auto">
+            <button
+              type="button"
+              onClick={() => goTo('survey')}
+              className="mt-[28px] h-[52px] md:h-[52px] px-8 md:px-8 rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all text-center flex items-center justify-center gap-2 select-none cursor-pointer"
               style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
             >
-              {activeCard.description}
-            </p>
-          </div>
-        )}
+              <span>{cleanCtaLabel}</span>
+              <ArrowRight className="w-5 h-5 ml-1 shrink-0" />
+            </button>
+          </StageReveal>
         </div>
-      </StageReveal>
+      </DesktopTreeScope>
+
+      {/* Right Orbit Window Column (Desktop: Rises 14vh like Page 2 right panel) */}
+      <DesktopTreeScope>
+        <StageReveal
+          order={3}
+          rise="14vh"
+          className="hidden md:flex flex-col gap-[10px] absolute right-[5%] top-[max(92px,12dvh)] w-[clamp(400px,26vw,500px)] z-20"
+        >
+          <div style={{ fontFamily: 'var(--font-outfit), sans-serif' }} className="flex flex-col gap-[10px] w-full">
+          {/* a. WINDOW */}
+          <div
+            className="rounded-[20px] overflow-hidden border border-[rgba(94,234,212,0.35)] flex flex-col shrink-0"
+            style={{
+              boxShadow: '0 30px 80px -24px rgba(45,212,191,0.35)',
+            }}
+          >
+            {/* 36px Title Bar */}
+            <div className="h-[36px] bg-[rgba(8,20,34,0.96)] px-4 flex items-center justify-between border-b border-[rgba(94,234,212,0.15)] shrink-0 select-none">
+              {/* 3 slate-600 dots */}
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-slate-600" />
+                <div className="w-2 h-2 rounded-full bg-slate-600" />
+                <div className="w-2 h-2 rounded-full bg-slate-600" />
+              </div>
+
+              {/* Badge pill */}
+              {activeCard && (
+                <span className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 text-[12px] font-semibold tracking-wide">
+                  {activeCard.badge ?? 'Sample data'}
+                </span>
+              )}
+            </div>
+
+            {/* Body: fixed aspect-ratio 16 / 10, background #0B1626 */}
+            <div className="relative w-full aspect-[16/10] bg-[#0B1626] overflow-hidden flex items-center justify-center">
+              {activeCard && (
+                <m.div
+                  key={activeCard.id}
+                  initial={hasUserSelected ? { opacity: 0, y: shouldReduceMotion ? 0 : 8 } : false}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  transformTemplate={(_, generated) => 'none'}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  {hasImage ? (
+                    <img
+                      src={activeCard.image}
+                      alt={activeCard.title}
+                      width={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.width : undefined}
+                      height={activeCard.image ? IMAGE_DIMENSIONS[activeCard.image]?.height : undefined}
+                      loading="lazy"
+                      onError={() => handleImageError(activeCard.id)}
+                      draggable={false}
+                      className="w-full h-full object-contain object-top pointer-events-none select-none"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 select-none">
+                      <div className="w-[72px] h-[72px] rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 flex items-center justify-center text-[#14B8A6] mb-3">
+                        <CardIcon name={activeCard.icon} className="w-9 h-9" />
+                      </div>
+                      <p className="text-teal-300 uppercase text-[12px] font-medium tracking-[0.18em] mb-1">
+                        {activeCard.kicker}
+                      </p>
+                      <h4 className="text-white font-semibold text-[22px] leading-tight max-w-sm">
+                        {activeCard.title}
+                      </h4>
+                    </div>
+                  )}
+                </m.div>
+              )}
+            </div>
+          </div>
+
+          {/* b. CHIPS: one grid row whose columns equal the card count */}
+          <div
+            className="grid gap-2 w-full box-border min-w-0"
+            style={{
+              gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))`,
+            }}
+          >
+            {cards.map((card, idx) => {
+              const isActive = idx === activeTab;
+              const Icon = getCardIcon(card.icon);
+
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => {
+                    setHasUserSelected(true);
+                    setActiveTab(idx);
+                  }}
+                  aria-pressed={isActive}
+                  className={`min-h-[60px] min-w-0 rounded-[16px] px-1 py-1.5 flex flex-col items-center justify-center gap-1.5 transition select-none cursor-pointer text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
+                    isActive
+                      ? 'bg-[#14B8A6] text-white shadow-md shadow-teal-500/20'
+                      : 'bg-[rgba(10,40,58,0.78)] border border-[rgba(94,234,212,0.35)] text-white hover:bg-[rgba(14,54,78,0.85)]'
+                  }`}
+                  style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+                >
+                  <Icon className="w-5 h-5 shrink-0" />
+                  <span
+                    className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                    style={{
+                      fontSize: 'clamp(10.5px, 0.78vw, 13px)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {card.shortTitle}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* c. CAPTION */}
+          {activeCard && (
+            <div className="min-h-[72px] text-left" aria-live="polite">
+              <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-0.5">
+                <span
+                  className="text-white text-[17px] leading-snug"
+                  style={{ fontFamily: 'var(--font-outfit), sans-serif', fontWeight: 600 }}
+                >
+                  {activeCard.title}
+                </span>
+                <span
+                  className="text-teal-300 uppercase text-[11px] font-medium tracking-[0.16em]"
+                  style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+                >
+                  {activeCard.kicker}
+                </span>
+              </div>
+              <p
+                className="mt-1 text-white/85 text-[14.5px] leading-relaxed line-clamp-2"
+                style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+              >
+                {activeCard.description}
+              </p>
+            </div>
+          )}
+          </div>
+        </StageReveal>
+      </DesktopTreeScope>
 
       {/* MOBILE VIEW (< 768px): TopBar then scroll container */}
       <div
