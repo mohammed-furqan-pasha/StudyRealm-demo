@@ -2,9 +2,77 @@
 
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { usePager } from './PageFlow';
+import { m, useReducedMotion } from 'motion/react';
+import { usePager, usePageState } from './PageFlow';
 import SceneShell, { SplitHeadline, StageReveal, SceneObject } from './SceneShell';
 import TopBar from './TopBar';
+import { TIME_SCALE } from '../lib/stageScenes';
+
+export const MOBILE_AHA_BASE_DELAY_OFFSET = 0.45 * TIME_SCALE;
+export const MOBILE_AHA_ROW_STAGGER = 0.04 * TIME_SCALE;
+export const MOBILE_AHA_ROW_DURATION = 0.3 * TIME_SCALE;
+export const MOBILE_AHA_TILE_STAGGER = 0.05 * TIME_SCALE;
+export const MOBILE_AHA_TILE_DURATION = 0.3 * TIME_SCALE;
+export const MOBILE_AHA_BAR_STAGGER = 0.06 * TIME_SCALE;
+export const MOBILE_AHA_BAR_DURATION = 0.45 * TIME_SCALE;
+export const MOBILE_AHA_BUBBLE_DELAY = 0.35 * TIME_SCALE;
+export const MOBILE_AHA_BUBBLE_DURATION = 0.35 * TIME_SCALE;
+export const MOBILE_AHA_DOT_STAGGER = 0.035 * TIME_SCALE;
+export const MOBILE_AHA_DOT_DURATION = 0.25 * TIME_SCALE;
+
+function useMobileAhaAnimation(animateIn?: boolean) {
+  const { isCurrent, isLeaving, transitionId, textDelayMs } = usePageState();
+  const shouldReduceMotion = useReducedMotion();
+
+  const effectiveTextDelay = textDelayMs ?? 250;
+  const cardDelay =
+    effectiveTextDelay / 1000 + 0.1 * TIME_SCALE + 3 * (0.1 * TIME_SCALE);
+  const baseDelay = cardDelay + MOBILE_AHA_BASE_DELAY_OFFSET;
+
+  const getItemMotion = (
+    delayOffset: number,
+    duration: number,
+    hidden: Record<string, number | string>,
+    visible: Record<string, number | string>
+  ) => {
+    if (!animateIn || shouldReduceMotion) {
+      return {
+        initial: false as const,
+        animate: visible,
+        transition: { duration: 0 },
+      };
+    }
+    if (isLeaving) {
+      return {
+        initial: false as const,
+        animate: visible,
+        transition: { duration: 0 },
+      };
+    }
+    if (isCurrent) {
+      return {
+        initial: hidden,
+        animate: visible,
+        transition: {
+          duration,
+          delay: baseDelay + delayOffset,
+          ease: [0.22, 1, 0.36, 1] as const,
+        },
+      };
+    }
+    return {
+      initial: hidden,
+      animate: hidden,
+      transition: { duration: 0 },
+    };
+  };
+
+  return {
+    transitionId,
+    baseDelay,
+    getItemMotion,
+  };
+}
 import { OBJECTS } from '../data/sceneAssets';
 import {
   PRINCIPAL_SAMPLE,
@@ -273,6 +341,7 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                 setChildName={setChildName}
                 effectiveName={effectiveChildName}
                 layout="m"
+                animateIn
               />
             ) : role === 'Other' ? (
               <OtherViews
@@ -292,12 +361,14 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                   <PrincipalDashboard
                     title={`${schoolDisplayName}: Class 7 Science`}
                     schoolName={schoolDisplayName}
+                    animateIn
                   />
                 )}
                 {role === 'Teacher' && (
                   <TeacherHeatmap
                     selectedCell={selectedCell}
                     onSelectCell={setSelectedCell}
+                    animateIn
                   />
                 )}
               </div>
@@ -332,8 +403,20 @@ function SampleDataChip() {
   );
 }
 
-function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: string }) {
+function PrincipalDashboard({
+  title,
+  schoolName,
+  animateIn = false,
+}: {
+  title: string;
+  schoolName: string;
+  animateIn?: boolean;
+}) {
   const sortedChapters = [...PRINCIPAL_SAMPLE.chapters].sort((a, b) => a.pct - b.pct);
+  const { transitionId, getItemMotion } = useMobileAhaAnimation(animateIn);
+  const tilesEndTime =
+    (PRINCIPAL_SAMPLE.stats.length - 1) * MOBILE_AHA_TILE_STAGGER +
+    MOBILE_AHA_TILE_DURATION;
 
   return (
     <div className="w-full block" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
@@ -358,13 +441,35 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
 
       {/* 4 Stat Tiles: always grid-cols-2 */}
       <div className="grid grid-cols-2 gap-2 mb-3">
-        {PRINCIPAL_SAMPLE.stats.map((st) => {
+        {PRINCIPAL_SAMPLE.stats.map((st, idx) => {
           const isStudentsAtRisk = st.label === 'Students needing help';
+          if (!animateIn) {
+            return (
+              <div
+                key={st.label}
+                title={isStudentsAtRisk ? `Below ${TEACHER_CRITICAL_BELOW}% in any concept` : undefined}
+                className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col text-left"
+              >
+                <span className="text-base sm:text-lg font-semibold text-white leading-tight">
+                  {st.value}
+                </span>
+                <span className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
+                  {st.label}
+                </span>
+              </div>
+            );
+          }
           return (
-            <div
-              key={st.label}
+            <m.div
+              key={`${st.label}-t${transitionId}`}
               title={isStudentsAtRisk ? `Below ${TEACHER_CRITICAL_BELOW}% in any concept` : undefined}
               className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col text-left"
+              {...getItemMotion(
+                idx * MOBILE_AHA_TILE_STAGGER,
+                MOBILE_AHA_TILE_DURATION,
+                { opacity: 0, y: 6 },
+                { opacity: 1, y: 0 }
+              )}
             >
               <span className="text-base sm:text-lg font-semibold text-white leading-tight">
                 {st.value}
@@ -372,7 +477,7 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
               <span className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
                 {st.label}
               </span>
-            </div>
+            </m.div>
           );
         })}
       </div>
@@ -384,7 +489,7 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
 
       {/* 4 Chapter Rows: Sorted ascending by pct */}
       <div className="space-y-2.5 w-full">
-        {sortedChapters.map((ch) => {
+        {sortedChapters.map((ch, idx) => {
           const status = getChapterStatus(ch.pct);
           const tone = status.tone;
 
@@ -433,13 +538,29 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
                 </div>
               </div>
               <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                <div
-                  className={`h-full w-full rounded-full ${barColor}`}
-                  style={{
-                    transform: `scaleX(${ch.pct / 100})`,
-                    transformOrigin: 'left',
-                  }}
-                />
+                {!animateIn ? (
+                  <div
+                    className={`h-full w-full rounded-full ${barColor}`}
+                    style={{
+                      transform: `scaleX(${ch.pct / 100})`,
+                      transformOrigin: 'left',
+                    }}
+                  />
+                ) : (
+                  <m.div
+                    key={`${ch.name}-bar-t${transitionId}`}
+                    className={`h-full w-full rounded-full ${barColor}`}
+                    style={{
+                      transformOrigin: 'left',
+                    }}
+                    {...getItemMotion(
+                      tilesEndTime + idx * MOBILE_AHA_BAR_STAGGER,
+                      MOBILE_AHA_BAR_DURATION,
+                      { scaleX: 0 },
+                      { scaleX: ch.pct / 100 }
+                    )}
+                  />
+                )}
               </div>
             </div>
           );
@@ -452,10 +573,17 @@ function PrincipalDashboard({ title, schoolName }: { title: string; schoolName: 
 function TeacherHeatmap({
   selectedCell,
   onSelectCell,
+  animateIn = false,
 }: {
   selectedCell: TeacherCell;
   onSelectCell: (cell: TeacherCell) => void;
+  animateIn?: boolean;
 }) {
+  const { transitionId, getItemMotion } = useMobileAhaAnimation(animateIn);
+  const lastRowEndTime =
+    (TEACHER_SAMPLE.students.length - 1) * MOBILE_AHA_ROW_STAGGER +
+    MOBILE_AHA_ROW_DURATION;
+
   const handleSelect = (cell: TeacherCell) => {
     onSelectCell(cell);
   };
@@ -576,71 +704,98 @@ function TeacherHeatmap({
 
         {/* Student Rows */}
         <div className="space-y-[4px] md:space-y-[5px]" role="presentation">
-          {TEACHER_SAMPLE.students.map((st, rIdx) => (
-            <div
-              key={st}
-              role="row"
-              className="grid gap-[4px] md:gap-[5px] items-center"
-              style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
-            >
-              <div
-                role="rowheader"
-                className="text-[11px] font-medium text-slate-400 text-center flex items-center justify-center select-none"
+          {TEACHER_SAMPLE.students.map((st, rIdx) => {
+            const rowContent = (
+              <>
+                <div
+                  role="rowheader"
+                  className="text-[11px] font-medium text-slate-400 text-center flex items-center justify-center select-none"
+                >
+                  {st}
+                </div>
+                {TEACHER_SAMPLE.concepts.map((concept, cIdx) => {
+                  const cell = TEACHER_SAMPLE.grid[st][concept];
+                  const tone = getTeacherTone(cell.pct);
+                  const isSelected =
+                    selectedCell.student === cell.student &&
+                    selectedCell.concept === cell.concept;
+                  const isCritical = cell.pct < TEACHER_CRITICAL_BELOW;
+
+                  const toneClass =
+                    tone === 'teal'
+                      ? 'bg-[#0F5B6C] border-[#1B8798] text-[#E6FBFF]'
+                      : tone === 'amber'
+                      ? 'bg-[#7A5C25] border-[#B78F43] text-[#FFF3D6]'
+                      : 'bg-[#C4485A] border-[#E26A7B] text-[#FFFFFF]';
+
+                  const outlineClass = isSelected
+                    ? 'outline outline-2 outline-white z-10'
+                    : isCritical
+                    ? 'outline outline-1 outline-[#FFA0AD]'
+                    : '';
+
+                  return (
+                    <button
+                      key={`${st}-${concept}`}
+                      id={getCellId(rIdx, cIdx)}
+                      role="gridcell"
+                      type="button"
+                      tabIndex={isSelected ? 0 : -1}
+                      aria-selected={isSelected}
+                      aria-label={`Roll ${cell.student}, ${cell.concept}, ${cell.pct} percent`}
+                      onClick={() => handleSelect(cell)}
+                      onKeyDown={(e) => handleCellKeyDown(e, rIdx, cIdx, cell)}
+                      style={{
+                        fontFamily: 'var(--font-outfit), sans-serif',
+                        fontSize: 'clamp(13px, 0.95vw, 17px)',
+                      }}
+                      className={`relative h-10 md:h-[clamp(30px,3.6dvh,40px)] rounded-[10px] border font-medium flex items-center justify-center select-none cursor-pointer transition-none ${toneClass} ${outlineClass} focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none`}
+                    >
+                      {/* Critical white corner dot */}
+                      {isCritical && (
+                        <span
+                          className="absolute top-1 right-1 w-[5px] h-[5px] rounded-full bg-white pointer-events-none"
+                          aria-hidden="true"
+                        />
+                      )}
+
+                      {cell.pct}
+                    </button>
+                  );
+                })}
+              </>
+            );
+
+            if (!animateIn) {
+              return (
+                <div
+                  key={st}
+                  role="row"
+                  className="grid gap-[4px] md:gap-[5px] items-center"
+                  style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
+                >
+                  {rowContent}
+                </div>
+              );
+            }
+
+            return (
+              <m.div
+                key={`${st}-t${transitionId}`}
+                role="row"
+                className="grid gap-[4px] md:gap-[5px] items-center"
+                style={{ gridTemplateColumns: '22px repeat(5, 1fr)' }}
+                {...getItemMotion(
+                  rIdx * MOBILE_AHA_ROW_STAGGER,
+                  MOBILE_AHA_ROW_DURATION,
+                  { opacity: 0, y: 6 },
+                  { opacity: 1, y: 0 }
+                )}
               >
-                {st}
-              </div>
-              {TEACHER_SAMPLE.concepts.map((concept, cIdx) => {
-                const cell = TEACHER_SAMPLE.grid[st][concept];
-                const tone = getTeacherTone(cell.pct);
-                const isSelected =
-                  selectedCell.student === cell.student &&
-                  selectedCell.concept === cell.concept;
-                const isCritical = cell.pct < TEACHER_CRITICAL_BELOW;
-
-                const toneClass =
-                  tone === 'teal'
-                    ? 'bg-[#0F5B6C] border-[#1B8798] text-[#E6FBFF]'
-                    : tone === 'amber'
-                    ? 'bg-[#7A5C25] border-[#B78F43] text-[#FFF3D6]'
-                    : 'bg-[#C4485A] border-[#E26A7B] text-[#FFFFFF]';
-
-                const outlineClass = isSelected
-                  ? 'outline outline-2 outline-white z-10'
-                  : isCritical
-                  ? 'outline outline-1 outline-[#FFA0AD]'
-                  : '';
-
-                return (
-                  <button
-                    key={`${st}-${concept}`}
-                    id={getCellId(rIdx, cIdx)}
-                    role="gridcell"
-                    type="button"
-                    tabIndex={isSelected ? 0 : -1}
-                    aria-selected={isSelected}
-                    aria-label={`Roll ${cell.student}, ${cell.concept}, ${cell.pct} percent`}
-                    onClick={() => handleSelect(cell)}
-                    onKeyDown={(e) => handleCellKeyDown(e, rIdx, cIdx, cell)}
-                    style={{
-                      fontFamily: 'var(--font-outfit), sans-serif',
-                      fontSize: 'clamp(13px, 0.95vw, 17px)',
-                    }}
-                    className={`relative h-10 md:h-[clamp(30px,3.6dvh,40px)] rounded-[10px] border font-medium flex items-center justify-center select-none cursor-pointer transition-none ${toneClass} ${outlineClass} focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none`}
-                  >
-                    {/* Critical white corner dot */}
-                    {isCritical && (
-                      <span
-                        className="absolute top-1 right-1 w-[5px] h-[5px] rounded-full bg-white pointer-events-none"
-                        aria-hidden="true"
-                      />
-                    )}
-
-                    {cell.pct}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+                {rowContent}
+              </m.div>
+            );
+          })}
         </div>
 
         {/* Footer row: Concept averages */}
@@ -671,66 +826,136 @@ function TeacherHeatmap({
       </div>
 
       {/* Detail area below the grid */}
-      <div
-        className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-3 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
-        style={{ background: 'var(--detail-bg, rgba(4, 14, 28, 0.72))' }}
-      >
-        {selectedCell.detail ? (
-          <div className="space-y-1.5">
+      {!animateIn ? (
+        <div
+          className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-3 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
+          style={{ background: 'var(--detail-bg, rgba(4, 14, 28, 0.72))' }}
+        >
+          {selectedCell.detail ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[15px] font-bold text-white leading-tight">
+                  Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-teal-200 border border-teal-400/20 select-none">
+                    Sample insight
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-teal-400 text-slate-900 select-none shrink-0">
+                    {selectedCell.detail.competency}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[13px] text-white/90 leading-snug">
+                <span className="font-semibold text-white">Stuck on:</span>{' '}
+                {selectedCell.detail.stuck}
+              </p>
+              <p className="text-[13px] text-white/90 leading-snug">
+                <span className="font-semibold text-teal-300">Action:</span>{' '}
+                {selectedCell.detail.action}
+              </p>
+            </div>
+          ) : selectedCell.pct >= 75 ? (
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-[15px] font-bold text-white leading-tight">
                 Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
               </span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-teal-200 border border-teal-400/20 select-none">
-                  Sample insight
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-teal-400 text-slate-900 select-none shrink-0">
-                  {selectedCell.detail.competency}
-                </span>
-              </div>
+              <span className="text-[13px] text-teal-300 font-medium">
+                On track. No action needed.
+              </span>
             </div>
-            <p className="text-[13px] text-white/90 leading-snug">
-              <span className="font-semibold text-white">Stuck on:</span>{' '}
-              {selectedCell.detail.stuck}
-            </p>
-            <p className="text-[13px] text-white/90 leading-snug">
-              <span className="font-semibold text-teal-300">Action:</span>{' '}
-              {selectedCell.detail.action}
-            </p>
-          </div>
-        ) : selectedCell.pct >= 75 ? (
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-[15px] font-bold text-white leading-tight">
-              Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
-            </span>
-            <span className="text-[13px] text-teal-300 font-medium">
-              On track. No action needed.
-            </span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-[15px] font-bold text-white leading-tight">
-              Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
-            </span>
-            <span className="text-[13px] text-amber-300 font-medium">
-              In progress. Keep an eye on it.
-            </span>
-          </div>
-        )}
-
-        {/* Concept reteaching context line */}
-        <div className="hidden md:block text-[12px] text-slate-300 leading-normal pt-2 border-t border-white/10 mt-2">
-          <span>
-            {selectedConceptStats.belowSixty} of {selectedConceptStats.total} students are below 60% in {selectedCell.concept}.
-          </span>
-          {selectedConceptStats.belowSixty >= 3 && (
-            <span className="text-amber-300 font-medium">
-              {' '}Worth reteaching to the whole class.
-            </span>
+          ) : (
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[15px] font-bold text-white leading-tight">
+                Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
+              </span>
+              <span className="text-[13px] text-amber-300 font-medium">
+                In progress. Keep an eye on it.
+              </span>
+            </div>
           )}
+
+          {/* Concept reteaching context line */}
+          <div className="hidden md:block text-[12px] text-slate-300 leading-normal pt-2 border-t border-white/10 mt-2">
+            <span>
+              {selectedConceptStats.belowSixty} of {selectedConceptStats.total} students are below 60% in {selectedCell.concept}.
+            </span>
+            {selectedConceptStats.belowSixty >= 3 && (
+              <span className="text-amber-300 font-medium">
+                {' '}Worth reteaching to the whole class.
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <m.div
+          key={`teacher-detail-t${transitionId}`}
+          className="mt-[14px] px-4 py-3.5 rounded-[16px] text-left min-h-0 md:min-h-[128px] max-h-[38dvh] md:max-h-none overflow-y-auto md:overflow-visible sticky bottom-3 z-20 md:static bg-[rgb(6,22,38)] md:bg-transparent [--detail-bg:rgb(6,22,38)] md:[--detail-bg:rgba(4,14,28,0.72)] shadow-[0_-12px_16px_-8px_rgba(0,0,0,0.5)] md:shadow-none flex flex-col justify-between"
+          style={{ background: 'var(--detail-bg, rgba(4, 14, 28, 0.72))' }}
+          {...getItemMotion(
+            lastRowEndTime,
+            MOBILE_AHA_ROW_DURATION,
+            { opacity: 0, y: 6 },
+            { opacity: 1, y: 0 }
+          )}
+        >
+          {selectedCell.detail ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-[15px] font-bold text-white leading-tight">
+                  Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-teal-200 border border-teal-400/20 select-none">
+                    Sample insight
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-teal-400 text-slate-900 select-none shrink-0">
+                    {selectedCell.detail.competency}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[13px] text-white/90 leading-snug">
+                <span className="font-semibold text-white">Stuck on:</span>{' '}
+                {selectedCell.detail.stuck}
+              </p>
+              <p className="text-[13px] text-white/90 leading-snug">
+                <span className="font-semibold text-teal-300">Action:</span>{' '}
+                {selectedCell.detail.action}
+              </p>
+            </div>
+          ) : selectedCell.pct >= 75 ? (
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[15px] font-bold text-white leading-tight">
+                Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
+              </span>
+              <span className="text-[13px] text-teal-300 font-medium">
+                On track. No action needed.
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-[15px] font-bold text-white leading-tight">
+                Roll {selectedCell.student} · {selectedCell.concept} ({selectedCell.pct}%)
+              </span>
+              <span className="text-[13px] text-amber-300 font-medium">
+                In progress. Keep an eye on it.
+              </span>
+            </div>
+          )}
+
+          {/* Concept reteaching context line */}
+          <div className="hidden md:block text-[12px] text-slate-300 leading-normal pt-2 border-t border-white/10 mt-2">
+            <span>
+              {selectedConceptStats.belowSixty} of {selectedConceptStats.total} students are below 60% in {selectedCell.concept}.
+            </span>
+            {selectedConceptStats.belowSixty >= 3 && (
+              <span className="text-amber-300 font-medium">
+                {' '}Worth reteaching to the whole class.
+              </span>
+            )}
+          </div>
+        </m.div>
+      )}
     </div>
   );
 }
@@ -742,12 +967,15 @@ function ParentPhonePreview({
   setChildName,
   effectiveName,
   layout = 'd',
+  animateIn = false,
 }: {
   childName: string;
   setChildName: (name: string) => void;
   effectiveName: string;
   layout?: 'd' | 'm';
+  animateIn?: boolean;
 }) {
+  const { transitionId, getItemMotion } = useMobileAhaAnimation(animateIn);
   const activeDaysCount = PARENT_SAMPLE.weekDays.filter(Boolean).length;
   const inputId = `child-name-${layout}`;
 
@@ -842,11 +1070,26 @@ function ParentPhonePreview({
               <div className="flex items-center justify-between px-1">
                 {DAY_LETTERS.map((letter, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
-                    <span
-                      className={`h-3 w-3 rounded-full ${
-                        PARENT_SAMPLE.weekDays[i] ? 'bg-[#14B8A6]' : 'bg-white/15'
-                      }`}
-                    />
+                    {!animateIn ? (
+                      <span
+                        className={`h-3 w-3 rounded-full ${
+                          PARENT_SAMPLE.weekDays[i] ? 'bg-[#14B8A6]' : 'bg-white/15'
+                        }`}
+                      />
+                    ) : (
+                      <m.span
+                        key={`dot-${i}-t${transitionId}`}
+                        className={`h-3 w-3 rounded-full ${
+                          PARENT_SAMPLE.weekDays[i] ? 'bg-[#14B8A6]' : 'bg-white/15'
+                        }`}
+                        {...getItemMotion(
+                          i * MOBILE_AHA_DOT_STAGGER,
+                          MOBILE_AHA_DOT_DURATION,
+                          { opacity: 0, scale: 0 },
+                          { opacity: 1, scale: 1 }
+                        )}
+                      />
+                    )}
                     <span className="text-[10px] text-slate-400 font-medium">
                       {letter}
                     </span>
@@ -865,14 +1108,34 @@ function ParentPhonePreview({
       </div>
 
       {/* Ask Tonight Box */}
-      <div className="w-full rounded-2xl bg-teal-400/10 border border-teal-300/30 p-3 text-left">
-        <p className="text-[12px] font-semibold text-teal-300 mb-0.5">
-          Try asking {effectiveName} tonight:
-        </p>
-        <p className="text-[13px] text-white/90 italic leading-snug">
-          &ldquo;{PARENT_SAMPLE.askTonight}&rdquo;
-        </p>
-      </div>
+      {!animateIn ? (
+        <div className="w-full rounded-2xl bg-teal-400/10 border border-teal-300/30 p-3 text-left">
+          <p className="text-[12px] font-semibold text-teal-300 mb-0.5">
+            Try asking {effectiveName} tonight:
+          </p>
+          <p className="text-[13px] text-white/90 italic leading-snug">
+            &ldquo;{PARENT_SAMPLE.askTonight}&rdquo;
+          </p>
+        </div>
+      ) : (
+        <m.div
+          key={`ask-tonight-t${transitionId}`}
+          className="w-full rounded-2xl bg-teal-400/10 border border-teal-300/30 p-3 text-left"
+          {...getItemMotion(
+            MOBILE_AHA_BUBBLE_DELAY,
+            MOBILE_AHA_BUBBLE_DURATION,
+            { opacity: 0, y: 6 },
+            { opacity: 1, y: 0 }
+          )}
+        >
+          <p className="text-[12px] font-semibold text-teal-300 mb-0.5">
+            Try asking {effectiveName} tonight:
+          </p>
+          <p className="text-[13px] text-white/90 italic leading-snug">
+            &ldquo;{PARENT_SAMPLE.askTonight}&rdquo;
+          </p>
+        </m.div>
+      )}
     </div>
   );
 }

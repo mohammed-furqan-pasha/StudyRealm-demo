@@ -214,6 +214,22 @@ function StagePlate({
           };
         }
       }
+    } else if (isFadeToStage) {
+      // fade -> stage (e.g. demo -> features, survey -> contact, demo -> aha, survey -> features)
+      // The stage plate is underneath from the start while the fade page fades out over it
+      if (state === 'active') {
+        initial = false;
+        animate = { opacity: 1 };
+        transition = { duration: 0 };
+      }
+    } else if (isStageToFade) {
+      // stage -> fade (e.g. aha -> demo, features -> survey, contact -> survey, features -> demo)
+      // The stage plate stays at opacity 1 underneath while the fade page fades in over it
+      if (state === 'leaving') {
+        initial = false;
+        animate = { opacity: 1 };
+        transition = { duration: 0 };
+      }
     } else {
       if (state === 'active' || state === 'leaving') {
         animate = { opacity: 1 };

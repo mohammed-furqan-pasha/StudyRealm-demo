@@ -16,6 +16,10 @@ export const PARALLAX_EASE = [0.22, 1, 0.36, 1] as const;
 export const SCENE_BOTTOM_RESERVE_DESKTOP = 120;
 export const SCENE_BOTTOM_RESERVE_MOBILE = 88;
 
+export const MOBILE_ENTER_DURATION_REVEAL = 0.9;
+export const MOBILE_ENTER_DURATION_WORD = 0.95;
+export const MOBILE_ENTER_EASE = [0.33, 1, 0.68, 1] as const;
+
 export { CoverBox } from './CoverBox';
 import { CoverBox } from './CoverBox';
 
@@ -68,7 +72,7 @@ function SceneObjectItem({ obj }: { obj: SceneObject }) {
 }
 
 export default function SceneShell({ scene, objects = [], children }: SceneShellProps) {
-  const { isCurrent, direction, axis, desktop } = usePageState();
+  const { isCurrent, direction, axis, desktop, choreographed = false } = usePageState();
   const [hasSettled, setHasSettled] = useState(false);
   const [bgLoaded, setBgLoaded] = useState(false);
   const [bgError, setBgError] = useState(false);
@@ -76,8 +80,13 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
 
   const sceneConfig = SCENES[scene] || SCENES.hero;
 
+  const bypassParallax = desktop || choreographed;
+
   useEffect(() => {
-    if (desktop) return;
+    if (bypassParallax) {
+      prevIsCurrent.current = isCurrent;
+      return;
+    }
     if (isCurrent && !prevIsCurrent.current) {
       setHasSettled(false);
       const timer = setTimeout(() => {
@@ -88,14 +97,16 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       setHasSettled(true);
     }
     prevIsCurrent.current = isCurrent;
-  }, [desktop, isCurrent]);
+  }, [bypassParallax, isCurrent]);
 
-  if (desktop && isStageMode(scene)) {
+  if (isStageMode(scene)) {
     return (
       <div
         className="relative z-10 w-full h-full flex flex-col overflow-y-auto pageflow-scroll pb-[88px] md:pb-[120px]"
         style={{
-          paddingBottom: `calc(${SCENE_BOTTOM_RESERVE_DESKTOP}px + env(safe-area-inset-bottom, 0px))`,
+          paddingBottom: `calc(${
+            desktop ? SCENE_BOTTOM_RESERVE_DESKTOP : SCENE_BOTTOM_RESERVE_MOBILE
+          }px + env(safe-area-inset-bottom, 0px))`,
           transform: 'none',
         }}
       >
@@ -105,6 +116,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
   }
 
   const getLayerAnimate = (percent: number) => {
+    if (bypassParallax) {
+      return { [axis]: '0%' };
+    }
     if (isCurrent && !hasSettled) {
       const offset = `${direction * percent}%`;
       return { [axis]: [offset, '0%'] };
@@ -112,12 +126,12 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
     return { [axis]: '0%' };
   };
 
-  const layerTransition = isCurrent && !hasSettled
+  const layerTransition = !bypassParallax && isCurrent && !hasSettled
     ? { duration: PARALLAX_DURATION, ease: PARALLAX_EASE }
     : { duration: 0 };
 
   const layerTransformTemplate = (_: unknown, generated: string) => {
-    return (!isCurrent || hasSettled) ? 'none' : generated;
+    return (bypassParallax || !isCurrent || hasSettled) ? 'none' : generated;
   };
 
   const behindMid = objects.filter((o) => o.layer === 'behind' && o.depth === 'mid');
@@ -136,9 +150,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       {/* Background Image Layer */}
       <m.div
         className="absolute inset-0 pointer-events-none select-none"
-        animate={desktop ? undefined : getLayerAnimate(PARALLAX_BG)}
-        transition={desktop ? { duration: 0 } : layerTransition}
-        transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+        animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_BG)}
+        transition={bypassParallax ? { duration: 0 } : layerTransition}
+        transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
       >
         <picture className="w-full h-full block">
           <source media="(min-width: 768px)" srcSet={sceneConfig.lg} />
@@ -171,9 +185,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       {behindMid.length > 0 && (
         <m.div
           className="absolute inset-0 pointer-events-none select-none z-[1]"
-          animate={desktop ? undefined : getLayerAnimate(PARALLAX_MID)}
-          transition={desktop ? { duration: 0 } : layerTransition}
-          transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+          animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_MID)}
+          transition={bypassParallax ? { duration: 0 } : layerTransition}
+          transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
         >
           {behindMid.map((obj, i) => (
             <SceneObjectItem key={`bm-${i}-${obj.src}`} obj={obj} />
@@ -185,9 +199,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       {behindNear.length > 0 && (
         <m.div
           className="absolute inset-0 pointer-events-none select-none z-[2]"
-          animate={desktop ? undefined : getLayerAnimate(PARALLAX_NEAR)}
-          transition={desktop ? { duration: 0 } : layerTransition}
-          transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+          animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_NEAR)}
+          transition={bypassParallax ? { duration: 0 } : layerTransition}
+          transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
         >
           {behindNear.map((obj, i) => (
             <SceneObjectItem key={`bn-${i}-${obj.src}`} obj={obj} />
@@ -202,13 +216,13 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
           paddingBottom: `calc(${
             desktop ? SCENE_BOTTOM_RESERVE_DESKTOP : SCENE_BOTTOM_RESERVE_MOBILE
           }px + env(safe-area-inset-bottom, 0px))`,
-          ...(desktop ? { transform: 'none' } : {}),
+          ...(bypassParallax ? { transform: 'none' } : {}),
         }}
-        animate={desktop ? undefined : getLayerAnimate(PARALLAX_TEXT)}
-        transition={desktop ? { duration: 0 } : layerTransition}
-        transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+        animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_TEXT)}
+        transition={bypassParallax ? { duration: 0 } : layerTransition}
+        transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
         onAnimationComplete={() => {
-          if (!desktop && isCurrent) setHasSettled(true);
+          if (!bypassParallax && isCurrent) setHasSettled(true);
         }}
       >
         {children}
@@ -218,9 +232,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       {frontMid.length > 0 && (
         <m.div
           className="absolute inset-0 pointer-events-none select-none z-[20]"
-          animate={desktop ? undefined : getLayerAnimate(PARALLAX_MID)}
-          transition={desktop ? { duration: 0 } : layerTransition}
-          transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+          animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_MID)}
+          transition={bypassParallax ? { duration: 0 } : layerTransition}
+          transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
         >
           {frontMid.map((obj, i) => (
             <SceneObjectItem key={`fm-${i}-${obj.src}`} obj={obj} />
@@ -232,9 +246,9 @@ export default function SceneShell({ scene, objects = [], children }: SceneShell
       {frontNear.length > 0 && (
         <m.div
           className="absolute inset-0 pointer-events-none select-none z-[30]"
-          animate={desktop ? undefined : getLayerAnimate(PARALLAX_NEAR)}
-          transition={desktop ? { duration: 0 } : layerTransition}
-          transformTemplate={desktop ? () => 'none' : layerTransformTemplate}
+          animate={bypassParallax ? undefined : getLayerAnimate(PARALLAX_NEAR)}
+          transition={bypassParallax ? { duration: 0 } : layerTransition}
+          transformTemplate={bypassParallax ? () => 'none' : layerTransformTemplate}
         >
           {frontNear.map((obj, i) => (
             <SceneObjectItem key={`fn-${i}-${obj.src}`} obj={obj} />
@@ -260,6 +274,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     desktop,
     transitionId = 0,
     transitionDir,
+    choreographed = false,
   } = usePageState();
   const shouldReduceMotion = useReducedMotion();
   const [settled, setSettled] = useState(true);
@@ -269,9 +284,6 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     if (desktop) return;
     if (!isCurrent || isLeaving) {
       setSettled(false);
-    } else {
-      const timer = setTimeout(() => setSettled(true), 800);
-      return () => clearTimeout(timer);
     }
   }, [desktop, isCurrent, isLeaving, transitionId]);
 
@@ -338,7 +350,43 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
               let transitionObj: Record<string, any>;
 
               if (staged) {
-                if (shouldReduceMotion) {
+                if (choreographed) {
+                  const enterX = dir === 1 ? '10vw' : '-10vw';
+                  const leaveX = dir === 1 ? '-5vw' : '5vw';
+
+                  if (shouldReduceMotion) {
+                    initialObj = { opacity: isLeaving ? 1 : 0, x: 0, y: 0 };
+                    animateObj = isLeaving
+                      ? { opacity: 0, x: 0, y: 0 }
+                      : isCurrent
+                      ? { opacity: 1, x: 0, y: 0 }
+                      : { opacity: 0, x: 0, y: 0 };
+                    transitionObj = {
+                      duration: isLeaving ? 0.2 : 0.3,
+                      delay: isLeaving ? currentIdx * 0.02 : 0,
+                    };
+                  } else if (isLeaving) {
+                    initialObj = { x: 0, y: 0, opacity: 1 };
+                    animateObj = { x: leaveX, y: 0, opacity: 0 };
+                    transitionObj = {
+                      duration: 0.28 * TIME_SCALE,
+                      ease: EASE_IN,
+                      delay: currentIdx * (0.02 * TIME_SCALE),
+                    };
+                  } else if (isCurrent) {
+                    initialObj = { x: enterX, y: 0, opacity: 0 };
+                    animateObj = { x: 0, y: 0, opacity: 1 };
+                    transitionObj = {
+                      duration: MOBILE_ENTER_DURATION_WORD * TIME_SCALE,
+                      ease: MOBILE_ENTER_EASE,
+                      delay: textDelayMs / 1000 + currentIdx * (0.09 * TIME_SCALE),
+                    };
+                  } else {
+                    initialObj = { x: enterX, y: 0, opacity: 0 };
+                    animateObj = { x: enterX, y: 0, opacity: 0 };
+                    transitionObj = { duration: 0 };
+                  }
+                } else if (shouldReduceMotion) {
                   initialObj = { opacity: isLeaving ? 1 : 0 };
                   animateObj = isLeaving
                     ? { opacity: 0 }
@@ -391,7 +439,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
               return (
                 <span
                   key={`word-${currentIdx}-${word}`}
-                  className="inline-block overflow-hidden pb-1 align-bottom mr-[0.28em] last:mr-0"
+                  className={`inline-block ${choreographed ? '' : 'overflow-hidden'} pb-1 align-bottom mr-[0.28em] last:mr-0`}
                 >
                   <m.span
                     key={`word-${currentIdx}-${word}-t${transitionId}`}
@@ -400,6 +448,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
                     initial={initialObj}
                     animate={animateObj}
                     transition={transitionObj}
+                    style={!desktop && staged && !settled && isCurrent ? { opacity: 0 } : undefined}
                     onAnimationComplete={() => {
                       if (isCurrent && !isLeaving) {
                         setSettled(true);
@@ -443,6 +492,7 @@ export function StageReveal({
     transitionId = 0,
     transitionDir,
     direction,
+    choreographed = false,
   } = usePageState();
   const shouldReduceMotion = useReducedMotion();
   const [settled, setSettled] = useState(true);
@@ -451,9 +501,6 @@ export function StageReveal({
     if (desktop) return;
     if (!isCurrent || isLeaving) {
       setSettled(false);
-    } else {
-      const timer = setTimeout(() => setSettled(true), 800);
-      return () => clearTimeout(timer);
     }
   }, [desktop, isCurrent, isLeaving, transitionId]);
 
@@ -493,56 +540,132 @@ export function StageReveal({
   let animateTarget: Record<string, any>;
   let transitionConfig: Record<string, any>;
 
-  if (shouldReduceMotion) {
-    initialTarget = {
-      opacity: isLeaving ? 1 : 0,
-      y: 0,
-    };
-    animateTarget = {
-      opacity: isLeaving ? 0 : isCurrent ? 1 : 0,
-      y: 0,
-    };
-    transitionConfig = {
-      duration: isLeaving ? 0.18 : 0.3,
-      delay: 0,
-    };
-  } else if (isLeaving) {
-    initialTarget = {
-      opacity: 1,
-      y: 0,
-    };
-    animateTarget = {
-      opacity: 0,
-      y: leaveY,
-    };
-    transitionConfig = {
-      duration: 0.25 * TIME_SCALE,
-      ease: EASE_IN,
-    };
-  } else if (isCurrent) {
-    initialTarget = {
-      opacity: 0,
-      y: enterY,
-    };
-    animateTarget = {
-      opacity: 1,
-      y: 0,
-    };
-    transitionConfig = {
-      duration: 0.7 * TIME_SCALE,
-      ease: EASE_OUT,
-      delay: textDelayMs / 1000 + 0.1 * TIME_SCALE + order * (0.1 * TIME_SCALE),
-    };
+  if (choreographed) {
+    const enterX = dir === 1 ? '18vw' : '-18vw';
+    const leaveX = dir === 1 ? '-8vw' : '8vw';
+
+    if (shouldReduceMotion) {
+      initialTarget = {
+        opacity: isLeaving ? 1 : 0,
+        x: 0,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: isLeaving ? 0 : isCurrent ? 1 : 0,
+        x: 0,
+        y: 0,
+      };
+      transitionConfig = {
+        duration: isLeaving ? 0.18 : 0.3,
+        delay: 0,
+      };
+    } else if (isLeaving) {
+      initialTarget = {
+        opacity: 1,
+        x: 0,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: 0,
+        x: leaveX,
+        y: 0,
+      };
+      transitionConfig = {
+        duration: 0.25 * TIME_SCALE,
+        ease: EASE_IN,
+      };
+    } else if (isCurrent) {
+      initialTarget = {
+        opacity: 0,
+        x: enterX,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: 1,
+        x: 0,
+        y: 0,
+      };
+      transitionConfig = {
+        duration: MOBILE_ENTER_DURATION_REVEAL * TIME_SCALE,
+        ease: MOBILE_ENTER_EASE,
+        delay: textDelayMs / 1000 + 0.1 * TIME_SCALE + order * (0.1 * TIME_SCALE),
+      };
+    } else {
+      initialTarget = {
+        opacity: 0,
+        x: enterX,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: 0,
+        x: enterX,
+        y: 0,
+      };
+      transitionConfig = { duration: 0 };
+    }
   } else {
-    initialTarget = {
-      opacity: 0,
-      y: enterY,
-    };
-    animateTarget = {
-      opacity: 0,
-      y: enterY,
-    };
-    transitionConfig = { duration: 0 };
+    const posRise = typeof rise === 'number' ? `${rise}px` : rise;
+    const negRise =
+      typeof rise === 'number'
+        ? `-${rise}px`
+        : rise.startsWith('-')
+        ? rise.slice(1)
+        : `-${rise}`;
+
+    const enterY = isDesktopStaged ? (dir === 1 ? posRise : negRise) : posRise;
+    const leaveY = isDesktopStaged ? (dir === 1 ? negRise : posRise) : negRise;
+
+    if (shouldReduceMotion) {
+      initialTarget = {
+        opacity: isLeaving ? 1 : 0,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: isLeaving ? 0 : isCurrent ? 1 : 0,
+        y: 0,
+      };
+      transitionConfig = {
+        duration: isLeaving ? 0.18 : 0.3,
+        delay: 0,
+      };
+    } else if (isLeaving) {
+      initialTarget = {
+        opacity: 1,
+        y: 0,
+      };
+      animateTarget = {
+        opacity: 0,
+        y: leaveY,
+      };
+      transitionConfig = {
+        duration: 0.25 * TIME_SCALE,
+        ease: EASE_IN,
+      };
+    } else if (isCurrent) {
+      initialTarget = {
+        opacity: 0,
+        y: enterY,
+      };
+      animateTarget = {
+        opacity: 1,
+        y: 0,
+      };
+      transitionConfig = {
+        duration: 0.7 * TIME_SCALE,
+        ease: EASE_OUT,
+        delay: textDelayMs / 1000 + 0.1 * TIME_SCALE + order * (0.1 * TIME_SCALE),
+      };
+    } else {
+      initialTarget = {
+        opacity: 0,
+        y: enterY,
+      };
+      animateTarget = {
+        opacity: 0,
+        y: enterY,
+      };
+      transitionConfig = { duration: 0 };
+    }
   }
 
   return (
@@ -552,6 +675,7 @@ export function StageReveal({
       initial={initialTarget}
       animate={animateTarget}
       transition={transitionConfig}
+      style={!desktop && staged && !settled && isCurrent ? { opacity: 0 } : undefined}
       onAnimationComplete={() => {
         if (isCurrent && !isLeaving) {
           setSettled(true);

@@ -57,6 +57,7 @@ export interface PageStateContextType {
   isLeaving?: boolean;
   transitionId?: number;
   transitionDir?: 1 | -1;
+  choreographed?: boolean;
 }
 
 export const PageStateContext = createContext<PageStateContextType>({
@@ -68,6 +69,7 @@ export const PageStateContext = createContext<PageStateContextType>({
   isLeaving: false,
   transitionId: 0,
   transitionDir: 1,
+  choreographed: false,
 });
 
 export const usePageState = () => useContext(PageStateContext);
@@ -126,6 +128,7 @@ interface TransitionState {
   fromId: string;
   toId: string;
   dir: 1 | -1;
+  choreographed: boolean;
 }
 
 const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, ref) => {
@@ -148,7 +151,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     tierRef.current = initialTier;
   }, []);
 
-  const effectiveTimeScale = isDesktop ? (TIME_SCALE * (TIER_SCALE[tier] ?? 1)) : TIME_SCALE;
+  const effectiveTimeScale = TIME_SCALE * (TIER_SCALE[tier] ?? 1);
 
   // Frame monitor for desktop: runs during the first two choreographed transitions of the session
   const monitoredTransitionsRef = useRef<number>(0);
@@ -299,6 +302,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     fromId: pages[0]?.id || '',
     toId: pages[0]?.id || '',
     dir: 1,
+    choreographed: false,
   }));
   const transitionRef = useRef(transition);
   useEffect(() => {
@@ -410,10 +414,10 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     const fromId = currentPages[indexRef.current]?.id;
     const toId = currentPages[targetIndex]?.id;
     const isDesktopNav = isDesktopRef.current;
-    // On desktop, all transitions between stage and fade modes run through the choreographed path
+    // On desktop and mobile, all transitions between stage and fade modes run through the choreographed path
     const isChoreographed = isDesktopNav
       ? (isStageMode(fromId) || isFadeMode(fromId)) && (isStageMode(toId) || isFadeMode(toId))
-      : isStaged(fromId) && isStaged(toId);
+      : (isStageMode(fromId) || isFadeMode(fromId)) && (isStageMode(toId) || isFadeMode(toId));
     const isFwd = targetIndex > indexRef.current;
 
     clearTransitionTimers();
@@ -436,6 +440,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         fromId: fromId || '',
         toId: toId || '',
         dir: isFwd ? 1 : -1,
+        choreographed: isChoreographed,
       };
       transitionRef.current = newTransition;
       setTransition(newTransition);
@@ -501,8 +506,8 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
           leaveDurationMs = Math.round(320 * TIME_SCALE);
         }
 
-        // Frame monitor: desktop only, first 2 choreographed transitions of session
-        const shouldMonitor = isDesktopNav && monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
+        // Frame monitor: first 2 choreographed transitions of session
+        const shouldMonitor = monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
         if (shouldMonitor) {
           if (activeMonitorCleanupRef.current) {
             activeMonitorCleanupRef.current();
@@ -1092,16 +1097,57 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   }
                 }
               } else {
-                // PHONE BRANCH (unchanged)
-                if (isStagedNav) {
+                // PHONE BRANCH
+                if (transition.choreographed) {
+                  const isStagePage = isStageMode(p.id);
                   const isVisible = isActive || isLeavingPage;
-                  animateObj = {
-                    x: 0,
-                    y: 0,
-                    opacity: isVisible ? 1 : 0,
-                    visibility: isVisible ? ("visible" as const) : ("hidden" as const),
-                  };
-                  transitionObj = { duration: 0 };
+
+                  if (isStagePage) {
+                    // 'stage' mode pages: always { opacity: 1, x: 0, y: 0 } with transition { duration: 0 };
+                    animateObj = {
+                      x: 0,
+                      y: 0,
+                      opacity: isVisible ? 1 : 0,
+                      visibility: isVisible ? ("visible" as const) : ("hidden" as const),
+                    };
+                    transitionObj = { duration: 0 };
+                  } else {
+                    // 'fade' mode pages (demo, survey): active { opacity: 1 }, inactive { opacity: 0 }
+                    animateObj = {
+                      x: 0,
+                      y: 0,
+                      opacity: isActive ? 1 : 0,
+                      visibility: isVisible ? ("visible" as const) : ("hidden" as const),
+                    };
+
+                    if (isActive) {
+                      if (isTransitioning) {
+                        const leavingPageId = leavingId || transition.fromId;
+                        const leavingIsStage = leavingPageId ? isStageMode(leavingPageId) : false;
+                        transitionObj = (shouldReduceMotion || tier === 'minimal')
+                          ? { duration: 0.3 }
+                          : {
+                              opacity: {
+                                duration: 0.3 * effectiveTimeScale,
+                                delay: leavingIsStage ? 0.36 * effectiveTimeScale : 0,
+                              },
+                            };
+                      } else {
+                        transitionObj = { duration: 0 };
+                      }
+                    } else if (p.id === leavingId) {
+                      transitionObj = (shouldReduceMotion || tier === 'minimal')
+                        ? { duration: 0.3 }
+                        : {
+                            opacity: {
+                              duration: 0.27 * effectiveTimeScale,
+                              delay: 0,
+                            },
+                          };
+                    } else {
+                      transitionObj = { duration: 0 };
+                    }
+                  }
                 } else {
                   if (isActive) {
                     animateObj = {
@@ -1169,12 +1215,13 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                       axis: isDesktop ? 'y' : 'x',
                       staged: isStaged(p.id),
                       desktop: isDesktop,
-                      textDelayMs: isStagedNav
+                      textDelayMs: (isDesktop ? isStagedNav : transition.choreographed)
                         ? Math.round((isDesktop ? PAIR_TIMING : PHONE_TIMING)[transition.dir === -1 ? 'back' : 'fwd'].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE))
                         : 250,
                       isLeaving: isStagedNav && p.id === leavingId,
                       transitionId: transition.id,
                       transitionDir: transition.dir,
+                      choreographed: transition.choreographed,
                     }}
                   >
                     {p.node}

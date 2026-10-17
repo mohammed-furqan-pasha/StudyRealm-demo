@@ -13,8 +13,15 @@ import {
   MessageCircle,
   ArrowRight,
 } from 'lucide-react';
+import { m, useReducedMotion } from 'motion/react';
 import SceneShell, { SplitHeadline, StageReveal } from './SceneShell';
 import TopBar from './TopBar';
+import { usePageState } from './PageFlow';
+import { TIME_SCALE } from '../lib/stageScenes';
+
+export const MOBILE_CONTACT_FLASH_DELAY_OFFSET = 0.7 * TIME_SCALE;
+export const MOBILE_CONTACT_FLASH_DURATION = 0.9 * TIME_SCALE;
+export const MOBILE_CONTACT_FLASH_PEAK = 0.3;
 import { ROLE_CONFIGS } from '../data/roleConfig';
 import { RoleConfig, RoleKey } from '../types';
 
@@ -61,8 +68,31 @@ export default function ContactSection({
   const config = propConfig || ROLE_CONFIGS[role]?.contact || ROLE_CONFIGS.Other.contact;
   const share = propShare || ROLE_CONFIGS[role]?.share || ROLE_CONFIGS.Other.share;
 
+  const { isCurrent = true, isLeaving = false, transitionId = 0, textDelayMs = 250 } = usePageState();
+  const shouldReduceMotion = useReducedMotion();
+
   const isStudent = role === 'Student';
   const isSharePrimary = config.primary === 'share';
+
+  const buttonBlockDelay =
+    (textDelayMs ?? 250) / 1000 + 0.1 * TIME_SCALE + 3 * (0.1 * TIME_SCALE);
+  const flashDelay = buttonBlockDelay + MOBILE_CONTACT_FLASH_DELAY_OFFSET;
+
+  const mobileFlashOverlay =
+    isCurrent && !isLeaving && !shouldReduceMotion ? (
+      <m.span
+        key={`contact-flash-t${transitionId}`}
+        aria-hidden="true"
+        className="absolute inset-0 rounded-full bg-white pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, MOBILE_CONTACT_FLASH_PEAK, 0] }}
+        transition={{
+          duration: MOBILE_CONTACT_FLASH_DURATION,
+          delay: flashDelay,
+          ease: [0.22, 1, 0.36, 1] as const,
+        }}
+      />
+    ) : null;
 
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -380,181 +410,194 @@ export default function ContactSection({
         {/* Action Cards Area (Phone < 768px) */}
         <div className="flex md:hidden flex-col gap-4 w-full mb-4 shrink-0">
           {/* Primary Action Button */}
-          {isStudent ? (
-            <div className="w-full flex flex-col items-center">
-              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
-                {share.label}
-              </p>
-              <button
-                type="button"
-                onClick={handleStudentShare}
-                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25"
-              >
-                <Share2 className="w-5 h-5 shrink-0" />
-                <span>Share</span>
-              </button>
-              {copied && (
-                <p
-                  aria-live="polite"
-                  className="text-teal-300 text-xs font-semibold mt-1.5 text-center"
-                >
-                  Copied! Paste it to your parent or teacher.
+          <StageReveal order={3} rise={30} className="w-full">
+            {isStudent ? (
+              <div className="w-full flex flex-col items-center">
+                <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                  {share.label}
                 </p>
-              )}
-            </div>
-          ) : isSharePrimary ? (
-            <div className="w-full flex flex-col items-center">
-              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
-                {share.label}
-              </p>
-              <a
-                href={shareLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
-              >
-                <Share2 className="w-5 h-5 shrink-0" />
-                <span>Share on WhatsApp</span>
-                <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
-              </a>
-            </div>
-          ) : (
-            <div className="w-full flex flex-col items-center">
-              <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
-                Book a Demo
-              </p>
-              <a
-                href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
-              >
-                <Calendar className="w-5 h-5 shrink-0" />
-                <span>Open Calendar</span>
-                <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
-              </a>
-            </div>
-          )}
-
-          {/* Secondary Actions List (Teacher, Parent, Principal, Other) */}
-          {!isStudent && (
-            <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10 flex flex-col w-full overflow-hidden">
-              {isSharePrimary ? (
-                <>
-                  {/* Calendar Row */}
-                  <a
-                    href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={handleStudentShare}
+                    className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none cursor-pointer shadow-lg shadow-teal-500/25"
                   >
-                    <Calendar className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        Book a Demo
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        {calendlyDesc}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
-                  </a>
-
-                  {/* WhatsApp Row */}
-                  <a
-                    href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    <Share2 className="w-5 h-5 shrink-0" />
+                    <span>Share</span>
+                  </button>
+                  {mobileFlashOverlay}
+                </div>
+                {copied && (
+                  <p
+                    aria-live="polite"
+                    className="text-teal-300 text-xs font-semibold mt-1.5 text-center"
                   >
-                    <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        WhatsApp
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        +91 90195 88700
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
-                  </a>
-
-                  {/* Email Row */}
-                  <a
-                    href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
-                  >
-                    <Mail className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        Email Us
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        {emailDesc} · {EMAIL_ADDRESS}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
-                  </a>
-                </>
-              ) : (
-                <>
-                  {/* WhatsApp Row */}
-                  <a
-                    href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
-                  >
-                    <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        WhatsApp
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        +91 90195 88700
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
-                  </a>
-
-                  {/* Email Row */}
-                  <a
-                    href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
-                  >
-                    <Mail className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        Email Us
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        {emailDesc} · {EMAIL_ADDRESS}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
-                  </a>
-
-                  {/* Share on WhatsApp Row */}
+                    Copied! Paste it to your parent or teacher.
+                  </p>
+                )}
+              </div>
+            ) : isSharePrimary ? (
+              <div className="w-full flex flex-col items-center">
+                <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                  {share.label}
+                </p>
+                <div className="relative w-full">
                   <a
                     href={shareLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
                   >
-                    <Share2 className="w-5 h-5 text-teal-300 shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-semibold text-white leading-snug">
-                        {share.label}
-                      </p>
-                      <p className="text-[12px] text-white/70 leading-snug">
-                        Forward via WhatsApp in 1 tap.
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    <Share2 className="w-5 h-5 shrink-0" />
+                    <span>Share on WhatsApp</span>
+                    <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
                   </a>
-                </>
-              )}
-            </div>
+                  {mobileFlashOverlay}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full flex flex-col items-center">
+                <p className="text-white/80 text-[13px] font-medium mb-1.5 text-center">
+                  Book a Demo
+                </p>
+                <div className="relative w-full">
+                  <a
+                    href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-[52px] w-full rounded-full font-semibold text-[16px] text-white bg-[#14B8A6] hover:bg-[#0D9488] active:scale-95 transition-all flex items-center justify-center gap-2 select-none shadow-lg shadow-teal-500/25"
+                  >
+                    <Calendar className="w-5 h-5 shrink-0" />
+                    <span>Open Calendar</span>
+                    <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
+                  </a>
+                  {mobileFlashOverlay}
+                </div>
+              </div>
+            )}
+          </StageReveal>
+
+          {/* Secondary Actions List (Teacher, Parent, Principal, Other) */}
+          {!isStudent && (
+            <StageReveal order={4} className="w-full">
+              <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10 flex flex-col w-full overflow-hidden">
+                {isSharePrimary ? (
+                  <>
+                    {/* Calendar Row */}
+                    <a
+                      href={isPlaceholder(CALENDLY_LINK) ? undefined : CALENDLY_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <Calendar className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          Book a Demo
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          {calendlyDesc}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+
+                    {/* WhatsApp Row */}
+                    <a
+                      href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          WhatsApp
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          +91 90195 88700
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+
+                    {/* Email Row */}
+                    <a
+                      href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <Mail className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          Email Us
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          {emailDesc} · {EMAIL_ADDRESS}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    {/* WhatsApp Row */}
+                    <a
+                      href={isPlaceholder(WHATSAPP_LINK) ? undefined : WHATSAPP_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <MessageCircle className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          WhatsApp
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          +91 90195 88700
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+
+                    {/* Email Row */}
+                    <a
+                      href={isPlaceholder(EMAIL_ADDRESS) ? undefined : `mailto:${EMAIL_ADDRESS}`}
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <Mail className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          Email Us
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          {emailDesc} · {EMAIL_ADDRESS}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+
+                    {/* Share on WhatsApp Row */}
+                    <a
+                      href={shareLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3.5 min-h-[56px] px-4 py-2.5 transition hover:bg-white/[0.04] active:bg-white/[0.08] select-none text-left w-full"
+                    >
+                      <Share2 className="w-5 h-5 text-teal-300 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-white leading-snug">
+                          {share.label}
+                        </p>
+                        <p className="text-[12px] text-white/70 leading-snug">
+                          Forward via WhatsApp in 1 tap.
+                        </p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/60 shrink-0 ml-auto" />
+                    </a>
+                  </>
+                )}
+              </div>
+            </StageReveal>
           )}
         </div>
 
