@@ -313,7 +313,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
 
       {/* MOBILE VIEW (< 768px): TopBar then scroll container */}
       <div
-        className="flex md:hidden flex-col w-full px-5 py-4 overflow-y-auto pageflow-scroll pb-36 text-left"
+        className="flex md:hidden flex-col w-full px-5 py-4 overflow-y-auto pageflow-scroll pb-36 text-left relative z-10"
         style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
       >
         {/* Tag */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { m, useReducedMotion } from 'motion/react';
 import { usePager, usePageState } from './PageFlow';
 import SceneShell, { SplitHeadline, StageReveal, SceneObject } from './SceneShell';
@@ -76,6 +76,8 @@ function useMobileAhaAnimation(animateIn?: boolean) {
 import { OBJECTS } from '../data/sceneAssets';
 import {
   PRINCIPAL_SAMPLE,
+  PrincipalStat,
+  PrincipalChapter,
   getChapterStatus,
   TEACHER_SAMPLE,
   getTeacherTone,
@@ -88,6 +90,14 @@ import {
 } from '../data/ahaSamples';
 import { RoleConfig, RoleKey } from '../types';
 import StarCatcher from './StarCatcher';
+
+export const PHONE_HINTS: Record<RoleKey, string> = {
+  Teacher: 'Tap a student to see why.',
+  Principal: 'A sample view of your school.',
+  Parent: 'Type a first name to personalise it.',
+  Student: 'Collect 5 stars. It takes 10 seconds.',
+  Other: 'Tap a tab to switch the view.',
+};
 
 const AHA_OBJECT_PLANET: SceneObject = {
   src: OBJECTS.planetSpace,
@@ -322,10 +332,10 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
 
           <StageReveal order={2}>
             <p
-              className="aha-hint hidden text-white/90 text-xs sm:text-sm leading-relaxed max-w-sm [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
+              className="aha-hint text-[13px] text-white/85 leading-snug max-w-sm [text-shadow:0_2px_24px_rgba(5,20,40,0.45)]"
               style={{ fontFamily: 'var(--font-outfit), sans-serif', textShadow: '0 2px 24px rgba(5,20,40,0.45)' }}
             >
-              {config.hint}
+              {PHONE_HINTS[role]}
             </p>
           </StageReveal>
         </div>
@@ -336,21 +346,18 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
             {role === 'Student' ? (
               <StarCatcher onContinue={() => goTo('demo')} />
             ) : role === 'Parent' ? (
-              <ParentPhonePreview
+              <ParentCompact
                 childName={childName}
                 setChildName={setChildName}
                 effectiveName={effectiveChildName}
-                layout="m"
-                animateIn
               />
             ) : role === 'Other' ? (
-              <OtherViews
+              <OtherCompact
                 selectedCell={selectedCell}
                 onSelectCell={setSelectedCell}
                 childName={childName}
                 setChildName={setChildName}
                 effectiveChildName={effectiveChildName}
-                isMobile
               />
             ) : (
               <div
@@ -358,17 +365,14 @@ export default function AhaScene({ role, schoolName, config }: AhaSceneProps) {
                 style={MOBILE_GLASS_CARD_STYLE}
               >
                 {role === 'Principal' && (
-                  <PrincipalDashboard
-                    title={`${schoolDisplayName}: Class 7 Science`}
+                  <PrincipalCompact
                     schoolName={schoolDisplayName}
-                    animateIn
                   />
                 )}
                 {role === 'Teacher' && (
-                  <TeacherHeatmap
+                  <TeacherStuckList
                     selectedCell={selectedCell}
                     onSelectCell={setSelectedCell}
-                    animateIn
                   />
                 )}
               </div>
@@ -565,6 +569,203 @@ function PrincipalDashboard({
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function PrincipalCompact({ schoolName }: { schoolName: string }) {
+  const shouldReduceMotion = useReducedMotion();
+  const [showAllChapters, setShowAllChapters] = useState(false);
+  const [showMoreStats, setShowMoreStats] = useState(false);
+
+  const sortedChapters = [...PRINCIPAL_SAMPLE.chapters].sort((a, b) => a.pct - b.pct);
+  const primaryChapters = sortedChapters.slice(0, 2);
+  const remainingChapters = sortedChapters.slice(2);
+
+  const avgMasteryStat = PRINCIPAL_SAMPLE.stats.find((s) => s.label === 'Avg mastery');
+  const studentsNeedingHelpStat = PRINCIPAL_SAMPLE.stats.find((s) => s.label === 'Students needing help');
+  const activeThisWeekStat = PRINCIPAL_SAMPLE.stats.find((s) => s.label === 'Active this week');
+  const chaptersNeedingHelpStat = PRINCIPAL_SAMPLE.stats.find((s) => s.label === 'Chapters needing help');
+
+  const primaryStats = [avgMasteryStat, studentsNeedingHelpStat].filter(
+    (s): s is PrincipalStat => Boolean(s)
+  );
+  const moreStats = [activeThisWeekStat, chaptersNeedingHelpStat].filter(
+    (s): s is PrincipalStat => Boolean(s)
+  );
+
+  const renderChapterRow = (ch: PrincipalChapter) => {
+    const status = getChapterStatus(ch.pct);
+    const tone = status.tone;
+
+    const badgeClass =
+      tone === 'teal'
+        ? 'bg-[#0F5B6C] border-[#1B8798] text-[#E6FBFF]'
+        : tone === 'amber'
+        ? 'bg-[#7A5C25] border-[#B78F43] text-[#FFF3D6]'
+        : 'bg-[#C4485A] border-[#E26A7B] text-white';
+
+    const barColor =
+      tone === 'teal'
+        ? 'bg-[#14B8A6]'
+        : tone === 'amber'
+        ? 'bg-[#B78F43]'
+        : 'bg-[#E26A7B]';
+
+    const isPositive = ch.trendPct > 0;
+    const trendText = isPositive ? `▲ ${ch.trendPct}` : `▼ ${Math.abs(ch.trendPct)}`;
+    const trendAria = isPositive
+      ? `up ${ch.trendPct} points since last month`
+      : `down ${Math.abs(ch.trendPct)} points since last month`;
+
+    return (
+      <div key={ch.name} className="flex flex-col gap-1 text-left">
+        <div className="flex items-center justify-between text-xs sm:text-sm">
+          <span className="font-medium text-slate-200 truncate pr-2">
+            {ch.name}
+          </span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {ch.trendPct !== 0 && (
+              <span
+                className={`text-[11px] font-semibold flex items-center ${
+                  isPositive ? 'text-teal-300' : 'text-[#E26A7B]'
+                }`}
+                aria-label={trendAria}
+              >
+                {trendText}
+              </span>
+            )}
+            <span
+              className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0 ${badgeClass}`}
+            >
+              {ch.pct}% · {status.label}
+            </span>
+          </div>
+        </div>
+        <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className={`h-full w-full rounded-full ${barColor}`}
+            style={{
+              transform: `scaleX(${ch.pct / 100})`,
+              transformOrigin: 'left',
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full block" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
+      {/* Header: school name with SampleDataChip on right */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="min-w-0 pr-2 text-left">
+          <h3 className="font-semibold text-white text-[17px] leading-tight break-words line-clamp-2">
+            {schoolName}
+          </h3>
+          <p className="text-[12px] text-slate-300 leading-normal mt-0.5">
+            Sample numbers · Class 7 Science
+          </p>
+        </div>
+        <SampleDataChip />
+      </div>
+
+      {/* Primary 2 Stat Tiles: grid-cols-2 gap-2 */}
+      <div className="grid grid-cols-2 gap-2 mb-1.5">
+        {primaryStats.map((st) => {
+          const isStudentsAtRisk = st.label === 'Students needing help';
+          return (
+            <div
+              key={st.label}
+              title={isStudentsAtRisk ? `Below ${TEACHER_CRITICAL_BELOW}% in any concept` : undefined}
+              className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col text-left"
+            >
+              <span className="text-base sm:text-lg font-semibold text-white leading-tight">
+                {st.value}
+              </span>
+              <span className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
+                {st.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Button to toggle more stats */}
+      <div className="flex justify-start mb-2">
+        <button
+          type="button"
+          aria-expanded={showMoreStats}
+          onClick={() => setShowMoreStats((prev) => !prev)}
+          className="min-h-[44px] text-[14px] text-teal-300 hover:text-teal-200 underline underline-offset-4 font-medium flex items-center cursor-pointer select-none transition-colors"
+        >
+          {showMoreStats ? 'Fewer numbers' : 'More numbers'}
+        </button>
+      </div>
+
+      {/* Expandable more stats row */}
+      <div
+        className={`grid transition-[grid-template-rows] ${
+          shouldReduceMotion ? '' : 'duration-200 ease-out'
+        }`}
+        style={{
+          gridTemplateRows: showMoreStats ? '1fr' : '0fr',
+        }}
+      >
+        <div className="overflow-hidden">
+          <div className="grid grid-cols-2 gap-2 pb-2">
+            {moreStats.map((st) => (
+              <div
+                key={st.label}
+                className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex flex-col text-left"
+              >
+                <span className="text-base sm:text-lg font-semibold text-white leading-tight">
+                  {st.value}
+                </span>
+                <span className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
+                  {st.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Chapters Header Caption */}
+      <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5 px-0.5 text-left">
+        <span>Lowest first · change vs last month</span>
+      </div>
+
+      {/* Chapters List: 2 lowest by default */}
+      <div className="space-y-2.5 w-full">
+        {primaryChapters.map((ch) => renderChapterRow(ch))}
+
+        {/* Expandable remaining chapters */}
+        <div
+          className={`grid transition-[grid-template-rows] ${
+            shouldReduceMotion ? '' : 'duration-200 ease-out'
+          }`}
+          style={{
+            gridTemplateRows: showAllChapters ? '1fr' : '0fr',
+          }}
+        >
+          <div className="overflow-hidden space-y-2.5 pt-2.5">
+            {remainingChapters.map((ch) => renderChapterRow(ch))}
+          </div>
+        </div>
+      </div>
+
+      {/* Toggle button for all chapters */}
+      <div className="flex justify-center mt-2">
+        <button
+          type="button"
+          aria-expanded={showAllChapters}
+          onClick={() => setShowAllChapters((prev) => !prev)}
+          className="min-h-[44px] text-[14px] text-teal-300 hover:text-teal-200 underline underline-offset-4 font-medium flex items-center justify-center cursor-pointer select-none transition-colors"
+        >
+          {showAllChapters ? 'Show fewer' : `Show all ${sortedChapters.length} chapters`}
+        </button>
       </div>
     </div>
   );
@@ -960,6 +1161,136 @@ function TeacherHeatmap({
   );
 }
 
+interface TeacherStuckListProps {
+  selectedCell: TeacherCell;
+  onSelectCell: (cell: TeacherCell) => void;
+}
+
+function TeacherStuckList({ selectedCell, onSelectCell }: TeacherStuckListProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const [openRowKey, setOpenRowKey] = useState<string | null>('04-Indicators');
+  const [showGrid, setShowGrid] = useState(false);
+
+  const stuckCells: TeacherCell[] = [
+    TEACHER_SAMPLE.grid['04']['Indicators'],
+    TEACHER_SAMPLE.grid['07']['Acids'],
+    TEACHER_SAMPLE.grid['05']['Natural dyes'],
+  ];
+
+  const toggleRow = (key: string, cell: TeacherCell) => {
+    setOpenRowKey((prev) => (prev === key ? null : key));
+    onSelectCell(cell);
+  };
+
+  return (
+    <div className="w-full block" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
+      {/* Header row: title 'Who is stuck' (font-semibold, 16px) and existing SampleDataChip on right */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="text-left">
+          <h3 className="font-semibold text-white text-[16px] leading-tight">
+            Who is stuck
+          </h3>
+          <p className="text-[12px] text-slate-300 leading-normal mt-0.5">
+            Sample class · roll numbers only
+          </p>
+        </div>
+        <SampleDataChip />
+      </div>
+
+      {/* 3 Stuck Student Rows */}
+      <div className="space-y-2 w-full">
+        {stuckCells.map((cell) => {
+          const rowKey = `${cell.student}-${cell.concept}`;
+          const isOpen = openRowKey === rowKey;
+
+          return (
+            <div
+              key={rowKey}
+              className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden"
+            >
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => toggleRow(rowKey, cell)}
+                className="w-full min-h-[56px] rounded-2xl px-4 flex items-center gap-3 text-left cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:outline-none"
+              >
+                <span
+                  className="w-[10px] h-[10px] rounded-full bg-[#E26A7B] shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="text-[15px] font-semibold text-white truncate">
+                  Roll {cell.student} · {cell.concept}
+                </span>
+                <div className="ml-auto flex items-center gap-2 shrink-0">
+                  <span className="text-[15px] font-semibold text-[#E26A7B]">
+                    {cell.pct}%
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-white/80 transition-transform ${
+                      shouldReduceMotion ? '' : 'duration-200'
+                    } ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+                    aria-hidden="true"
+                  />
+                </div>
+              </button>
+
+              <div
+                className={`grid transition-[grid-template-rows] ${
+                  shouldReduceMotion ? '' : 'duration-200 ease-out'
+                }`}
+                style={{
+                  gridTemplateRows: isOpen ? '1fr' : '0fr',
+                }}
+              >
+                <div className="overflow-hidden">
+                  {cell.detail && (
+                    <div className="border-t border-white/10 px-4 py-3 space-y-2 text-left">
+                      <div className="flex items-center">
+                        <span className="px-2.5 py-0.5 rounded-full text-[12px] font-semibold bg-teal-400 text-slate-900 select-none shrink-0">
+                          {cell.detail.competency}
+                        </span>
+                      </div>
+                      <p className="text-[13px] text-white/90 leading-snug">
+                        <span className="font-semibold text-white">Stuck on:</span>{' '}
+                        {cell.detail.stuck}
+                      </p>
+                      <p className="text-[13px] text-white/90 leading-snug">
+                        <span className="font-semibold text-teal-300">Action:</span>{' '}
+                        {cell.detail.action}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Toggle button to show/hide full class grid */}
+      <div className="flex justify-center mt-3">
+        <button
+          type="button"
+          onClick={() => setShowGrid((prev) => !prev)}
+          className="min-h-[44px] text-[14px] text-teal-300 hover:text-teal-200 underline underline-offset-4 font-medium flex items-center justify-center cursor-pointer select-none transition-colors"
+        >
+          {showGrid ? 'Hide the class grid' : 'See the full class grid'}
+        </button>
+      </div>
+
+      {/* Full class grid when expanded */}
+      {showGrid && (
+        <div className="pt-4 border-t border-white/10 mt-3">
+          <TeacherHeatmap
+            selectedCell={selectedCell}
+            onSelectCell={onSelectCell}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 function ParentPhonePreview({
@@ -1140,6 +1471,162 @@ function ParentPhonePreview({
   );
 }
 
+interface ParentCompactProps {
+  childName: string;
+  setChildName: (name: string) => void;
+  effectiveName: string;
+}
+
+function ParentCompact({ childName, setChildName, effectiveName }: ParentCompactProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const [showWeek, setShowWeek] = useState(false);
+  const activeDaysCount = PARENT_SAMPLE.weekDays.filter(Boolean).length;
+  const inputId = 'parent-compact-child-name';
+
+  return (
+    <div
+      className="w-full p-4 text-left flex flex-col gap-3"
+      style={MOBILE_GLASS_CARD_STYLE}
+    >
+      {/* Name Input on ONE line */}
+      <div className="w-full text-left">
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor={inputId}
+            className="text-[12px] text-slate-300 font-medium shrink-0"
+          >
+            First name
+          </label>
+          <input
+            id={inputId}
+            name="childName"
+            type="text"
+            maxLength={20}
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            value={childName}
+            onChange={(e) => setChildName(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            placeholder={PARENT_SAMPLE.defaultName}
+            className="flex-1 h-11 px-3.5 py-2 rounded-xl bg-slate-950/70 border border-[rgba(94,234,212,0.35)] text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400"
+          />
+        </div>
+        <p className="text-[11px] text-slate-300 mt-1 leading-tight">
+          Stays on this device.
+        </p>
+      </div>
+
+      {/* Message Bubble (no notch bar) */}
+      <div
+        className="w-full rounded-[24px] border border-[rgba(94,234,212,0.35)] shadow-2xl p-3.5 sm:p-4 flex flex-col relative"
+        style={{
+          background: 'linear-gradient(180deg, rgba(14,48,66,0.85), rgba(8,26,44,0.90))',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+        }}
+      >
+        {/* Header with Daily update · 7:30 PM and Sample data chip */}
+        <div className="flex items-center justify-between mb-2.5 px-0.5">
+          <span className="text-xs sm:text-[13px] text-teal-300 font-semibold tracking-wide">
+            Daily update · 7:30 PM
+          </span>
+          <SampleDataChip />
+        </div>
+
+        {/* Bubble inner card */}
+        <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5 sm:p-4 text-left text-xs sm:text-sm text-slate-200 space-y-2.5">
+          <h4 className="font-bold text-white text-[15px] pb-1 border-b border-white/10">
+            {effectiveName}&apos;s progress today
+          </h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Score</span>
+              <span className="font-bold text-teal-300">{PARENT_SAMPLE.scorePct}%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Stars</span>
+              <span className="font-bold text-amber-300">
+                {'★'.repeat(PARENT_SAMPLE.stars)}{' '}
+                <span className="text-slate-400 font-normal">({PARENT_SAMPLE.stars})</span>
+              </span>
+            </div>
+            <div className="flex items-start justify-between gap-3 pt-1 border-t border-white/10">
+              <span className="text-slate-400 shrink-0">Needs revision</span>
+              <span className="font-medium text-[#E26A7B] text-right">
+                {PARENT_SAMPLE.revise}
+              </span>
+            </div>
+
+            {/* Toggle button for week */}
+            <div className="pt-1">
+              <button
+                type="button"
+                aria-expanded={showWeek}
+                onClick={() => setShowWeek((prev) => !prev)}
+                className="min-h-[44px] text-[14px] text-teal-300 hover:text-teal-200 underline underline-offset-4 font-medium flex items-center cursor-pointer select-none transition-colors"
+              >
+                {showWeek ? 'Hide this week' : 'See this week'}
+              </button>
+            </div>
+
+            {/* Collapsible week block */}
+            <div
+              className={`grid transition-[grid-template-rows] ${
+                shouldReduceMotion ? '' : 'duration-200 ease-out'
+              }`}
+              style={{
+                gridTemplateRows: showWeek ? '1fr' : '0fr',
+              }}
+            >
+              <div className="overflow-hidden">
+                <div className="space-y-2 pt-1 border-t border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Time on chapter:</span>
+                    <span className="font-bold text-teal-300">{PARENT_SAMPLE.minutes} min</span>
+                  </div>
+                  <div
+                    className="flex flex-col gap-1.5 pt-1 border-t border-white/10"
+                    aria-label={`${activeDaysCount} of 7 days active this week`}
+                  >
+                    <div className="flex items-center justify-between text-[12px] text-slate-300">
+                      <span>This week</span>
+                      <span>{activeDaysCount} of 7 days</span>
+                    </div>
+                    <div className="flex items-center justify-between px-1">
+                      {DAY_LETTERS.map((letter, i) => (
+                        <div key={i} className="flex flex-col items-center gap-1">
+                          <span
+                            className={`h-3 w-3 rounded-full ${
+                              PARENT_SAMPLE.weekDays[i] ? 'bg-[#14B8A6]' : 'bg-white/15'
+                            }`}
+                          />
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {letter}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ask Tonight Box */}
+      <div className="w-full rounded-2xl bg-teal-400/10 border border-teal-300/30 p-3 text-left">
+        <p className="text-[12px] font-semibold text-teal-300 mb-0.5">
+          Try asking {effectiveName} tonight:
+        </p>
+        <p className="text-[13px] text-white/90 italic leading-snug">
+          &ldquo;{PARENT_SAMPLE.askTonight}&rdquo;
+        </p>
+      </div>
+    </div>
+  );
+}
+
 const OTHER_TABS = ['Teacher', 'Principal', 'Parent'] as const;
 type OtherTabKey = (typeof OTHER_TABS)[number];
 
@@ -1281,6 +1768,116 @@ function OtherViews({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface OtherCompactProps {
+  selectedCell: TeacherCell;
+  onSelectCell: (cell: TeacherCell) => void;
+  childName: string;
+  setChildName: (name: string) => void;
+  effectiveChildName: string;
+}
+
+function OtherCompact({
+  selectedCell,
+  onSelectCell,
+  childName,
+  setChildName,
+  effectiveChildName,
+}: OtherCompactProps) {
+  const shouldReduceMotion = useReducedMotion();
+  const [activeTab, setActiveTab] = useState<OtherTabKey>('Teacher');
+
+  const handleTabKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowLeft') {
+      e.stopPropagation();
+      e.preventDefault();
+      const prevIdx = (index - 1 + OTHER_TABS.length) % OTHER_TABS.length;
+      const targetTab = OTHER_TABS[prevIdx];
+      setActiveTab(targetTab);
+      document.getElementById(`other-compact-tab-${targetTab}`)?.focus();
+    } else if (e.key === 'ArrowRight') {
+      e.stopPropagation();
+      e.preventDefault();
+      const nextIdx = (index + 1) % OTHER_TABS.length;
+      const targetTab = OTHER_TABS[nextIdx];
+      setActiveTab(targetTab);
+      document.getElementById(`other-compact-tab-${targetTab}`)?.focus();
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-2" style={{ fontFamily: 'var(--font-outfit), sans-serif' }}>
+      {/* 1. Tabs */}
+      <div
+        role="tablist"
+        aria-label="Perspective tabs"
+        className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-950/60 border border-[rgba(94,234,212,0.25)] select-none shrink-0"
+      >
+        {OTHER_TABS.map((tab, idx) => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              id={`other-compact-tab-${tab}`}
+              role="tab"
+              type="button"
+              aria-selected={isActive}
+              aria-controls={`other-compact-panel-${tab}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActiveTab(tab)}
+              onKeyDown={(e) => handleTabKeyDown(e, idx)}
+              className={`h-[44px] rounded-xl font-medium text-xs sm:text-sm flex items-center justify-center transition-all cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                isActive
+                  ? 'bg-[#14B8A6] text-white font-semibold shadow-md'
+                  : 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10'
+              }`}
+            >
+              {tab}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2. Caption under tabs */}
+      <p className="text-[12px] text-slate-300 text-left px-1 font-medium leading-normal shrink-0">
+        {OTHER_TAB_CAPTIONS[activeTab]}
+      </p>
+
+      {/* 3. Panel rendered one at a time with 150ms opacity-only crossfade */}
+      <m.div
+        key={activeTab}
+        initial={shouldReduceMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
+        role="tabpanel"
+        id={`other-compact-panel-${activeTab}`}
+        aria-labelledby={`other-compact-tab-${activeTab}`}
+        className="w-full min-h-[330px]"
+      >
+        {activeTab === 'Teacher' && (
+          <div className="w-full p-4 sm:p-5 text-left" style={MOBILE_GLASS_CARD_STYLE}>
+            <TeacherStuckList
+              selectedCell={selectedCell}
+              onSelectCell={onSelectCell}
+            />
+          </div>
+        )}
+        {activeTab === 'Principal' && (
+          <div className="w-full p-4 sm:p-5 text-left" style={MOBILE_GLASS_CARD_STYLE}>
+            <PrincipalCompact schoolName="Your School" />
+          </div>
+        )}
+        {activeTab === 'Parent' && (
+          <ParentCompact
+            childName={childName}
+            setChildName={setChildName}
+            effectiveName={effectiveChildName}
+          />
+        )}
+      </m.div>
     </div>
   );
 }

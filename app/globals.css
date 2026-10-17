@@ -26,6 +26,15 @@ body {
 }
 .spot-pulse { animation: spotPulse 2s ease-in-out infinite; }
 
+@keyframes nextGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(45,212,191,0.65), inset 0 1px 0 rgba(255,255,255,0.14); }
+  50%     { box-shadow: 0 0 0 10px rgba(45,212,191,0), inset 0 1px 0 rgba(255,255,255,0.14); }
+}
+@keyframes nudgeX { 0%,100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+.next-glow { animation: nextGlow 1.8s ease-in-out infinite; border-color: rgba(94,234,212,0.9) !important; }
+.next-glow-arrow { display: inline-block; animation: nudgeX 1.2s ease-in-out infinite; }
+.flip-glow { animation: spotPulse 1.8s ease-in-out infinite; }
+
 .flip-container { perspective: 1000px; }
 .flip-inner {
   transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
@@ -45,8 +54,14 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .spot-pulse,
-  .star-burst {
+  .star-burst,
+  .next-glow,
+  .next-glow-arrow,
+  .flip-glow {
     animation: none !important;
+  }
+  .flip-inner {
+    transition: none;
   }
 }
 

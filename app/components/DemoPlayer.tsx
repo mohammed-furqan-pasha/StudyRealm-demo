@@ -13,15 +13,37 @@ import GuideBot from './GuideBot';
 import SceneShell from './SceneShell';
 
 // ─── TAP REVEAL BLOCK ──────────────────────────────────────────────────────
-function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentBlock, {type:'tap_reveal'}>, onAutoRead:(t:string)=>void, shouldStart: () => boolean }) {
+function TapReveal({
+  block,
+  onAutoRead,
+  shouldStart,
+  onComplete,
+}: {
+  block: Extract<ContentBlock, { type: 'tap_reveal' }>;
+  onAutoRead: (t: string) => void;
+  shouldStart: () => boolean;
+  onComplete?: () => void;
+}) {
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [openLabels, setOpenLabels] = useState<Set<string>>(new Set());
   const [activeLabel, setActiveLabel] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
+  const hasNotifiedRef = useRef(false);
 
   useEffect(() => {
     onAutoRead(block.instruction || 'Tap the glowing dots to explore the acid and base diagram.');
   }, [block.instruction, onAutoRead]);
+
+  useEffect(() => {
+    if (block.spots.length > 0 && revealed.size === block.spots.length) {
+      if (!hasNotifiedRef.current) {
+        hasNotifiedRef.current = true;
+        onComplete?.();
+      }
+    } else {
+      hasNotifiedRef.current = false;
+    }
+  }, [revealed.size, block.spots.length, onComplete]);
 
   const tap = (spot: TapRevealSpot) => {
     setRevealed(p => new Set(p).add(spot.id));
@@ -171,25 +193,52 @@ function TapReveal({ block, onAutoRead, shouldStart }: { block: Extract<ContentB
 }
 
 // ─── FLIP CARD BLOCK ───────────────────────────────────────────────────────
-function FlipCard({ block, onAutoRead, shouldStart }: { block: Extract<ContentBlock, {type:'flip_card'}>, onAutoRead:(t:string)=>void, shouldStart: () => boolean }) {
+function FlipCard({
+  block,
+  onAutoRead,
+  shouldStart,
+  onComplete,
+}: {
+  block: Extract<ContentBlock, { type: 'flip_card' }>;
+  onAutoRead: (t: string) => void;
+  shouldStart: () => boolean;
+  onComplete?: () => void;
+}) {
   const [flipped, setFlipped] = useState(false);
+  const [hasEverFlipped, setHasEverFlipped] = useState(false);
 
   useEffect(() => { onAutoRead(block.audio_front); }, [block.audio_front, onAutoRead]);
 
   const handleFlip = () => {
     const next = !flipped;
     setFlipped(next);
+    if (next && !hasEverFlipped) {
+      setHasEverFlipped(true);
+      onComplete?.();
+    }
     playAudio(next ? block.audio_back : block.audio_front, true, 'en-IN', undefined, undefined, shouldStart, 'demo');
   };
 
+  const showFlipInvite = !flipped && !hasEverFlipped;
+
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      <p className="text-white/80 text-sm text-center">Tap the card to reveal the answer</p>
+      {!hasEverFlipped && !flipped ? (
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 border border-teal-300/40 px-3 py-1 text-[13px] font-medium text-teal-200">
+          👆 Tap the card
+        </p>
+      ) : (
+        <p className="text-white/80 text-sm text-center opacity-0 select-none pointer-events-none" aria-hidden="true">
+          Tap the card to reveal the answer
+        </p>
+      )}
       <div className="flip-container w-full max-w-[380px] h-[180px] md:h-[200px]">
         <div className={`flip-inner w-full h-full ${flipped ? 'flipped' : ''}`}>
           {/* Front */}
           <div
-            className="flip-face w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer"
+            className={`flip-face w-full h-full flex flex-col items-center justify-center p-4 md:p-6 cursor-pointer ${
+              showFlipInvite ? 'flip-glow' : ''
+            }`}
             style={{
               background: 'linear-gradient(180deg, rgba(10,40,58,0.82), rgba(6,22,38,0.88))',
               border: '1px solid rgba(94, 234, 212, 0.28)',
@@ -200,7 +249,7 @@ function FlipCard({ block, onAutoRead, shouldStart }: { block: Extract<ContentBl
           >
             <div className="text-3xl md:text-4xl mb-3">🤔</div>
             <p className="text-white text-center text-xs md:text-base font-medium leading-relaxed">{block.front}</p>
-            <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.50)' }}>Tap to flip ↓</p>
+            <p className="text-xs mt-4 absolute bottom-4" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Tap to flip ↓</p>
           </div>
           {/* Back */}
           <div
@@ -292,6 +341,13 @@ export default function DemoPlayer({
   nextPageLabel,
 }: DemoPlayerProps) {
   const [current, setCurrent] = useState(0);
+  const [partDone, setPartDone] = useState(false);
+  const markDone = useCallback(() => setPartDone(true), []);
+
+  useEffect(() => {
+    setPartDone(false);
+  }, [current]);
+
   const [speaking, setSpeaking] = useState(false);
   const [direction, setDirection] = useState<'right'|'left'>('right');
   const [isIntersecting, setIsIntersecting] = useState(false);
@@ -444,6 +500,7 @@ export default function DemoPlayer({
     if (next < 0 || next >= total) return;
     stopAudioFor('demo');
     setSpeaking(false);
+    setPartDone(false);
     setTimeout(() => {
       setDirection(dir === 1 ? 'right' : 'left');
       setCurrent(next);
@@ -486,6 +543,8 @@ export default function DemoPlayer({
     }
   };
   const nextAriaLabel = isLastPart && nextPageLabel ? `Next: ${nextPageLabel}` : undefined;
+
+  const showNextGlow = partDone && !isNextDisabled && (block.type === 'tap_reveal' || block.type === 'flip_card');
 
   return (
     <SceneShell scene="demo">
@@ -569,6 +628,7 @@ export default function DemoPlayer({
                 onClick={() => {
                   stopAudioFor('demo');
                   setSpeaking(false);
+                  setPartDone(false);
                   setTimeout(() => {
                     setDirection(i > current ? 'right' : 'left');
                     setCurrent(i);
@@ -612,14 +672,16 @@ export default function DemoPlayer({
             onClick={handleNextClick}
             disabled={isNextDisabled}
             aria-label={nextAriaLabel || 'Next part'}
-            className="hidden md:flex absolute md:top-1/2 md:-translate-y-1/2 md:right-8 w-12 h-12 rounded-full text-white items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
+            className={`hidden md:flex absolute md:top-1/2 md:-translate-y-1/2 md:right-8 w-12 h-12 rounded-full text-white items-center justify-center transition disabled:opacity-0 z-30 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+              showNextGlow ? 'next-glow' : ''
+            }`}
             style={{
               background: 'rgba(8, 24, 40, 0.85)',
               border: '1px solid rgba(94, 234, 212, 0.28)',
               boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.14)',
             }}
           >
-            ›
+            <span className={showNextGlow ? 'next-glow-arrow' : ''}>›</span>
           </button>
 
           {/* Scroll Wrapper */}
@@ -695,10 +757,10 @@ export default function DemoPlayer({
                           <KitchenLab block={block} onAutoRead={autoRead} onNext={() => go(1)} />
                         )}
                         {block.type === 'tap_reveal' && (
-                          <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                          <TapReveal block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} onComplete={markDone} />
                         )}
                         {block.type === 'flip_card' && (
-                          <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} />
+                          <FlipCard block={block} onAutoRead={autoRead} shouldStart={canSpeakNow} onComplete={markDone} />
                         )}
                         {block.type === 'celebration' && (
                           <CelebrationBlock block={block} onContinue={onComplete} onAutoRead={autoRead} />
@@ -746,7 +808,7 @@ export default function DemoPlayer({
                       onClick={handlePrevClick}
                       disabled={isPrevDisabled}
                       aria-label={prevAriaLabel || 'Previous part'}
-                      className={`min-h-[44px] px-4 rounded-full bg-white/10 border border-white/15 text-sm font-medium text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                      className={`min-h-[44px] px-4 rounded-full bg-slate-900/80 border border-white/30 text-sm font-semibold text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                         isPrevDisabled ? 'opacity-0 pointer-events-none' : 'hover:bg-white/15 active:scale-95'
                       }`}
                     >
@@ -758,11 +820,11 @@ export default function DemoPlayer({
                       onClick={handleNextClick}
                       disabled={isNextDisabled}
                       aria-label={nextAriaLabel || 'Next part'}
-                      className={`min-h-[44px] px-4 rounded-full bg-white/10 border border-white/15 text-sm font-medium text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
+                      className={`min-h-[44px] px-4 rounded-full bg-slate-900/80 border border-teal-300/60 text-sm font-semibold text-white flex items-center justify-center transition cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 ${
                         isNextDisabled ? 'opacity-0 pointer-events-none' : 'hover:bg-white/15 active:scale-95'
-                      }`}
+                      } ${showNextGlow ? 'next-glow' : ''}`}
                     >
-                      Next part ›
+                      Next part <span className={showNextGlow ? 'next-glow-arrow' : ''}>›</span>
                     </button>
                   </div>
                 </div>
