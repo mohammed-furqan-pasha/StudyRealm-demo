@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, useLayoutEffect, useMem
 import { LazyMotion, domAnimation, m, MotionConfig, useReducedMotion } from 'motion/react';
 import Stage from './Stage';
 import { isStaged, isStageMode, isFadeMode, PAIR_TIMING, PHONE_TIMING, TIME_SCALE, ARRIVAL_ENABLED, ARRIVAL_TIMING } from '../lib/stageScenes';
+import { SCENES, OBJECTS } from '../data/sceneAssets';
 import {
   detectTier,
   Tier,
@@ -11,6 +12,7 @@ import {
   downgradeTier,
   SESSION_QUALITY_KEY,
   SESSION_MONITORED_COUNT_KEY,
+  MOBILE_QUALITY_STORAGE_KEY,
 } from '../lib/quality';
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -58,6 +60,7 @@ export interface PageStateContextType {
   transitionId?: number;
   transitionDir?: 1 | -1;
   choreographed?: boolean;
+  lite?: boolean;
 }
 
 export const PageStateContext = createContext<PageStateContextType>({
@@ -70,6 +73,7 @@ export const PageStateContext = createContext<PageStateContextType>({
   transitionId: 0,
   transitionDir: 1,
   choreographed: false,
+  lite: false,
 });
 
 export const usePageState = () => useContext(PageStateContext);
@@ -85,8 +89,13 @@ interface PageStateProviderProps {
   transitionId?: number;
   transitionDir?: 1 | -1;
   choreographed?: boolean;
+  lite?: boolean;
   children: ReactNode;
 }
+
+type PageStateSnapshot = Omit<PageStateProviderProps, 'children'>;
+
+let hasPredecodedSession = false;
 
 function PageStateProvider({
   isCurrent,
@@ -99,6 +108,7 @@ function PageStateProvider({
   transitionId,
   transitionDir,
   choreographed,
+  lite,
   children,
 }: PageStateProviderProps) {
   const value = useMemo(
@@ -113,6 +123,7 @@ function PageStateProvider({
       transitionId,
       transitionDir,
       choreographed,
+      lite,
     }),
     [
       isCurrent,
@@ -125,6 +136,7 @@ function PageStateProvider({
       transitionId,
       transitionDir,
       choreographed,
+      lite,
     ]
   );
 
@@ -190,6 +202,7 @@ interface TransitionState {
   toId: string;
   dir: 1 | -1;
   choreographed: boolean;
+  lite: boolean;
 }
 
 const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, ref) => {
@@ -226,6 +239,50 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   }, []);
 
   const activeMonitorCleanupRef = useRef<(() => void) | null>(null);
+
+  // Battery state for mobile: cached level and charging state
+  const batteryRef = useRef<{ level: number; charging: boolean } | null>(null);
+  const batteryCleanupRef = useRef<(() => void) | null>(null);
+  const batteryInitRef = useRef(false);
+
+  useEffect(() => {
+    if (locked || isDesktop || batteryInitRef.current) return;
+    batteryInitRef.current = true;
+
+    try {
+      if (typeof navigator !== 'undefined' && 'getBattery' in navigator && typeof (navigator as any).getBattery === 'function') {
+        (navigator as any).getBattery().then((battery: any) => {
+          if (!battery) return;
+          const update = () => {
+            batteryRef.current = {
+              level: battery.level,
+              charging: battery.charging,
+            };
+          };
+          update();
+          const onLevelChange = () => update();
+          const onChargingChange = () => update();
+          battery.addEventListener('levelchange', onLevelChange);
+          battery.addEventListener('chargingchange', onChargingChange);
+          batteryCleanupRef.current = () => {
+            try {
+              battery.removeEventListener('levelchange', onLevelChange);
+              battery.removeEventListener('chargingchange', onChargingChange);
+            } catch {}
+          };
+        }).catch(() => {});
+      }
+    } catch {}
+  }, [locked, isDesktop]);
+
+  useEffect(() => {
+    return () => {
+      if (batteryCleanupRef.current) {
+        batteryCleanupRef.current();
+        batteryCleanupRef.current = null;
+      }
+    };
+  }, []);
 
   // Text phase: Record<pageId, 'hidden' | 'enter' | 'leave' | 'done'>
   const [textPhase, setTextPhase] = useState<Record<string, TextPhase>>(() => {
@@ -267,6 +324,8 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
   useEffect(() => {
     pagesRef.current = pages;
   }, [pages]);
+
+  const pageStateSnapshotRef = useRef<Record<string, PageStateSnapshot>>({});
 
   const prevLockedRef = useRef(locked);
   useEffect(() => {
@@ -356,6 +415,43 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     prevLockedRef.current = locked;
   }, [locked, isDesktop, shouldReduceMotion]);
 
+  useEffect(() => {
+    if (isDesktop || locked || hasPredecodedSession) return;
+    if (typeof navigator !== 'undefined' && (navigator as any).connection?.saveData) return;
+    hasPredecodedSession = true;
+    try {
+      if (sessionStorage.getItem('sr_predecoded')) return;
+      sessionStorage.setItem('sr_predecoded', '1');
+    } catch {}
+
+    const urls = Array.from(
+      new Set([
+        ...Object.values(SCENES).map((s) => s.sm),
+        ...Object.values(OBJECTS),
+      ])
+    );
+
+    const schedule = (cb: () => void) =>
+      typeof window !== 'undefined' && 'requestIdleCallback' in window
+        ? (window as any).requestIdleCallback(cb, { timeout: 2000 })
+        : setTimeout(cb, 1500);
+
+    let idx = 0;
+    const decodeNext = () => {
+      if (idx >= urls.length) return;
+      const url = urls[idx++];
+      schedule(async () => {
+        try {
+          const img = new Image();
+          img.src = url;
+          await img.decode().catch(() => {});
+        } catch {}
+        decodeNext();
+      });
+    };
+    decodeNext();
+  }, [isDesktop, locked]);
+
   // Transition object: { id, fromId, toId, dir }
   const transitionCounterRef = useRef(0);
   const [transition, setTransition] = useState<TransitionState>(() => ({
@@ -364,6 +460,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
     toId: pages[0]?.id || '',
     dir: 1,
     choreographed: false,
+    lite: false,
   }));
   const transitionRef = useRef(transition);
   useEffect(() => {
@@ -494,6 +591,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
       if (toId) settledRef.current[toId] = false;
       if (fromId) settledRef.current[fromId] = false;
 
+      const isLowBattery = !isDesktopNav && batteryRef.current !== null && !batteryRef.current.charging && batteryRef.current.level < 0.2;
       const nextId = ++transitionCounterRef.current;
       const thisTransId = nextId;
       const newTransition: TransitionState = {
@@ -502,6 +600,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         toId: toId || '',
         dir: isFwd ? 1 : -1,
         choreographed: isChoreographed,
+        lite: !isDesktopNav && (tierRef.current !== 'full' || isLowBattery),
       };
       transitionRef.current = newTransition;
       setTransition(newTransition);
@@ -568,7 +667,7 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
         }
 
         // Frame monitor: first 2 choreographed transitions of session
-        const shouldMonitor = isDesktopNav && monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
+        const shouldMonitor = monitoredTransitionsRef.current < 2 && tierRef.current !== 'minimal';
         if (shouldMonitor) {
           if (activeMonitorCleanupRef.current) {
             activeMonitorCleanupRef.current();
@@ -612,6 +711,14 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   try {
                     sessionStorage.setItem(SESSION_QUALITY_KEY, nextTier);
                   } catch {}
+                  if (!isDesktopNav) {
+                    try {
+                      localStorage.setItem(
+                        MOBILE_QUALITY_STORAGE_KEY,
+                        JSON.stringify({ tier: nextTier, savedAt: Date.now() })
+                      );
+                    } catch {}
+                  }
                 }
               }
             }
@@ -1263,6 +1370,59 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
 
               const effectivePhase = (isDesktop && isActive && !locked) ? (settled[p.id] ? 'done' : 'enter') : textPhase[p.id];
 
+              const livePageStateProps: PageStateSnapshot = {
+                isCurrent: isActive,
+                direction: transition.dir,
+                axis: isDesktop ? 'y' : 'x',
+                staged: isStaged(p.id),
+                desktop: isDesktop,
+                textDelayMs:
+                  (isDesktop ? isStagedNav : transition.choreographed)
+                    ? Math.round(
+                        (isDesktop ? PAIR_TIMING : PHONE_TIMING)[
+                          transition.dir === -1 ? 'back' : 'fwd'
+                        ].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE)
+                      )
+                    : 250,
+                isLeaving: isStagedNav && p.id === leavingId,
+                transitionId: transition.id,
+                transitionDir: transition.dir,
+                choreographed: transition.choreographed,
+                lite: isDesktop ? false : transition.lite,
+              };
+
+              let pageStateProps: PageStateSnapshot;
+
+              if (isDesktop) {
+                pageStateProps = livePageStateProps;
+              } else {
+                const isInvolved =
+                  isActive ||
+                  p.id === transition.fromId ||
+                  p.id === transition.toId ||
+                  p.id === leavingId;
+
+                const existingSnapshot = pageStateSnapshotRef.current[p.id];
+                const isSnapshotValid =
+                  existingSnapshot && existingSnapshot.desktop === isDesktop;
+
+                if (isInvolved || !isSnapshotValid) {
+                  pageStateProps = livePageStateProps;
+                  pageStateSnapshotRef.current[p.id] = pageStateProps;
+                } else {
+                  if (existingSnapshot.isCurrent || existingSnapshot.isLeaving) {
+                    pageStateProps = {
+                      ...existingSnapshot,
+                      isCurrent: false,
+                      isLeaving: false,
+                    };
+                    pageStateSnapshotRef.current[p.id] = pageStateProps;
+                  } else {
+                    pageStateProps = existingSnapshot;
+                  }
+                }
+              }
+
               return (
                 <m.div
                   key={p.id}
@@ -1292,24 +1452,17 @@ const PageFlow = forwardRef<PageFlowHandle, PageFlowProps>(({ pages, locked }, r
                   data-text-phase={isDesktop ? effectivePhase : undefined}
                 >
                   <PageStateProvider
-                    isCurrent={isActive}
-                    direction={transition.dir}
-                    axis={isDesktop ? 'y' : 'x'}
-                    staged={isStaged(p.id)}
-                    desktop={isDesktop}
-                    textDelayMs={
-                      (isDesktop ? isStagedNav : transition.choreographed)
-                        ? Math.round(
-                            (isDesktop ? PAIR_TIMING : PHONE_TIMING)[
-                              transition.dir === -1 ? 'back' : 'fwd'
-                            ].textDelayMs * (isDesktop ? effectiveTimeScale : TIME_SCALE)
-                          )
-                        : 250
-                    }
-                    isLeaving={isStagedNav && p.id === leavingId}
-                    transitionId={transition.id}
-                    transitionDir={transition.dir}
-                    choreographed={transition.choreographed}
+                    isCurrent={pageStateProps.isCurrent}
+                    direction={pageStateProps.direction}
+                    axis={pageStateProps.axis}
+                    staged={pageStateProps.staged}
+                    desktop={pageStateProps.desktop}
+                    textDelayMs={pageStateProps.textDelayMs}
+                    isLeaving={pageStateProps.isLeaving}
+                    transitionId={pageStateProps.transitionId}
+                    transitionDir={pageStateProps.transitionDir}
+                    choreographed={pageStateProps.choreographed}
+                    lite={pageStateProps.lite}
                   >
                     {p.node}
                   </PageStateProvider>

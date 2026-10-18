@@ -68,7 +68,7 @@ export default function ContactSection({
   const config = propConfig || ROLE_CONFIGS[role]?.contact || ROLE_CONFIGS.Other.contact;
   const share = propShare || ROLE_CONFIGS[role]?.share || ROLE_CONFIGS.Other.share;
 
-  const { isCurrent = true, isLeaving = false, transitionId = 0, textDelayMs = 250 } = usePageState();
+  const { isCurrent = true, isLeaving = false, transitionId = 0, textDelayMs = 250, lite = false } = usePageState();
   const shouldReduceMotion = useReducedMotion();
 
   const isStudent = role === 'Student';
@@ -79,7 +79,7 @@ export default function ContactSection({
   const flashDelay = buttonBlockDelay + MOBILE_CONTACT_FLASH_DELAY_OFFSET;
 
   const mobileFlashOverlay =
-    isCurrent && !isLeaving && !shouldReduceMotion ? (
+    !lite && isCurrent && !isLeaving && !shouldReduceMotion ? (
       <m.span
         key={`contact-flash-t${transitionId}`}
         aria-hidden="true"

@@ -78,7 +78,7 @@ export interface LockedFeaturesProps {
 
 export default function LockedFeatures({ config: propConfig }: LockedFeaturesProps) {
   const { goTo } = usePager();
-  const { isCurrent = true, isLeaving = false, transitionId = 0 } = usePageState();
+  const { isCurrent = true, isLeaving = false, transitionId = 0, lite = false } = usePageState();
   const shouldReduceMotion = useReducedMotion();
   const lastTransitionIdRef = useRef(transitionId);
   const [hasMobileSwitchedTab, setHasMobileSwitchedTab] = useState(false);
@@ -367,9 +367,9 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
               {activeCard && (
                 <m.div
                   key={`mob-${activeCard.id}`}
-                  initial={{ opacity: shouldReduceMotion ? 1 : 0 }}
+                  initial={{ opacity: shouldReduceMotion || lite ? 1 : 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: shouldReduceMotion ? 0 : MOBILE_FEATURES_TAB_FADE, ease: [0.22, 1, 0.36, 1] as const }}
+                  transition={{ duration: shouldReduceMotion || lite ? 0 : MOBILE_FEATURES_TAB_FADE, ease: [0.22, 1, 0.36, 1] as const }}
                   transformTemplate={(_, generated) => 'none'}
                   className="w-full h-full flex items-center justify-center"
                 >
@@ -435,7 +435,7 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
                   <span
                     className="text-[11px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full font-medium"
                   >
-                    {isActive && hasMobileSwitchedTab && !shouldReduceMotion && !isLeaving ? (
+                    {isActive && hasMobileSwitchedTab && !shouldReduceMotion && !isLeaving && !lite ? (
                       <m.span
                         key={`active-${card.id}`}
                         className="inline-block"
@@ -459,9 +459,9 @@ export default function LockedFeatures({ config: propConfig }: LockedFeaturesPro
           <StageReveal order={5} className="w-full shrink-0">
             <m.div
               key={`mob-caption-${activeCard.id}`}
-              initial={hasMobileSwitchedTab && !shouldReduceMotion && !isLeaving ? { opacity: 0 } : false}
+              initial={hasMobileSwitchedTab && !shouldReduceMotion && !isLeaving && !lite ? { opacity: 0 } : false}
               animate={{ opacity: 1 }}
-              transition={{ duration: shouldReduceMotion ? 0 : MOBILE_FEATURES_TAB_FADE, ease: [0.22, 1, 0.36, 1] as const }}
+              transition={{ duration: shouldReduceMotion || lite ? 0 : MOBILE_FEATURES_TAB_FADE, ease: [0.22, 1, 0.36, 1] as const }}
               className="min-h-[72px] text-left shrink-0"
               aria-live="polite"
             >

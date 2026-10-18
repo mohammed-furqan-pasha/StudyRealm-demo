@@ -21,7 +21,7 @@ export const MOBILE_AHA_DOT_STAGGER = 0.035 * TIME_SCALE;
 export const MOBILE_AHA_DOT_DURATION = 0.25 * TIME_SCALE;
 
 function useMobileAhaAnimation(animateIn?: boolean) {
-  const { isCurrent, isLeaving, transitionId, textDelayMs } = usePageState();
+  const { isCurrent, isLeaving, transitionId, textDelayMs, lite = false } = usePageState();
   const shouldReduceMotion = useReducedMotion();
 
   const effectiveTextDelay = textDelayMs ?? 250;
@@ -42,7 +42,7 @@ function useMobileAhaAnimation(animateIn?: boolean) {
         transition: { duration: 0 },
       };
     }
-    if (isLeaving) {
+    if (lite || isLeaving) {
       return {
         initial: false as const,
         animate: visible,

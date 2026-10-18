@@ -27,9 +27,12 @@ export const useQuality = () => useContext(QualityContext);
 
 export const SESSION_QUALITY_KEY = 'sr_quality';
 export const SESSION_MONITORED_COUNT_KEY = 'sr_quality_monitored_count';
+export const MOBILE_QUALITY_STORAGE_KEY = 'sr_quality_mobile';
 
 export function detectTier(): Tier {
   if (typeof window === 'undefined') return 'full';
+
+  const isMobile = window.innerWidth < 768;
 
   // 1. URL parameter overrides everything: ?quality=full|lite|minimal (stored in sessionStorage)
   try {
@@ -39,18 +42,50 @@ export function detectTier(): Tier {
       try {
         sessionStorage.setItem(SESSION_QUALITY_KEY, q);
       } catch {}
+      if (isMobile) {
+        try {
+          if (q === 'full') {
+            localStorage.removeItem(MOBILE_QUALITY_STORAGE_KEY);
+          } else {
+            localStorage.setItem(
+              MOBILE_QUALITY_STORAGE_KEY,
+              JSON.stringify({ tier: q, savedAt: Date.now() })
+            );
+          }
+        } catch {}
+      }
       return q;
     }
   } catch {}
 
-  // 2. prefers-reduced-motion: reduce -> 'minimal'
+  // 2. Mobile stored downgrade: use value younger than 7 days if no ?quality= override
+  if (isMobile) {
+    try {
+      const raw = localStorage.getItem(MOBILE_QUALITY_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (
+          parsed &&
+          (parsed.tier === 'full' || parsed.tier === 'lite' || parsed.tier === 'minimal') &&
+          typeof parsed.savedAt === 'number'
+        ) {
+          const age = Date.now() - parsed.savedAt;
+          if (age >= 0 && age < 7 * 24 * 60 * 60 * 1000) {
+            return parsed.tier;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // 3. prefers-reduced-motion: reduce -> 'minimal'
   try {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return 'minimal';
     }
   } catch {}
 
-  // 3. Stored session downgrade is respected
+  // 4. Stored session downgrade is respected
   try {
     const stored = sessionStorage.getItem(SESSION_QUALITY_KEY);
     if (stored === 'full' || stored === 'lite' || stored === 'minimal') {

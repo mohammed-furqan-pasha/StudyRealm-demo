@@ -19,6 +19,11 @@ export const SCENE_BOTTOM_RESERVE_MOBILE = 88;
 export const MOBILE_ENTER_DURATION_REVEAL = 0.9;
 export const MOBILE_ENTER_DURATION_WORD = 0.95;
 export const MOBILE_ENTER_EASE = [0.33, 1, 0.68, 1] as const;
+export const MOBILE_HEADLINE_LINE_STAGGER = 0.14;
+export const MOBILE_HEADLINE_LEAVE_STAGGER = 0.03;
+export const MOBILE_LITE_FADE_DURATION = 0.4;
+export const MOBILE_LITE_ORDER_STAGGER = 0.06;
+export const MOBILE_LITE_LINE_STAGGER = 0.08;
 
 export type RenderTreeScope = 'desktop' | undefined;
 export const RenderTreeContext = createContext<RenderTreeScope>(undefined);
@@ -286,6 +291,7 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     transitionId = 0,
     transitionDir,
     choreographed = false,
+    lite = false,
   } = usePageState();
   const tree = useContext(RenderTreeContext);
   const shouldReduceMotion = useReducedMotion();
@@ -371,8 +377,128 @@ export function SplitHeadline({ lines, className = '' }: SplitHeadlineProps) {
     );
   }
 
-  const isDesktopStaged = desktop && staged;
   const dir = transitionDir ?? direction;
+
+  if (staged && choreographed) {
+    const enterX = dir === 1 ? '10vw' : '-10vw';
+    const leaveX = dir === 1 ? '-5vw' : '5vw';
+    const isAnimating = (isCurrent && !settled) || Boolean(isLeaving);
+    const isInitialHidden = !settled && isCurrent && !isLeaving;
+
+    return (
+      <div
+        role="heading"
+        aria-level={1}
+        aria-label={fullText}
+        className={className}
+        style={{ fontFamily: 'var(--font-outfit), sans-serif' }}
+      >
+        {lines.map((line, lIdx) => {
+          const words = line.trim().split(/\s+/).filter(Boolean);
+
+          let initialObj: false | Record<string, any>;
+          let animateObj: Record<string, any>;
+          let transitionObj: Record<string, any>;
+
+          if (shouldReduceMotion) {
+            initialObj = { opacity: isLeaving ? 1 : 0, x: 0, y: 0 };
+            animateObj = isLeaving
+              ? { opacity: 0, x: 0, y: 0 }
+              : isCurrent
+              ? { opacity: 1, x: 0, y: 0 }
+              : { opacity: 0, x: 0, y: 0 };
+            transitionObj = {
+              duration: isLeaving ? 0.2 : 0.3,
+              delay: isLeaving ? lIdx * 0.02 : 0,
+            };
+          } else if (lite) {
+            if (isLeaving) {
+              initialObj = { opacity: 1, x: 0, y: 0 };
+              animateObj = { opacity: 0, x: 0, y: 0 };
+              transitionObj = {
+                duration: 0.2 * TIME_SCALE,
+                delay: lIdx * (MOBILE_HEADLINE_LEAVE_STAGGER * TIME_SCALE),
+              };
+            } else if (isCurrent) {
+              initialObj = { opacity: 0, x: 0, y: 0 };
+              animateObj = { opacity: 1, x: 0, y: 0 };
+              transitionObj = {
+                duration: MOBILE_LITE_FADE_DURATION * TIME_SCALE,
+                ease: EASE_OUT,
+                delay: textDelayMs / 1000 + lIdx * (MOBILE_LITE_LINE_STAGGER * TIME_SCALE),
+              };
+            } else {
+              initialObj = { opacity: 0, x: 0, y: 0 };
+              animateObj = { opacity: 0, x: 0, y: 0 };
+              transitionObj = { duration: 0 };
+            }
+          } else if (isLeaving) {
+            initialObj = { x: 0, y: 0, opacity: 1 };
+            animateObj = { x: leaveX, y: 0, opacity: 0 };
+            transitionObj = {
+              duration: 0.28 * TIME_SCALE,
+              ease: EASE_IN,
+              delay: lIdx * (MOBILE_HEADLINE_LEAVE_STAGGER * TIME_SCALE),
+            };
+          } else if (isCurrent) {
+            initialObj = { x: enterX, y: 0, opacity: 0 };
+            animateObj = { x: 0, y: 0, opacity: 1 };
+            transitionObj = {
+              duration: MOBILE_ENTER_DURATION_WORD * TIME_SCALE,
+              ease: MOBILE_ENTER_EASE,
+              delay: textDelayMs / 1000 + lIdx * (MOBILE_HEADLINE_LINE_STAGGER * TIME_SCALE),
+            };
+          } else {
+            initialObj = { x: enterX, y: 0, opacity: 0 };
+            animateObj = { x: enterX, y: 0, opacity: 0 };
+            transitionObj = { duration: 0 };
+          }
+
+          const lineStyle: React.CSSProperties | undefined =
+            isInitialHidden || isAnimating
+              ? {
+                  ...(isInitialHidden ? { opacity: 0 } : {}),
+                  ...(isAnimating
+                    ? { willChange: lite ? 'opacity' : 'transform, opacity' }
+                    : {}),
+                }
+              : undefined;
+
+          return (
+            <m.span
+              key={`line-${lIdx}-t${transitionId}`}
+              className="block"
+              initial={initialObj}
+              animate={animateObj}
+              transition={transitionObj}
+              style={lineStyle}
+              onAnimationComplete={() => {
+                if (isCurrent && !isLeaving && (lIdx === lines.length - 1 || shouldReduceMotion)) {
+                  setSettled(true);
+                }
+              }}
+              transformTemplate={(_, generated) =>
+                settled && isCurrent && !isLeaving ? 'none' : generated
+              }
+            >
+              {words.map((word, wIdx) => (
+                <span
+                  key={`word-${lIdx}-${wIdx}-${word}`}
+                  className="inline-block pb-1 align-bottom mr-[0.28em] last:mr-0"
+                >
+                  <span className="inline-block" aria-hidden="true">
+                    {word}
+                  </span>
+                </span>
+              ))}
+            </m.span>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const isDesktopStaged = desktop && staged;
   let wordIndex = 0;
 
   return (
@@ -539,6 +665,7 @@ export function StageReveal({
     transitionDir,
     direction,
     choreographed = false,
+    lite = false,
   } = usePageState();
   const tree = useContext(RenderTreeContext);
   const shouldReduceMotion = useReducedMotion();
@@ -610,6 +737,50 @@ export function StageReveal({
         duration: isLeaving ? 0.18 : 0.3,
         delay: 0,
       };
+    } else if (lite) {
+      if (isLeaving) {
+        initialTarget = {
+          opacity: 1,
+          x: 0,
+          y: 0,
+        };
+        animateTarget = {
+          opacity: 0,
+          x: 0,
+          y: 0,
+        };
+        transitionConfig = {
+          duration: 0.2 * TIME_SCALE,
+        };
+      } else if (isCurrent) {
+        initialTarget = {
+          opacity: 0,
+          x: 0,
+          y: 0,
+        };
+        animateTarget = {
+          opacity: 1,
+          x: 0,
+          y: 0,
+        };
+        transitionConfig = {
+          duration: MOBILE_LITE_FADE_DURATION * TIME_SCALE,
+          ease: EASE_OUT,
+          delay: textDelayMs / 1000 + order * (MOBILE_LITE_ORDER_STAGGER * TIME_SCALE),
+        };
+      } else {
+        initialTarget = {
+          opacity: 0,
+          x: 0,
+          y: 0,
+        };
+        animateTarget = {
+          opacity: 0,
+          x: 0,
+          y: 0,
+        };
+        transitionConfig = { duration: 0 };
+      }
     } else if (isLeaving) {
       initialTarget = {
         opacity: 1,
@@ -719,6 +890,19 @@ export function StageReveal({
     }
   }
 
+  const isAnimating = (isCurrent && !settled) || Boolean(isLeaving);
+  const isInitialHidden = !desktop && staged && !settled && isCurrent && !isLeaving;
+
+  const revealStyle: React.CSSProperties | undefined =
+    isInitialHidden || (choreographed && isAnimating)
+      ? {
+          ...(isInitialHidden ? { opacity: 0 } : {}),
+          ...(choreographed && isAnimating
+            ? { willChange: lite ? 'opacity' : 'transform, opacity' }
+            : {}),
+        }
+      : undefined;
+
   return (
     <m.div
       key={`reveal-${order}-t${transitionId}`}
@@ -726,7 +910,7 @@ export function StageReveal({
       initial={initialTarget}
       animate={animateTarget}
       transition={transitionConfig}
-      style={!desktop && staged && !settled && isCurrent ? { opacity: 0 } : undefined}
+      style={revealStyle}
       onAnimationComplete={() => {
         if (isCurrent && !isLeaving) {
           setSettled(true);
