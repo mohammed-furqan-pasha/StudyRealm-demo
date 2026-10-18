@@ -29,6 +29,13 @@ export const surveyQuestions: Record<string, SurveySet> = {
       },
       {
         type: 'mcq',
+        id: 'teacher_q_app',
+        prompt: "Have you ever tried a learning app in your class? What happened?",
+        audio: "Have you ever tried a learning app in your class? What happened?",
+        options: ["Never tried one", "Tried one, stopped within a month", "Tried one, still use it", "Only students use one on their own"],
+      },
+      {
+        type: 'mcq',
         id: 'teacher_q4',
         prompt: "How do you record which skills or competencies a lesson or test covers, for example under NCF 2023?",
         audio: "How do you record which skills or competencies a lesson or test covers, for example under NCF 2023?",
@@ -105,6 +112,13 @@ export const surveyQuestions: Record<string, SurveySet> = {
         prompt: "Roughly how much do you spend each month, in rupees, on tuition, learning apps or study material for your child?",
         audio: "Roughly how much do you spend each month, in rupees, on tuition, learning apps or study material for your child?",
         options: ["Nothing", "Under ₹1,000", "₹1,000 to ₹3,000", "₹3,000 to ₹6,000", "More than ₹6,000"],
+      },
+      {
+        type: 'mcq',
+        id: 'parent_q_paid',
+        prompt: "In the past 6 months, have you paid for any learning app, online class or science kit?",
+        audio: "In the past 6 months, have you paid for any learning app, online class or science kit?",
+        options: ["No", "Yes, a learning app", "Yes, tuition classes", "Yes, a kit or books", "Yes, more than one of these"],
       },
       {
         type: 'mcq',
